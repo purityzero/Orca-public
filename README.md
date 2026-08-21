@@ -23,7 +23,7 @@ git clone https://github.com/purityzero/Orca.git C:\Orca
 상세 메커니즘은 `UnityLauncher.MD` 참고.
 
 ### 새 세션에서 이어서 작업할 때
-1. `UNFINISHED.md` — 이 워크스페이스 자체의 미완료 항목부터 확인
+1. 이 워크스페이스 자체의 미완료 항목은 §5 "알려진 이슈"부터 확인
 2. 작업 대상이 특정 프로젝트(GeometryDefender/HouseRulez)면 `Unity\{프로젝트명}\.claude\UNFINISHED.md`도 확인
 3. `ParallelWorkContract.MD` §0~§2에서 Orca 모델·Unity 제약 전체 맥락 파악
 
@@ -38,7 +38,6 @@ C:\Orca\
 ├── CODE.MD                      ← C#/Unity 코딩 규칙 (네이밍, 스타일 등)
 ├── PREFAB.MD                    ← 프리팹/UI 컴포넌트 규칙
 ├── AGENT.MD                     ← 서브에이전트 8개 라우팅 기준(누구를 언제 부를지)
-├── UNFINISHED.md                ← Orca 워크스페이스 자체의 미완료 작업
 │
 ├── ParallelWorkContract.MD      ← Orca 모델·Unity 제약·병렬 레인 분할/평가 계약 (Main→워커 핸드오프 규격)
 │
@@ -92,7 +91,7 @@ C:\Unity\HouseRules\HouseRulez\.claude\   ← 실제 Unity 에디터가 읽는 �
 | 문서 | 언제 읽나 |
 |---|---|
 | `CLAUDE.md`/`CODE.MD`/`PREFAB.MD`/`AGENT.MD` | 어떤 세션이든 항상(자동 로드) — 코딩/행동 규칙 |
-| `UNFINISHED.md` (루트) | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |
+| 이 문서 §5 "알려진 이슈" | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |
 | `Unity\{P}\.claude\UNFINISHED.md` | 특정 프로젝트 작업 시작 시 |
 | `ParallelWorkContract.MD` | 레인 2개 이상으로 병렬 작업을 짤 때, 또는 Orca/Unity CLI 모델 자체를 다시 확인할 때 (특히 §11 이름 기반 소프트 락) |
 | `UnityLauncher.MD` | 런처가 이상하게 동작하거나 새 PC에 셋업할 때 |
@@ -113,7 +112,12 @@ C:\Unity\HouseRules\HouseRulez\.claude\   ← 실제 Unity 에디터가 읽는 �
 
 ## 5. 알려진 이슈 / 다음에 볼 것
 
-`UNFINISHED.md` 참고 — MCP 멀티 인스턴스 (a)/(b) 미확정, GeometryDefender git 커밋 상태, Orca 바로가기 대상 확인 등.
+Orca 워크스페이스 자체의 미완료 작업은 프로젝트별 `UNFINISHED.md`가 아니라 여기 적는다(어느 프로젝트 소속도 아니므로):
+
+- **MCP 멀티 인스턴스 (a)/(b) 미확정** — Unity 에디터를 켠 상태에서 이 세션에 MCP for Unity 도구를 붙여 `mcpforunity://instances`를 한 번 읽으면 닫을 수 있다. `ParallelWorkContract.MD` §2 참고.
+- **Orca 바탕화면 바로가기가 실제로 `OrcaStart.cmd`를 가리키는지 미확인.**
+
+프로젝트별 미완료 작업은 `Unity\{프로젝트명}\.claude\UNFINISHED.md` 참고(위 §2 폴더 구조).
 
 ---
 
@@ -167,7 +171,7 @@ unity "$PWD"
 
 ### Unity CLI — `verify-compile`/`verify-tables` 구현 메커니즘
 
-Unity CLI(`unity install/doctor/pipeline`)는 이미 실행 중인 에디터를 셸에서 제어할 수 있어(Pipeline), Unity 에디터 락과 경쟁하지 않고 검증이 가능하다. **`CliCommand` 속성**(C# 정적 메서드에 부착)으로 프로젝트 전용 검증 명령을 노출하면, `ParallelWorkContract.MD` §5/§10의 `<verify-compile>`/`<verify-tables>`를 실제 종료 코드로 판정하는 CLI 명령으로 만들 수 있다 — 아직 Unity CLI 자체가 미설치라 `UNFINISHED.md`의 최우선 미적용 항목으로 남아있음.
+Unity CLI(`unity install/doctor/pipeline`)는 이미 실행 중인 에디터를 셸에서 제어할 수 있어(Pipeline), Unity 에디터 락과 경쟁하지 않고 검증이 가능하다. **`CliCommand` 속성**(C# 정적 메서드에 부착)으로 프로젝트 전용 검증 명령을 노출하면, `ParallelWorkContract.MD` §5/§10의 `<verify-compile>`/`<verify-tables>`를 실제 종료 코드로 판정하는 CLI 명령으로 만들 수 있다 — 아직 Unity CLI 자체가 미설치라 각 프로젝트 `UNFINISHED.md`의 최우선 미적용 항목으로 남아있음.
 
 주의: `eval`은 임의 C# 실행이라 신뢰할 수 없는 입력에 노출 금지, experimental이라 의존하는 자동화는 얇게 유지.
 

@@ -1,5 +1,10 @@
 # 미완료 작업
 
+## 2026-08-22-0 — Orca 워크스페이스 정리 작업에서 넘어온 항목
+
+- **`orca repo add`로 이 프로젝트를 등록할지 미정.** git 위생 문제(PAT 노출/detached HEAD/부실한 gitignore)는 2026-08-21에 이미 해결(`work` 브랜치)했으므로 이제 등록 가능한 상태 — 등록만 남음.
+- **`verify-compile`/`verify-tables` 같은 기계 판정 검증 수단이 아직 없음** — Unity CLI/Pipeline도 미설치. `README.md`(Orca 루트) 부록 A에 구현 메커니즘(`CliCommand` 속성) 정리돼 있음. 이게 있어야 `ParallelWorkContract.MD`의 계약 포맷·평가 계약이 실제로 굴러간다.
+
 ## 2026-07-30-1 — 밸런스 2차 조정(진행 중, 세션 한도로 중단) + 대규모 밸런스/신규무기 배치 작업(전부 미검증)
 
 ### 밸런스 2차 조정 검증 — 세션 한도로 중단, 재개 필요

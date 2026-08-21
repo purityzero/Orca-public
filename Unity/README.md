@@ -11,7 +11,7 @@
 C:\Orca\
 ├── CLAUDE.md / CODE.MD / PREFAB.MD / AGENT.MD   ← 코딩 규칙 + 서브에이전트 라우팅, 정본
 ├── agents\*.md                                   ← 서브에이전트 정의 8개, 정본
-├── Orca준비작업.MD / ParallelWorkContract.MD      ← Orca 자체 운용 문서
+├── ParallelWorkContract.MD                       ← Orca 자체 운용 문서
 ├── UnityLauncher.MD/.ps1/.cmd, OrcaStart.cmd     ← 프로젝트 실행 체인
 └── Unity\
     ├── README.md                                 ← 이 문서

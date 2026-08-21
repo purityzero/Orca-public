@@ -7,7 +7,7 @@
 ## 2026-08-21 — Orca 파일 정리 감사 후 남은 확인 필요 항목
 
 ### 다음 세션 최우선
-1. **`mcpforunity://instances`로 멀티 인스턴스 지원 여부 확정** — Unity 에디터를 켠 상태에서 이 세션에 MCP for Unity 도구를 붙여 리소스를 한 번 읽으면 닫을 수 있는 항목. `Orca준비작업.MD` §5의 (a)/(b) 갈림길이 이걸로 결정됨(간접 증거는 (a) 쪽에 무게 — 레지스트리에 `LocalHttpServer.LastPidFilePath`가 프로젝트별 pid로 기록되는데 포트는 8080 고정, 브로커 흔적 없음).
+1. **`mcpforunity://instances`로 멀티 인스턴스 지원 여부 확정** — Unity 에디터를 켠 상태에서 이 세션에 MCP for Unity 도구를 붙여 리소스를 한 번 읽으면 닫을 수 있는 항목. `ParallelWorkContract.MD` §2의 (a)/(b) 갈림길이 이걸로 결정됨(간접 증거는 (a) 쪽에 무게 — 레지스트리에 `LocalHttpServer.LastPidFilePath`가 프로젝트별 pid로 기록되는데 포트는 8080 고정, 브로커 흔적 없음).
 2. **오늘 GeometryDefender 원본에서 만든 git 변경사항(work 브랜치, `.gitignore`, `.claude` 문서 수정분)을 아직 커밋하지 않음** — 사용자가 명시적으로 커밋을 요청하면 진행. 그 전까지 워킹 트리에 변경사항이 쌓여있는 상태.
 3. **Orca 바탕화면 바로가기가 실제로 `OrcaStart.cmd`를 가리키는지 미확인.**
 
@@ -15,7 +15,7 @@
 - **`C:\Orca` 자체에 git이 없음.** 이제 여기가 GeometryDefender/HouseRulez 문서의 정본이 됐는데 버전관리가 없어서, 실수로 덮어쓰면 복구 수단이 원본 스냅샷뿐이다. 사용자가 여러 PC에서 Orca를 쓸 계획이라고 확인함(2026-08-21) — 정션이 아니라 git 기반 동기화가 맞는 방향이므로, `C:\Orca`를 git 저장소로 만들지 이 시점에 결정할 것.
 - GeometryDefender를 `orca repo add`로 등록할지 — git 위생 문제(PAT 노출/detached HEAD/부실한 gitignore)는 2026-08-21에 이미 해결했으므로 이제 등록 가능한 상태.
 
-### 아직 미적용 (적용 우선순위 1위, `Orca준비작업.MD` §7-2)
+### 아직 미적용 (적용 우선순위 1위, `README.md` 부록 A/B)
 `verify-compile` / `verify-tables` 같은 기계가 판정하는 성공 조건이 두 프로젝트 어디에도 없다. Unity CLI/Pipeline도 미설치. 이게 있어야 `ParallelWorkContract.MD`의 §3(계약 포맷)·§8(평가 계약)이 실제로 굴러간다 — 지금은 전부 문서 상태로 멈춰있음.
 
 ### 참고 — 오늘(2026-08-21) 완료한 것 요약
@@ -28,5 +28,5 @@
   - GD agents 동기화(프로젝트 노하우 보존 병합), AGENT.MD를 Orca 루트로 승격
   - `UNFINISHED.md` 최신본 정리, 죽은 `settings.local.json` 삭제
   - GeometryDefender git 위생 3건 수정(PAT 제거, gitignore, detached HEAD → `work` 브랜치)
-  - `Orca준비작업.MD`/`ParallelWorkContract.MD`의 스테일 서술·끊긴 참조 정리
+  - `ParallelWorkContract.MD`의 스테일 서술·끊긴 참조 정리, 이후 `Orca준비작업.MD`를 폐기하며 그 내용을 `ParallelWorkContract.MD`/`README.md` 부록으로 통합(2026-08-22)
   - `plugin-watch-usage.md`를 GD 전용 문서로 재배치, `.claude.zip` 백업 삭제

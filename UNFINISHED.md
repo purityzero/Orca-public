@@ -16,7 +16,7 @@
 - GeometryDefender를 `orca repo add`로 등록할지 — git 위생 문제(PAT 노출/detached HEAD/부실한 gitignore)는 2026-08-21에 이미 해결했으므로 이제 등록 가능한 상태.
 
 ### 아직 미적용 (적용 우선순위 1위, `Orca준비작업.MD` §7-2)
-`verify-compile` / `verify-tables` 같은 기계가 판정하는 성공 조건이 두 프로젝트 어디에도 없다. Unity CLI/Pipeline도 미설치. 이게 있어야 `병렬_작업분할계약.MD`의 §3(계약 포맷)·§8(평가 계약)이 실제로 굴러간다 — 지금은 전부 문서 상태로 멈춰있음.
+`verify-compile` / `verify-tables` 같은 기계가 판정하는 성공 조건이 두 프로젝트 어디에도 없다. Unity CLI/Pipeline도 미설치. 이게 있어야 `ParallelWorkContract.MD`의 §3(계약 포맷)·§8(평가 계약)이 실제로 굴러간다 — 지금은 전부 문서 상태로 멈춰있음.
 
 ### 참고 — 오늘(2026-08-21) 완료한 것 요약
 - UnityLauncher 전체 체인 실행 검증(Unity 실행 → 프로세스 확인)
@@ -28,5 +28,5 @@
   - GD agents 동기화(프로젝트 노하우 보존 병합), AGENT.MD를 Orca 루트로 승격
   - `UNFINISHED.md` 최신본 정리, 죽은 `settings.local.json` 삭제
   - GeometryDefender git 위생 3건 수정(PAT 제거, gitignore, detached HEAD → `work` 브랜치)
-  - `Orca준비작업.MD`/`병렬_작업분할계약.MD`의 스테일 서술·끊긴 참조 정리
+  - `Orca준비작업.MD`/`ParallelWorkContract.MD`의 스테일 서술·끊긴 참조 정리
   - `plugin-watch-usage.md`를 GD 전용 문서로 재배치, `.claude.zip` 백업 삭제

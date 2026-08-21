@@ -11,7 +11,7 @@
 C:\Orca\
 ├── CLAUDE.md / CODE.MD / PREFAB.MD / AGENT.MD   ← 코딩 규칙 + 서브에이전트 라우팅, 정본
 ├── agents\*.md                                   ← 서브에이전트 정의 8개, 정본
-├── Orca준비작업.MD / 병렬_작업분할계약.MD          ← Orca 자체 운용 문서
+├── Orca준비작업.MD / ParallelWorkContract.MD      ← Orca 자체 운용 문서
 ├── UnityLauncher.MD/.ps1/.cmd, OrcaStart.cmd     ← 프로젝트 실행 체인
 └── Unity\
     ├── README.md                                 ← 이 문서
@@ -36,7 +36,7 @@ C:\Unity\HouseRules\HouseRulez\.claude\           ← 실제 Unity 에디터가 
 
 - **문서(class/prefab/design/qa/rules/UNFINISHED.md) 갱신** → Orca 쪽(`C:\Orca\Unity\{P}\.claude\`)만 고친다. 원본은 그 시점 스냅샷으로 고정, 더 갱신 안 함.
 - **에이전트 정의(`agents/*.md`) 갱신 — 예외, 원본도 반드시 같이 고쳐야 함**: subagent_type은 프로젝트 로컬 `.claude/agents/`에서 찾으므로, **그 프로젝트에서 Agent를 실제로 실행하려면 원본(`C:\Unity\{P}\.claude\agents\`)에도 있어야 동작한다.** Orca 사본만 고치고 원본에 안 옮기면, 그 프로젝트 세션에서 subagent_type 자체가 안 보인다.
-  - 절차는 `병렬_작업분할계약.MD` §8 참고 — 마스터(`C:\Orca\agents\`) 기준으로 프로젝트에 없는 파일은 그대로 복사, 이미 있는 파일은 **body(프로젝트 노하우)는 보존하고 frontmatter 안전설정만 병합**한다(무조건 덮어쓰기 금지).
+  - 절차는 `ParallelWorkContract.MD` §8 참고 — 마스터(`C:\Orca\agents\`) 기준으로 프로젝트에 없는 파일은 그대로 복사, 이미 있는 파일은 **body(프로젝트 노하우)는 보존하고 frontmatter 안전설정만 병합**한다(무조건 덮어쓰기 금지).
 
 ## 4. 왜 "원본 스냅샷 고정"에 예외가 생겼나
 

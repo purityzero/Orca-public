@@ -20,7 +20,7 @@
 ## 0-1. 진행 상태 (2026-08-20 기준)
 
 > **새 세션에서 이어서 작업할 때 여기부터 읽을 것.**
-> 관련 문서: `UnityLauncher.MD`, `병렬_작업분할계약.MD`
+> 관련 문서: `UnityLauncher.MD`, `ParallelWorkContract.MD`
 > 실행 파일(같은 폴더에 있어야 함 — `%~dp0` 상대 참조): `UnityLauncher.ps1` / `UnityLauncher.cmd` / `OrcaStart.cmd` (3개뿐 — `.MD` 문서는 상대 참조와 무관)
 
 ### 완료

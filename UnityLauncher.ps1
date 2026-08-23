@@ -106,26 +106,6 @@ if (-not (Test-Path -LiteralPath $target.EditorPath)) {
     exit 1
 }
 
-# 선택 결과를 Claude Code(Orca) 세션에 넘긴다.
-# SessionStart 훅이 이 파일을 읽어 "어떤 프로젝트인지" 를 다시 묻지 않고 바로 작업을 시작한다.
-$selectionFile = Join-Path (Join-Path $PSScriptRoot ".claude") "selected-project.json"
-try {
-    $selectionDir = Split-Path $selectionFile -Parent
-    if (-not (Test-Path -LiteralPath $selectionDir)) {
-        New-Item -ItemType Directory -Path $selectionDir -Force | Out-Null
-    }
-
-    [PSCustomObject]@{
-        title      = $target.Title
-        path       = $target.Path
-        version    = $target.Version
-        selectedAt = (Get-Date).ToString("o")
-    } | ConvertTo-Json | Set-Content -LiteralPath $selectionFile -Encoding utf8
-}
-catch {
-    Write-Host "  (선택 정보를 기록하지 못했습니다: $($_.Exception.Message))" -ForegroundColor DarkYellow
-}
-
 Write-Host ""
 Write-Host "  실행: $($target.Title)  ($($target.Version))" -ForegroundColor Green
 Write-Host "  경로: $($target.Path)"

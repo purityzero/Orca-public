@@ -67,6 +67,10 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 ├── SetupLocalPaths.ps1          ← LocalPaths.json 생성 스크립트 본체
 ├── SetupLocalPaths.cmd          ← 생성 스크립트 진입점
 │
+├── WorkBranchFlow.MD            ← 작업 브랜치 흐름(검증 전 변경을 main에 안 올리기)
+├── WorkBranch.ps1               ← 브랜치 시작/병합 스크립트 본체
+├── WorkBranch.cmd               ← 브랜치 스크립트 진입점
+│
 ├── agents\                      ← 서브에이전트 정의 8개, **마스터**
 │   ├── code-architect.md        (설계, opus/high)
 │   ├── code-writer.md           (구현, sonnet/low)
@@ -118,6 +122,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 | `Unity\{P}\.claude\UNFINISHED.md` | 특정 프로젝트 작업 시작 시 |
 | `ParallelWorkContract.MD` | 레인 2개 이상으로 병렬 작업을 짤 때, 또는 Orca/Unity CLI 모델 자체를 다시 확인할 때 (특히 §11 이름 기반 소프트 락) |
 | `LocalPaths.json` | **프로젝트 원본(`<원본:{P}>`)을 읽거나 쓰기 직전 항상** — 실제 경로가 여기에만 있다 |
+| `WorkBranchFlow.MD` | **Unity 프로젝트의 동작을 바꾸는 수정을 시작하기 전 항상** — 작업 브랜치/검증/병합 절차 |
 | `UnityLauncher.MD` | 런처가 이상하게 동작하거나 새 PC에 셋업할 때 |
 | `Unity\README.md` | 프로젝트 문서(class/prefab/agents 등)를 갱신하기 전에 항상 |
 | `Unity\{P}\.claude\class\{Class}.md` | 그 클래스를 수정하기 전에 항상 (없으면 수정 후 생성) |
@@ -130,7 +135,8 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 2. **에이전트를 실행하기 전엔 이름에 프로젝트명을 붙인다** — `{ProjectName}_{ClassName}_class` 형식. GeometryDefender/HouseRulez가 같은 "Glory" 라이브러리를 써서 클래스명이 겹치기 때문. 스폰 전 `ListAgents`로 같은 이름이 이미 실행 중이면 대기한다. (`ParallelWorkContract.MD` §8)
 3. **Unity 에디터·MCP 브릿지는 공유 자원, 한 번에 하나만** — Play Mode 검증이나 프리팹 편집은 병렬 불가. 코드/문서 편집만 병렬 가능. (`ParallelWorkContract.MD` §2)
 4. **MCP for Unity는 전역 자동연결 켜둠** — `MCPForUnity.AutoStartOnLoad`가 레지스트리(모든 프로젝트 공유)에 `true`로 설정돼 있어, 이 런처로 여는 어떤 프로젝트든 자동으로 서버가 뜬다. (`UnityLauncher.MD` §6)
-5. **기록용 md 파일은 그 프로젝트가 없는 한 만들지 않는다** — 특정 프로젝트 얘기(클래스명, 파일명)를 이 루트의 공용 문서에 직접 섞지 않는다. `CLAUDE.md`의 "피드백 반영 프로세스" 참고.
+5. **검증 전 변경은 기본 브랜치에 올리지 않는다** — Unity 프로젝트의 동작을 바꾸는 수정은 `work/{날짜}-{주제}` 브랜치에서 하고, Play Mode 확인까지 끝난 뒤 `--no-ff`로 합류한다. (`WorkBranchFlow.MD`)
+6. **기록용 md 파일은 그 프로젝트가 없는 한 만들지 않는다** — 특정 프로젝트 얘기(클래스명, 파일명)를 이 루트의 공용 문서에 직접 섞지 않는다. `CLAUDE.md`의 "피드백 반영 프로세스" 참고.
 
 ---
 

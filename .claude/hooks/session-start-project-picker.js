@@ -12,6 +12,7 @@ const WORKSPACE_ROOT = path.resolve(__dirname, '..', '..');
 const HUB_PROJECTS = path.join(process.env.APPDATA || '', 'UnityHub', 'projects-v1.json');
 const LOCAL_PATHS = path.join(WORKSPACE_ROOT, 'LocalPaths.json');
 const SESSION_PROJECT_DIR = path.join(WORKSPACE_ROOT, '.claude', 'session-project');
+const OPEN_PROJECT_SCRIPT = path.join(WORKSPACE_ROOT, 'OpenUnityProject.ps1');
 
 const MAX_ROWS = 12;
 const SUMMARY_CHARS = 220;
@@ -134,9 +135,12 @@ function buildContext(sessionId, rows) {
     lines.push('사용자가 지정하기 전에 임의로 한 프로젝트를 골라 작업을 시작하지 않는다.');
     lines.push('아직 안 골랐는데 다른 얘기를 먼저 꺼내면, 그 얘기에 답하면서 어느 프로젝트인지 한 줄로 되묻는다.');
     lines.push('');
-    lines.push('사용자가 고르면 아래 파일을 만들어 확정을 기록한다(안 만들면 매 턴 미확정 알림이 계속 뜬다):');
-    lines.push(`  ${markerPath}`);
-    lines.push('  {"title": "<이름>", "path": "<프로젝트 절대경로>", "source": "asked", "confirmedAt": "<ISO8601>"}');
+    lines.push('사용자가 고르면 즉시 두 가지를 한다:');
+    lines.push(`  1) Unity 에디터 실행 — PowerShell 툴로: & "${OPEN_PROJECT_SCRIPT}" -ProjectPath "<프로젝트 절대경로>"`);
+    lines.push('     (이미 그 프로젝트로 켜져 있으면 스크립트가 알아서 건너뛴다)');
+    lines.push(`  2) 확정 기록 — ${markerPath}`);
+    lines.push('     {"title": "<이름>", "path": "<프로젝트 절대경로>", "source": "asked", "confirmedAt": "<ISO8601>"}');
+    lines.push('     (안 만들면 매 턴 미확정 알림이 계속 뜬다)');
     lines.push('');
 
     if (rows === null) {

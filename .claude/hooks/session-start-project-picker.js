@@ -94,12 +94,10 @@ function buildContext(sessionId) {
     lines.push('**이번 세션의 첫 응답에서 아래 목록을 사용자에게 보여주고, 어떤 프로젝트를 열지 AskUserQuestion으로 먼저 물어봐야 한다.**');
     lines.push('사용자가 지정하기 전에 임의로 한 프로젝트를 골라 작업을 시작하지 않는다. 목록을 다시 조회할 필요는 없다.');
     lines.push('');
-    lines.push('사용자가 프로젝트를 고르면 즉시 두 가지를 한다:');
-    lines.push(`  1) 확정 기록: ${markerPath}`);
-    lines.push('     {"title": "<이름>", "path": "<프로젝트 절대경로>", "source": "asked", "confirmedAt": "<ISO8601>"}');
-    lines.push('     (안 만들면 UserPromptSubmit 가드가 매 턴 미확정 알림을 계속 띄운다)');
-    lines.push('  2) Unity 에디터 실행: OpenUnityProject.ps1 -ProjectPath "<절대경로>"');
-    lines.push('     (이미 그 프로젝트로 켜져 있으면 스크립트가 알아서 건너뛴다)');
+    lines.push('목록은 번호를 매겨서 보여준다 — 사용자가 번호나 프로젝트명 아무거나 쳐서 고를 수 있게.');
+    lines.push('사용자가 고르면 아래 파일을 만들어 확정을 기록한다(안 만들면 매 턴 미확정 알림이 계속 뜬다):');
+    lines.push(`  ${markerPath}`);
+    lines.push('  {"title": "<이름>", "path": "<프로젝트 절대경로>", "source": "asked", "confirmedAt": "<ISO8601>"}');
     lines.push('');
 
     if (hub === null || hub.data === undefined) {

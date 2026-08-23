@@ -15,8 +15,8 @@ LLM이 코딩할 때 흔히 저지르는 실수를 줄이기 위한 행동 지�
 ## 미완료 작업 보고 (세션 시작 시)
 - 세션에서 처음 호출되면, 가장 먼저 `.claude/UNFINISHED.md`를 확인해 끝내지 못한 작업이 있으면 첫 응답에서 사용자에게 알려준다.
 - **작업 디렉토리가 여러 프로젝트를 품은 워크스페이스 루트인 경우**(루트엔 `.claude/UNFINISHED.md`가 없고 하위 프로젝트 폴더마다 따로 있는 구조 등), **세션의 첫 응답에서 SessionStart hook(`.claude/hooks/session-start-project-picker.js`)이 주입한 Unity Hub 목록을 그대로 보여주고, 어떤 프로젝트를 열지 `AskUserQuestion`으로 먼저 묻는다.** 목록을 다시 조회하지 않는다. 사용자가 지정하기 전에 임의로 한 프로젝트를 골라 작업을 시작하지 않는다.
-  - 사용자가 고르면 즉시 두 가지를 한다: ① `.claude/session-project/{세션ID}.json`에 확정 기록 ② `OpenUnityProject.ps1 -ProjectPath "<절대경로>"`로 Unity 에디터 실행(이미 켜져 있으면 스크립트가 건너뛴다).
-  - ①을 빠뜨리면 UserPromptSubmit 가드(`user-prompt-project-guard.js`)가 매 턴 미확정 알림을 계속 띄운다. 확정 기록이 생기면 가드는 스스로 조용해진다.
+  - 목록은 **번호를 매겨서** 보여준다 — 사용자가 번호든 프로젝트명이든 쳐서 고를 수 있게.
+  - 사용자가 고르면 `.claude/session-project/{세션ID}.json`에 확정을 기록한다. 빠뜨리면 UserPromptSubmit 가드(`user-prompt-project-guard.js`)가 매 턴 미확정 알림을 계속 띄우고, 기록이 생기면 가드는 스스로 조용해진다.
   - (근거: "먼저 물어라"는 규칙이 세션 시작 1회 주입만으로는 반복해서 누락됐다 — 한 번 흘려보내면 복구 지점이 없다. 그래서 강제는 매 턴 뜨고 조건 충족 시 스스로 꺼지는 가드가 맡는다. 후보 목록은 워크스페이스 하위 폴더 스캔이 아니라 Hub 목록이 기준 — 여는 프로젝트가 워크스페이스에 아직 등록 안 된 것일 수 있다)
 - 작업이 미완료 상태로 세션이 끝날 것 같으면(중단 요청, 검증 못 함 등) `.claude/UNFINISHED.md`에 날짜, 남은 작업, 관련 파일을 기록해 둔다.
 - 미완료 작업을 마저 끝내면 해당 항목을 `.claude/UNFINISHED.md`에서 제거한다.

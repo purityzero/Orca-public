@@ -7,7 +7,7 @@
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start-project-picker.js\"",
             "timeout": 15,
-            "statusMessage": "대상 Unity 프로젝트 확인 중..."
+            "statusMessage": "Unity 프로젝트 목록 수집 중..."
           }
         ]
       }

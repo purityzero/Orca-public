@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start-project-picker.js\"",
+            "timeout": 15,
+            "statusMessage": "Unity 프로젝트 목록 수집 중..."
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/user-prompt-project-guard.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

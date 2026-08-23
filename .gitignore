@@ -2,3 +2,6 @@
 
 # PC마다 다른 로컬 경로 설정 (LocalPaths.example.json 이 템플릿)
 LocalPaths.json
+
+# 세션마다 다른 로컬 상태 (대상 프로젝트 확정 기록)
+.claude/session-project/

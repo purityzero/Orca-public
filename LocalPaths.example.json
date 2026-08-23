@@ -1,0 +1,13 @@
+{
+  "_readme": [
+    "이 파일은 템플릿이다. 복사해서 LocalPaths.json 으로 저장한다(LocalPaths.json은 git에 올라가지 않는다).",
+    "SetupLocalPaths.cmd 를 실행하면 Unity Hub 등록 목록에서 후보를 찾아 자동으로 만들어 준다.",
+    "projects의 키는 Unity\\ 아래 폴더명(= Orca가 관리하는 프로젝트명)이고,",
+    "값은 그 프로젝트의 '원본' 절대 경로(Unity 에디터가 실제로 여는 폴더)다.",
+    "이 PC에 없는 프로젝트는 null 로 둔다."
+  ],
+  "projects": {
+    "GeometryDefender": "C:\\Unity\\GeometryDefender",
+    "HouseRulez": null
+  }
+}

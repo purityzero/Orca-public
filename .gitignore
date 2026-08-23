@@ -1,1 +1,4 @@
 .claude/scheduled_tasks.lock
+
+# PC마다 다른 로컬 경로 설정 (LocalPaths.example.json 이 템플릿)
+LocalPaths.json

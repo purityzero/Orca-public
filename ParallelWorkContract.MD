@@ -326,7 +326,7 @@ MemoryPoolFactory<T, string>
 §5~6의 "소유 파일 계약"은 워크트리 레인 단위의 무거운 사전 협의다. 아래는 개별 `Agent` 스폰 단위로 즉석에서 충돌을 막는 가벼운 보조 장치 — 정식 레인이 아닌 fork/서브에이전트 산발 호출에도 쓴다.
 
 ### 마스터-사본 관계 (에이전트 정의 파일)
-GeometryDefender/HouseRulez의 `.claude`를 Orca가 통합 관리하게 되면서(구조 설명은 `Unity\README.md` 참고), 에이전트 정의(`.claude/agents/*.md`)도 `C:\Orca\agents\`가 마스터다. Claude Code는 subagent_type을 프로젝트 로컬 `.claude/agents/`에서 찾으므로(Orca 루트에 있는 것만으론 인식 안 됨), **해당 프로젝트에서 Agent를 실행하기 전에 `C:\Orca\agents\*.md`를 그 프로젝트의 `.claude\agents\`로 맞춰둔다.**
+GeometryDefender/HouseRulez의 `.claude`를 Orca가 통합 관리하게 되면서(구조 설명은 `Unity\README.md` 참고), 에이전트 정의(`.claude/agents/*.md`)도 `<ORCA>\agents\`가 마스터다. Claude Code는 subagent_type을 프로젝트 로컬 `.claude/agents/`에서 찾으므로(Orca 루트에 있는 것만으론 인식 안 됨), **해당 프로젝트에서 Agent를 실행하기 전에 `<ORCA>\agents\*.md`를 그 프로젝트의 `.claude\agents\`로 맞춰둔다.** 그 프로젝트의 실제 위치는 `<ORCA>\LocalPaths.json`의 `projects.{프로젝트명}`에서 읽는다(경로 토큰 `<ORCA>`/`<원본:{P}>` 설명은 루트 `README.md`).
 
 **⚠️ 무조건 덮어쓰기 금지 (2026-08-21 발견):** GeometryDefender의 `qa-tester.md`/`design-issue-resolver.md`엔 그 프로젝트만의 튜닝(WaveTable 페이즈 타이밍, `isAutoMode` 플래그 절차, Text Animator 핫리로드 우회법, `08_balance.html` 기준선 등)이 body에 녹아있었다 — 마스터로 그냥 덮어썼다면 이 노하우가 통째로 사라질 뻔했다. 실제 절차:
 1. **프로젝트에 그 이름의 파일이 아예 없으면** → 마스터를 그대로 복사.

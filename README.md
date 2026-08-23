@@ -1,19 +1,35 @@
 # Orca 워크스페이스
 
-**이게 뭔가:** `C:\Orca`는 Unity 게임 프로젝트(GeometryDefender, HouseRulez)를 Claude Code + Orca 앱으로 관리하기 위한 **메타 작업공간**이다. 게임 코드 자체는 여기 없다(`C:\Unity\...`에 따로 있음) — 여긴 코딩 규칙, 서브에이전트 정의, 프로젝트 문서(class/prefab/design/qa), 실행 스크립트, 운용 원칙 문서를 모아둔 곳이다.
+**이게 뭔가:** 이 저장소는 Unity 게임 프로젝트(GeometryDefender, HouseRulez)를 Claude Code + Orca 앱으로 관리하기 위한 **메타 작업공간**이다. 게임 코드 자체는 여기 없다(각 Unity 프로젝트 폴더에 따로 있음) — 여긴 코딩 규칙, 서브에이전트 정의, 프로젝트 문서(class/prefab/design/qa), 실행 스크립트, 운용 원칙 문서를 모아둔 곳이다.
 
 **작성일:** 2026-08-22
 **GitHub:** https://github.com/purityzero/Orca (private) — 여러 PC에서 이 폴더를 clone해서 같은 상태로 이어 쓸 수 있다.
+
+### 경로 표기 규칙 — 이 문서들에 절대경로는 없다
+
+clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모든 문서는 다음 두 토큰으로만 쓴다.
+
+| 토큰 | 뜻 | 어디서 알아내나 |
+|---|---|---|
+| `<ORCA>` | 이 저장소를 clone한 폴더 | 지금 이 파일이 있는 곳 (스크립트는 `%~dp0` / `$PSScriptRoot`로 자동 인식) |
+| `<원본:{프로젝트명}>` | 그 프로젝트의 **실제 Unity 프로젝트 폴더**(에디터가 여는 곳) | `<ORCA>\LocalPaths.json` 의 `projects.{프로젝트명}` |
+
+`<ORCA>` 안을 가리킬 때는 토큰 없이 루트 기준 상대경로로 쓴다 (예: `agents\`, `Unity\{P}\.claude\`).
+**`LocalPaths.json`은 git에 올리지 않는다**(PC마다 값이 다르므로). 커밋되는 건 템플릿인 `LocalPaths.example.json`뿐이다.
 
 ---
 
 ## 1. 빠른 시작
 
 ### 새 PC에서 처음 셋업할 때
-```bash
-git clone https://github.com/purityzero/Orca.git C:\Orca
-```
-그 다음 `UnityLauncher.MD` §3(설치 절차)을 따라 `.ps1` 인코딩만 확인하면 끝.
+1. 원하는 위치에 clone한다(경로는 자유 — 문서의 `<ORCA>`가 이 폴더를 뜻한다).
+   ```bash
+   git clone https://github.com/purityzero/Orca.git <원하는 경로>
+   ```
+2. **`SetupLocalPaths.cmd` 실행** — Unity Hub 등록 목록에서 각 프로젝트의 실제 위치 후보를 뽑아 보여준다. 골라주면 `LocalPaths.json`이 만들어진다. (Hub에 없거나 이름이 다르면 `d`로 직접 입력, 이 PC에 없는 프로젝트는 `n`)
+3. `UnityLauncher.MD` §3(설치 절차)을 따라 `.ps1` 인코딩만 확인하면 끝.
+
+> 프로젝트를 다른 폴더로 옮기거나 새 프로젝트를 `Unity\` 아래에 추가했다면 `SetupLocalPaths.cmd`를 다시 실행하면 된다(기존 값은 엔터로 유지).
 
 ### 평소 실행 순서
 1. 바탕화면 바로가기(또는 `OrcaStart.cmd` 직접 실행) 클릭
@@ -32,7 +48,7 @@ git clone https://github.com/purityzero/Orca.git C:\Orca
 ## 2. 폴더 구조
 
 ```
-C:\Orca\
+<ORCA>\
 ├── README.md                    ← 이 문서 (전체 사용법)
 ├── CLAUDE.md                    ← 행동 지침 (같이 읽을 파일: CODE/PREFAB/AGENT)
 ├── CODE.MD                      ← C#/Unity 코딩 규칙 (네이밍, 스타일 등)
@@ -45,6 +61,11 @@ C:\Orca\
 ├── UnityLauncher.ps1            ← 런처 스크립트 본체
 ├── UnityLauncher.cmd            ← 런처 실행 진입점
 ├── OrcaStart.cmd                ← "Unity 실행 → Orca 실행" 묶음 시퀀스
+│
+├── LocalPaths.json              ← **이 PC 전용** 프로젝트 원본 경로 (git 제외)
+├── LocalPaths.example.json      ← 위 파일의 템플릿 (커밋됨)
+├── SetupLocalPaths.ps1          ← LocalPaths.json 생성 스크립트 본체
+├── SetupLocalPaths.cmd          ← 생성 스크립트 진입점
 │
 ├── agents\                      ← 서브에이전트 정의 8개, **마스터**
 │   ├── code-architect.md        (설계, opus/high)
@@ -78,9 +99,11 @@ C:\Orca\
         ├── UNFINISHED.md         ← 이 프로젝트(HouseRulez)의 미완료 작업
         └── settings.local.json
 
-C:\Unity\GeometryDefender\.claude\        ← 실제 Unity 에디터가 읽는 원본 (게임 코드도 여기)
-C:\Unity\HouseRules\HouseRulez\.claude\   ← 실제 Unity 에디터가 읽는 원본 (게임 코드도 여기)
+<원본:GeometryDefender>\.claude\   ← 실제 Unity 에디터가 읽는 원본 (게임 코드도 여기)
+<원본:HouseRulez>\.claude\         ← 실제 Unity 에디터가 읽는 원본 (게임 코드도 여기)
 ```
+
+> 위 두 경로의 실제 값은 `LocalPaths.json`에 있다. 프로젝트 원본을 건드리기 전엔 **항상 그 파일을 먼저 읽어 경로를 확인한다** — 같은 프로젝트의 오래된 클론이 PC에 같이 있을 수 있어서 폴더명만 보고 짐작하면 틀린다. 값이 `null`이면 그 프로젝트는 이 PC에 없는 것이므로, 원본 동기화 작업은 건너뛰고 그 사실을 사용자에게 알린다.
 
 > `Unity\` 폴더 자체의 정본 규칙·동기화 함정·마스터 관계는 **`Unity\README.md`에 훨씬 상세히** 정리돼 있다 — 프로젝트 문서를 실제로 갱신하기 전엔 그 문서부터 읽을 것.
 
@@ -94,6 +117,7 @@ C:\Unity\HouseRules\HouseRulez\.claude\   ← 실제 Unity 에디터가 읽는 �
 | 이 문서 §5 "알려진 이슈" | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |
 | `Unity\{P}\.claude\UNFINISHED.md` | 특정 프로젝트 작업 시작 시 |
 | `ParallelWorkContract.MD` | 레인 2개 이상으로 병렬 작업을 짤 때, 또는 Orca/Unity CLI 모델 자체를 다시 확인할 때 (특히 §11 이름 기반 소프트 락) |
+| `LocalPaths.json` | **프로젝트 원본(`<원본:{P}>`)을 읽거나 쓰기 직전 항상** — 실제 경로가 여기에만 있다 |
 | `UnityLauncher.MD` | 런처가 이상하게 동작하거나 새 PC에 셋업할 때 |
 | `Unity\README.md` | 프로젝트 문서(class/prefab/agents 등)를 갱신하기 전에 항상 |
 | `Unity\{P}\.claude\class\{Class}.md` | 그 클래스를 수정하기 전에 항상 (없으면 수정 후 생성) |
@@ -102,7 +126,7 @@ C:\Unity\HouseRules\HouseRulez\.claude\   ← 실제 Unity 에디터가 읽는 �
 
 ## 4. 핵심 원칙 요약 (각 문서에 상세 근거 있음)
 
-1. **정본 위치가 종류별로 다르다** — 코딩 규칙은 루트 1부, 에이전트 정의는 `agents\`가 마스터(단 실제 실행엔 프로젝트 로컬 사본이 필요), 프로젝트 문서는 `Unity\{P}\.claude\`가 정본이고 `C:\Unity\{P}\.claude\`(원본)는 그 시점 스냅샷. (`Unity\README.md` 참고)
+1. **정본 위치가 종류별로 다르다** — 코딩 규칙은 루트 1부, 에이전트 정의는 `agents\`가 마스터(단 실제 실행엔 프로젝트 로컬 사본이 필요), 프로젝트 문서는 `Unity\{P}\.claude\`가 정본이고 `<원본:{P}>\.claude\`는 그 시점 스냅샷. (`Unity\README.md` 참고)
 2. **에이전트를 실행하기 전엔 이름에 프로젝트명을 붙인다** — `{ProjectName}_{ClassName}_class` 형식. GeometryDefender/HouseRulez가 같은 "Glory" 라이브러리를 써서 클래스명이 겹치기 때문. 스폰 전 `ListAgents`로 같은 이름이 이미 실행 중이면 대기한다. (`ParallelWorkContract.MD` §8)
 3. **Unity 에디터·MCP 브릿지는 공유 자원, 한 번에 하나만** — Play Mode 검증이나 프리팹 편집은 병렬 불가. 코드/문서 편집만 병렬 가능. (`ParallelWorkContract.MD` §2)
 4. **MCP for Unity는 전역 자동연결 켜둠** — `MCPForUnity.AutoStartOnLoad`가 레지스트리(모든 프로젝트 공유)에 `true`로 설정돼 있어, 이 런처로 여는 어떤 프로젝트든 자동으로 서버가 뜬다. (`UnityLauncher.MD` §6)
@@ -130,9 +154,9 @@ Orca에는 CLI가 번들돼 있으나 **PATH에 자동 등록되지 않는다** 
 `orca open`은 프로젝트 인자를 받지 않는다(옵션이 `--json`뿐). **repo를 여러 개 등록해두고 사이드바에서 전환**하는 모델이다.
 
 ```bash
-orca repo add --path "D:/Unity/NextProject"   # 등록 (GUI: 사이드바 Add Repo)
-orca repo list                                 # 등록 목록
-orca repo set-base-ref ...                     # worktree가 뻗어나갈 기준 브랜치
+orca repo add --path "<프로젝트 경로>"   # 등록 (GUI: 사이드바 Add Repo)
+orca repo list                           # 등록 목록
+orca repo set-base-ref ...               # worktree가 뻗어나갈 기준 브랜치
 ```
 
 작업 단위인 worktree를 만들 때 `--repo`로 프로젝트를 고른다:
@@ -145,7 +169,7 @@ orca worktree create --repo name:NextProject --name task-a --agent claude --prom
 
 ### `repo`와 `project`는 다른 개념
 
-- **repo** — 로컬 파일시스템 경로 단위. 로컬만 쓸 거면 이것으로 충분. git이 아니어도 `kind: "folder"`로 등록 가능(단 worktree 불가) — `C:\Orca` 자체가 그 예시였으나 지금은 git 저장소가 됐다.
+- **repo** — 로컬 파일시스템 경로 단위. 로컬만 쓸 거면 이것으로 충분. git이 아니어도 `kind: "folder"`로 등록 가능(단 worktree 불가) — `<ORCA>` 자체가 그 예시였으나 지금은 git 저장소가 됐다.
 - **project** — durable, 원격 저장소 연결 단위 (`project setup-clone`, `project setup-existing-folder`)
 
 ### 주요 명령군

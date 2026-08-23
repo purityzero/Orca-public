@@ -94,16 +94,20 @@ git -C "<원본:{P}>" revert <커밋>
 
 ---
 
-## 7. 알려진 위험 — 전역 gitignore 의존 (2026-08-23 발견)
+## 7. 전역 gitignore 의존 — 왜 프로젝트로 옮겼나 (2026-08-23)
 
-이 PC의 git 전역 설정이 이렇게 돼 있다.
+이 PC의 git 전역 설정이 이렇게 돼 있었다.
 
 ```
 core.excludesfile = D:\BackUp\Kapi\.gitignore
 ```
 
-Unity의 `Library/`, `Temp/`, `obj/`를 무시하는 규칙이 **프로젝트의 `.gitignore`가 아니라 이 PC에만 있는 파일**에 들어 있다. GeometryDefender의 `.gitignore`엔 `QA_Recordings/`와 `.claude/` 두 줄뿐이다.
+Unity의 `Library/`, `Temp/`, `obj/`를 무시하는 규칙이 **프로젝트의 `.gitignore`가 아니라 이 PC에만 있는 파일**에 들어 있었다. GeometryDefender의 `.gitignore`엔 `QA_Recordings/`와 `.claude/` 두 줄뿐이었다.
 
 **왜 위험한가:** 다른 PC에서 clone하면 그 파일이 없으므로 `Library/`(수 GB, 매번 바뀜)가 통째로 추적 대상이 된다. 브랜치를 오가는 이 흐름에서는 전환 때마다 거대한 변경으로 잡혀 사실상 작동하지 않는다.
 
-**해결:** Unity 표준 `.gitignore`를 각 프로젝트에 커밋해 넣는다. 아직 안 했다 — 이 흐름을 다른 PC로 가져가기 전에 처리해야 한다.
+**처리:** GeometryDefender는 Unity 표준 목록에서 이 프로젝트에 해당하는 것만 추려 프로젝트 `.gitignore`에 커밋했다(`c0d1146`). 전역 설정을 꺼도 `Library/`·`Temp/`·`obj/`·`Logs/`·`UserSettings/`가 무시되는 것을 확인했고, 이미 추적 중이던 파일 중 새로 무시되는 것은 없었다.
+
+**남은 것:** HouseRulez는 이 PC에 없어(`LocalPaths.json`이 `null`) 확인하지 못했다. 그 프로젝트가 있는 PC에서 같은 점검을 해야 한다.
+
+> **새 Unity 프로젝트를 이 워크스페이스에 편입할 때 확인할 것:** `git -C <원본> -c core.excludesfile=/dev/null check-ignore -v Library/` 가 프로젝트 `.gitignore`를 가리키는지. 전역 파일을 가리키거나 아무것도 안 나오면 위와 같이 옮긴다.

@@ -58,9 +58,17 @@ $projects = @()
 foreach ($prop in $config.projects.PSObject.Properties) {
     if ([string]::IsNullOrWhiteSpace($prop.Value)) { continue }
     if (-not (Test-Path -LiteralPath $prop.Value)) { continue }
-    if (-not (Test-Path -LiteralPath (Join-Path $prop.Value '.git'))) { continue }
 
-    $projects += [PSCustomObject]@{ Name = $prop.Name; Path = $prop.Value }
+    # 저장소 루트가 프로젝트 폴더보다 위일 수 있다(예: <repo>\<프로젝트>\Assets).
+    # .git 폴더 존재 여부로 판정하지 말고 git에게 직접 묻는다.
+    $repoRoot = (& $gitPath '-C' $prop.Value 'rev-parse' '--show-toplevel' 2>$null)
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($repoRoot)) { continue }
+
+    $projects += [PSCustomObject]@{
+        Name        = $prop.Name
+        Path        = $prop.Value
+        RepoRoot    = ($repoRoot | Select-Object -First 1).Trim().Replace('/', '\')
+    }
 }
 
 if ($projects.Count -le 0) {
@@ -88,7 +96,7 @@ if ($projects.Count -gt 1) {
     $project = $projects[$number - 1]
 }
 
-$repo = $project.Path
+$repo = $project.RepoRoot
 
 # 기준 브랜치 이름 — 저장소마다 main / master 가 다를 수 있다
 $baseBranch = 'main'
@@ -106,7 +114,10 @@ function Show-Status {
     $dirtyList = @(Invoke-Git $repo @('status', '--porcelain'))
 
     Write-Host ""
-    Write-Host "  [$($project.Name)]  $repo" -ForegroundColor Cyan
+    Write-Host "  [$($project.Name)]  $($project.Path)" -ForegroundColor Cyan
+    if ($repo -ne $project.Path) {
+        Write-Host "  저장소 루트 : $repo" -ForegroundColor DarkGray
+    }
     Write-Host "  ---------------------------------------------------------------------"
     Write-Host "  현재 브랜치 : $branch"
     Write-Host "  미커밋 변경 : $($dirtyList.Count) 개"

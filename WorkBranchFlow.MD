@@ -108,6 +108,8 @@ Unity의 `Library/`, `Temp/`, `obj/`를 무시하는 규칙이 **프로젝트의
 
 **처리:** GeometryDefender는 Unity 표준 목록에서 이 프로젝트에 해당하는 것만 추려 프로젝트 `.gitignore`에 커밋했다(`c0d1146`). 전역 설정을 꺼도 `Library/`·`Temp/`·`obj/`·`Logs/`·`UserSettings/`가 무시되는 것을 확인했고, 이미 추적 중이던 파일 중 새로 무시되는 것은 없었다.
 
-**남은 것:** HouseRulez는 이 PC에 없어(`LocalPaths.json`이 `null`) 확인하지 못했다. 그 프로젝트가 있는 PC에서 같은 점검을 해야 한다.
+HouseRulez는 2026-08-23에 이 PC로 clone한 뒤 점검했고, 프로젝트 자체 `.gitignore`에 표준 목록이 이미 들어 있어 손댈 게 없었다.
+
+**주의 — 저장소 루트가 프로젝트 폴더보다 위일 수 있다.** HouseRulez가 그렇다(`<repo>\HouseRulez\Assets\` 구조라 `.git`은 한 단계 위에 있다). `.git` 폴더의 위치로 프로젝트를 판정하면 이런 배치를 놓치므로, `WorkBranch.ps1`은 `git rev-parse --show-toplevel`로 저장소 루트를 물어본다. 브랜치는 **저장소 단위**라 이 경우 한 브랜치가 저장소 전체에 걸린다.
 
 > **새 Unity 프로젝트를 이 워크스페이스에 편입할 때 확인할 것:** `git -C <원본> -c core.excludesfile=/dev/null check-ignore -v Library/` 가 프로젝트 `.gitignore`를 가리키는지. 전역 파일을 가리키거나 아무것도 안 나오면 위와 같이 옮긴다.

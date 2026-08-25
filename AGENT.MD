@@ -42,3 +42,6 @@ Client(구현) 버킷 일감을 서브에이전트에 위임하는 기준. Desig
 - 단순 조회성 Explore/general-purpose 같은 가벼운 탐색 호출까지는 대상 아님 — 위 8개 에이전트와 명시적 fork(작업 위임 성격)에 한정.
 
 상세 절차는 각 에이전트 정의 파일(`agents/{이름}.md`, 프로젝트에서는 `.claude/agents/{이름}.md`) 참고.
+
+## 8개가 목록에 안 보이면
+Claude Code는 subagent_type을 **작업 디렉토리**의 `.claude/agents/`에서만 찾는다. 워크스페이스 루트 세션은 SessionStart 훅이 마스터를 `.claude/agents/`로 깔아주고 종료 시 지운다 — 그래도 안 보이면 `node .claude/hooks/session-agents.js sync`를 직접 돌린다. **위임이 불가능한 상태면 조용히 직접 처리하지 말고 그 사실을 먼저 알린다**(2026-08-24, 못 지키는 규칙을 말 안 해서 문제가 늦게 발견됨). 상세는 `ParallelWorkContract.MD` §11.

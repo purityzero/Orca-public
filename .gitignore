@@ -5,3 +5,6 @@ LocalPaths.json
 
 # 세션마다 다른 로컬 상태 (대상 프로젝트 확정 기록)
 .claude/session-project/
+
+# 세션용 서브에이전트 임시 사본 (마스터는 agents/ — ParallelWorkContract.MD §11)
+.claude/agents/

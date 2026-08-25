@@ -333,6 +333,22 @@ GeometryDefender/HouseRulez의 `.claude`를 Orca가 통합 관리하게 되면�
 2. **이미 있으면** → body(절차/노하우)는 그대로 두고, **frontmatter의 안전설정(`disallowedTools`/`model`/`effort`/`maxTurns`)만 마스터 기준으로 병합**한다. 마스터 쪽 설명(description)이 더 일반화돼 있어도 프로젝트 파일의 구체적 설명이 그 프로젝트에선 더 유용하면 유지한다.
 3. 마스터 자체의 오탈/끊긴 참조(예: 삭제된 `.claude/CODE.md` 참조)를 발견하면 마스터부터 고치고, 그 수정을 모든 프로젝트 사본에 전파한다.
 
+### 워크스페이스 루트에서 연 세션 — 세션용 임시 사본 후 삭제 (2026-08-24)
+
+위 절차는 **"그 프로젝트에서 세션을 연다"를 전제**한다. 그런데 `OrcaStart.cmd` 흐름은 세션을 `<ORCA>` 루트에서 열고 **그 안에서** 프로젝트를 고른다 — 이때 cwd는 끝까지 `<ORCA>`이므로, 프로젝트 원본에 8개가 멀쩡히 동기화돼 있어도 **subagent_type이 하나도 안 잡힌다**(Claude Code는 cwd의 `.claude/agents/`만 본다). 2026-08-24 세션에서 실제로 겪음 — AGENT.MD 라우팅 대상인 작업을 위임 못 하고 메인이 직접 처리했고, 원인을 알아채는 데 대화 여러 번을 썼다.
+
+**해결 — 훅이 자동으로 처리한다** (`.claude/hooks/session-agents.js`):
+
+| 시점 | 동작 |
+|---|---|
+| SessionStart | `<ORCA>\agents\*.md` → `<ORCA>\.claude\agents\` 복사 |
+| SessionEnd | `<ORCA>\.claude\agents\` 삭제 |
+
+- **마스터(`<ORCA>\agents\`)는 절대 옮기거나 지우지 않는다.** `.claude` 밖에 있는 건 실수가 아니라 의도다 — 루트 세션에서 자동 로드되지 않는 순수 보관 위치라는 뜻이다(`rules\glory.md`와 같은 성격, `Unity\README.md` §4-1).
+- `.claude\agents\`는 **세션 스코프 임시 사본**이라 `.gitignore`에 넣어 커밋에서 제외한다. 영구본이 두 벌이 되면 어느 쪽이 마스터인지 즉시 흐려진다.
+- 이 사본은 마스터 그대로다(프로젝트 노하우 병합 없음). **프로젝트 고유 튜닝이 들어간 에이전트를 써야 하면 그 프로젝트 폴더에서 세션을 열 것** — 루트 세션은 어디까지나 공통 base로 돌린다.
+- 프로젝트 원본(`<원본:{P}>\.claude\agents\`)에 맞춰두는 위 절차는 그대로 유효하다. 둘은 대체 관계가 아니다 — 원본 동기화는 "그 프로젝트에서 연 세션"용, 이 훅은 "루트에서 연 세션"용이다.
+
 ### 에이전트 설정 폴더(.claude) 자체를 어떻게 다룰지 — git 추적 vs junction
 `.claude/`를 gitignore하면 worktree엔 그게 **통째로 없다** — 잃는 것: 프로젝트 지침, 서브에이전트 정의, 누적 작업 기록, 권한 설정. 신규 프로젝트라면 시작 시점에 아래 중 하나를 정할 것(GeometryDefender/HouseRulez는 **git 추적**으로 이미 결정됨, `Unity\README.md` §2 참고):
 

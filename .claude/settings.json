@@ -5,6 +5,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-agents.js\" sync",
+            "timeout": 10,
+            "statusMessage": "서브에이전트 정의 배치 중..."
+          },
+          {
+            "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start-project-picker.js\"",
             "timeout": 15,
             "statusMessage": "Unity 프로젝트 목록 수집 중..."
@@ -18,6 +24,17 @@
           {
             "type": "command",
             "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/user-prompt-project-guard.js\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-agents.js\" cleanup",
             "timeout": 10
           }
         ]

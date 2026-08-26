@@ -1,0 +1,363 @@
+<title>Orca 중앙 오케스트레이션 체제</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@500;700;800&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --ground: #F2F5F6;
+    --surface: #FFFFFF;
+    --fill: #E8EDEF;
+    --line: #D2DBDE;
+    --line-2: #A9B8BD;
+    --ink: #10171A;
+    --ink-2: #3D4E55;
+    --muted: #6B7C83;
+    --accent: #0B6E75;
+    --done: #1F6F4A;  --done-bg: #DDEEE4;
+    --ready: #0B5A75; --ready-bg: #DCEAF1;
+    --next: #8A5B12;  --next-bg: #F4E9D4;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0C1215;
+      --surface: #131C20;
+      --fill: #1A252A;
+      --line: #263237;
+      --line-2: #3C4C53;
+      --ink: #E3EBED;
+      --ink-2: #B3C3C8;
+      --muted: #7E9198;
+      --accent: #59C3C8;
+      --done: #6FCB9B;  --done-bg: #12301F;
+      --ready: #74BEDC; --ready-bg: #102A36;
+      --next: #D8A65A;  --next-bg: #33260F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0C1215;
+    --surface: #131C20;
+    --fill: #1A252A;
+    --line: #263237;
+    --line-2: #3C4C53;
+    --ink: #E3EBED;
+    --ink-2: #B3C3C8;
+    --muted: #7E9198;
+    --accent: #59C3C8;
+    --done: #6FCB9B;  --done-bg: #12301F;
+    --ready: #74BEDC; --ready-bg: #102A36;
+    --next: #D8A65A;  --next-bg: #33260F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans KR", "Malgun Gothic", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    word-break: keep-all;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 960px; margin: 0 auto; padding: 0 26px 88px; }
+
+  header.masthead {
+    padding: 64px 0 30px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  h1 {
+    font-family: "Gothic A1", "Malgun Gothic", sans-serif;
+    font-weight: 800;
+    font-size: clamp(30px, 5vw, 46px);
+    line-height: 1.16;
+    letter-spacing: -.025em;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+
+  .standfirst { max-width: 62ch; color: var(--ink-2); font-size: 17px; margin: 0 0 24px; }
+
+  .meta {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  section { padding-top: 46px; }
+
+  h2 {
+    font-family: "Gothic A1", "Malgun Gothic", sans-serif;
+    font-weight: 800;
+    font-size: clamp(20px, 2.8vw, 26px);
+    letter-spacing: -.02em;
+    line-height: 1.3;
+    margin: 0 0 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    text-wrap: balance;
+  }
+
+  p { max-width: 68ch; margin: 0 0 16px; }
+  .lede { color: var(--ink-2); }
+  .note { font-size: 14.5px; color: var(--ink-2); }
+
+  code {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .85em;
+    background: var(--fill);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--ink-2);
+    word-break: break-word;
+  }
+
+  .table-wrap { overflow-x: auto; margin: 20px 0 8px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+    min-width: 600px;
+    background: var(--surface);
+  }
+  th, td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  thead th {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    border-bottom: 1px solid var(--line-2);
+    background: var(--fill);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.key { font-weight: 600; }
+  td.sub { color: var(--ink-2); font-size: 13.8px; }
+  td.step {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    color: var(--accent);
+    letter-spacing: .05em;
+    white-space: nowrap;
+  }
+
+  .chip {
+    display: inline-block;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    padding: 3px 8px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .done  { color: var(--done);  background: var(--done-bg); }
+  .ready { color: var(--ready); background: var(--ready-bg); }
+  .next  { color: var(--next);  background: var(--next-bg); }
+
+  ul { margin: 0 0 16px; padding-left: 20px; max-width: 70ch; }
+  li { margin-bottom: 8px; color: var(--ink-2); }
+  li b { color: var(--ink); font-weight: 600; }
+
+  .highlight {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    border-top: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    border-radius: 0 4px 4px 0;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-size: 14.8px;
+  }
+  .highlight p { margin: 0; }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 2px solid var(--ink);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+
+  @media (max-width: 640px) { .page { padding: 0 18px 64px; } }
+</style>
+
+<div class="page">
+
+  <header class="masthead">
+    <h1>Orca 중앙 오케스트레이션 체제</h1>
+    <p class="standfirst">
+      여러 Unity 프로젝트를 <b>하나의 규칙 베이스</b>로 운용하는 구조를 구축했다.
+      메인이 명령을 받아 분류하고, 대상 이름으로 에이전트를 배정하고, 작업 결과를 그 이름으로 축적한다 —
+      <b>다섯 단계가 모두 실제로 동작</b>하며, 그 위에 병렬 실행과 외부 검증을 얹을 설계까지 마쳐둔 상태다.
+    </p>
+    <div class="meta">2026-08-26 · D:\Orca · 에이전트 10 · 누적 기록 140건 · 자동 훅 3</div>
+  </header>
+
+  <section>
+    <h2>0. Orca가 무엇인가</h2>
+    <p>
+      <b>Orca는 AI 에이전트를 격리해서 돌리고, 그 결과를 비교해 채택하는 도구다.</b>
+      작업 하나마다 git worktree(같은 저장소의 독립된 작업 폴더)와 브랜치를 만들어 CLI 에이전트를 붙이고,
+      나온 변경을 diff로 견줘 쓸 것만 합류시킨다. 에이전트를 많이 켜서 빨라지는 도구가 아니라,
+      <b>여러 시도를 비교 가능한 형태로 바꿔주는 도구</b>다.
+    </p>
+    <p>
+      이 문서가 다루는 <b>Orca 워크스페이스</b>는 그 위에 얹은 운용 베이스다.
+      게임 코드는 각 Unity 프로젝트에 있고, 여기엔 <b>코딩 규칙 · 에이전트 정의 · 프로젝트별 작업 기록 · 실행 스크립트</b>만 모았다.
+      어느 프로젝트에서 세션을 열든 같은 규칙과 같은 에이전트 구성으로 시작하게 만드는 것이 목적이다.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th style="width: 26%;">구성</th><th>역할</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="key">규칙 문서 4종</td><td class="sub">코딩 규칙 · 프리팹 규칙 · 에이전트 라우팅 기준 · 행동 지침. 모든 세션이 자동으로 읽는다.</td></tr>
+          <tr><td class="key">에이전트 정의 10</td><td class="sub">설계 · 구현 · 버그 수정 · QA · 커밋 검토 등 역할별 전문 에이전트. 각자 담당 범위와 모델이 고정.</td></tr>
+          <tr><td class="key">작업 기록 140건</td><td class="sub">클래스 · 프리팹별로 무엇을 왜 어떻게 고쳤는지 누적. 다음 작업의 출발점.</td></tr>
+          <tr><td class="key">자동 실행 훅 3</td><td class="sub">세션 시작 시 에이전트 배치와 프로젝트 목록 제시, 매 턴 확인, 종료 시 정리.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. 명령이 지나가는 길 — 5단계 전부 가동 중</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th style="width: 12%;">단계</th><th style="width: 24%;">하는 일</th><th>구현</th><th style="width: 20%;">근거 문서</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="step">1 수신</td><td class="key">공통 베이스 로드</td>
+            <td class="sub">루트 <code>CLAUDE.md</code>가 CODE / PREFAB / AGENT를 함께 로드. 규칙 정본은 워크스페이스에 1부.</td>
+            <td class="sub">CLAUDE.md</td></tr>
+          <tr><td class="step">2 분류</td><td class="key">축 판정 → 에이전트 선택</td>
+            <td class="sub">설계 / 컨텐츠 / 분량(대·소) / QA(대·소) / 마무리. 축마다 model·effort가 정의에 고정돼 있다.</td>
+            <td class="sub">AGENT.MD</td></tr>
+          <tr><td class="step">3 배정</td><td class="key">이름 기반 소프트 락</td>
+            <td class="sub"><code>{Project}_{Class}_class</code>로 스폰. 같은 대상이 작업 중이면 자동으로 순위를 미룬다.</td>
+            <td class="sub">ParallelWorkContract §11</td></tr>
+          <tr><td class="step">4 작업</td><td class="key">소유 파일만 수정</td>
+            <td class="sub">작업 전 대응 md를 먼저 읽는다. 동작이 바뀌는 수정은 <code>work/{날짜}-{주제}</code> 브랜치에서.</td>
+            <td class="sub">WorkBranchFlow.MD</td></tr>
+          <tr><td class="step">5 학습</td><td class="key">이름 단위 축적</td>
+            <td class="sub"><code>.claude/class/{이름}.md</code> · <code>prefab/{이름}.md</code>로 저장. 요청 없어도 항상 수행된다.</td>
+            <td class="sub">CLAUDE.md</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">
+      3단계 이름에 프로젝트명을 앞에 붙인 건 실측으로 얻은 설계다 — 두 프로젝트가 같은 공용 라이브러리를 써서 클래스명이 겹치는데,
+      접두사가 이 오인 충돌을 정확히 갈라준다(2026-08-21 레인 3개로 확인).
+    </p>
+  </section>
+
+  <section>
+    <h2>2. 지향 대비 현황</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th style="width: 26%;">지향</th><th style="width: 12%;">현황</th><th>내용</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="key">기본 베이스 통일</td><td><span class="chip done">가동</span></td>
+            <td class="sub">규칙 정본 1부로 통일. PC마다 다른 경로는 <code>LocalPaths.json</code>으로 분리해 어느 장비에서도 같은 상태로 이어진다.</td></tr>
+          <tr><td class="key">메인이 분류 → 에이전트 선택</td><td><span class="chip done">가동</span></td>
+            <td class="sub">별도 감독 계층 없이 메인이 직접 라우팅. 축이 겹치면 더 무거운 쪽으로 올리는 판정 기준까지 명문화.</td></tr>
+          <tr><td class="key">Class / Prefab 이름으로 작업</td><td><span class="chip done">가동</span></td>
+            <td class="sub">명명 규칙 + 사전 조회 + 대기 프로토콜이 한 세트로 동작. 실제 레인 실행으로 검증 완료.</td></tr>
+          <tr><td class="key">작업 결과를 학습으로 축적</td><td><span class="chip done">가동</span></td>
+            <td class="sub">class 109 · prefab 24 · design 5 · qa 2 축적. 다음 작업이 이 기록에서 출발한다.</td></tr>
+          <tr><td class="key">동일 대상이면 순위를 뒤로</td><td><span class="chip done">가동</span></td>
+            <td class="sub">활성 여부를 조회해 대기 후 진입. 프로젝트 접두사 덕에 동명 클래스라도 서로 다른 프로젝트면 동시 진행된다.</td></tr>
+          <tr><td class="key">설계·컨텐츠 병렬 분배</td><td><span class="chip ready">설계 완료</span></td>
+            <td class="sub">수직(도메인) 분할, 메인 선점 후 커밋, 레인별 소유 파일·ID 대역 계약서까지 규격이 서 있다. 레인 2개 실측만 남았다.</td></tr>
+          <tr><td class="key">외부 모델(Codex) 교차검증</td><td><span class="chip next">확장 예정</span></td>
+            <td class="sub">붙일 지점이 이미 두 곳 뚫려 있고, 커밋 직전 검토 단계가 그 자리를 먼저 채우고 있다.</td></tr>
+          <tr><td class="key">간단한 작업은 로컬 LLM</td><td><span class="chip next">확장 예정</span></td>
+            <td class="sub">모델 계층(opus / sonnet / haiku)이 이미 라우팅에 들어가 있어, 아래 단계를 하나 더 얹는 형태로 확장된다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. 이 구조가 선 근거</h2>
+    <ul>
+      <li>한 Unity 프로젝트에는 <b>에디터 1 · MCP 브릿지 1 · Play Mode 1 · OS 포커스 1</b>뿐이다. 중앙 체제는 취향이 아니라 이 제약에서 나온 답이다.</li>
+      <li>그래서 <b>작성은 병렬, 검증은 중앙 집중</b>으로 갈랐다. 에디터 락은 검증 시점에만 걸리므로 작업량의 대부분인 작성 구간은 그대로 병렬로 열린다.</li>
+      <li>자르는 축을 파일 종류가 아니라 <b>컨텐츠 도메인</b>으로 잡았다. 스키마와 그걸 읽는 코드가 한 레인 안에 통째로 들어온다.</li>
+      <li>충돌은 경고가 아니라 <b>배분</b>으로 막는다. 공유 등록 파일은 메인이 미리 선점해 커밋한 뒤 계약서에 적어 넘긴다 — 워커 손에 충돌할 파일 자체가 쥐어지지 않는다.</li>
+    </ul>
+    <div class="highlight">
+      <p>
+        <b>미리 잡아둔 함정 하나:</b> 워크트리 안에서 검증 명령을 부르면 실행 중인 에디터가 열고 있는 원본이 검증된다.
+        병렬을 켜기 전에 막을 지점으로 문서에 명시해뒀다.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. 다음 확장</h2>
+    <p>
+      <b>외부 모델 교차검증</b> — 자리는 이미 준비돼 있다. ① 커밋 직전 게이트: 서브에이전트는 각자 새 컨텍스트라
+      서로의 실제 시그니처를 못 보고 코드를 쓰는데, 여기에 다른 모델의 독립 판정을 겹치면 같은 맹점을 공유하지 않는다.
+      ② 경쟁 레인의 diff 판독. 두 지점 모두 <b>종료 코드로 판정하는 검증 명령이 함께 서면 곧바로 값어치가 난다.</b>
+    </p>
+    <p>
+      <b>로컬 LLM 결합</b> — 토큰 절약 방향은 타당하다. 다만 꽂는 위치는 서브에이전트가 아니라 <b>훅 / CLI 파이프라인</b>이다
+      (이미 세션 시작 · 매 프롬프트 · 세션 종료 세 지점에서 스크립트가 돌고 있어 그대로 확장 가능).
+      판단이 아닌 <b>생성·변환</b> 구간부터 옮기면 효과가 바로 나온다.
+    </p>
+    <ul>
+      <li><b>커밋 메시지 · 작업 요약</b> — 짧고 diff로 즉시 대조되니 가장 먼저 옮길 후보.</li>
+      <li><b>class / prefab 기록 md 초안</b> — 포맷이 고정이라 로컬 생성에 적합. 확정만 중앙이 맡는다.</li>
+      <li><b>규칙 위반 스캔</b> — 규칙이 표로 명시돼 있어 정규식·린터와 조합하면 더 싸게 끝난다.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>5. 로드맵</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th style="width: 12%;">순서</th><th style="width: 32%;">할 일</th><th>얻는 것</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="step">STEP 1</td><td class="key">verify-compile / verify-tables를 CLI 명령으로</td>
+            <td class="sub">병렬 착수 조건 · 외부 모델 판정 · 로컬 LLM 산출물 검수가 한 번에 열린다.</td></tr>
+          <tr><td class="step">STEP 2</td><td class="key">커밋 게이트에 두 번째 눈 추가</td>
+            <td class="sub">서로 다른 모델의 독립 판정으로 맹점을 분산. 산출물은 "고칠 파일:줄" 목록.</td></tr>
+          <tr><td class="step">STEP 3</td><td class="key">로컬 LLM을 훅 파이프라인에</td>
+            <td class="sub">정형 작업이 로컬로 내려가며 장기 토큰 비용이 줄어든다.</td></tr>
+          <tr><td class="step">STEP 4</td><td class="key">레인 2개로 병렬 계약 실측</td>
+            <td class="sub">이미 완성된 분할 계약을 실제 실행으로 확정한다.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <div>근거: 루트 규칙 문서 4종, ParallelWorkContract.MD, README.md, Unity\README.md, .claude\settings.json, agents\ · hooks\ 실제 파일, 프로젝트별 .claude 기록 집계</div>
+  </footer>
+
+</div>

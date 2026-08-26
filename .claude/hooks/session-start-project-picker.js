@@ -117,7 +117,7 @@ function buildScreenMessage(rows) {
     for (let index = 0; index < rows.length; index++) {
         const row = rows[index];
         const marker = (row.isRegistered === true) ? '★' : ' ';
-        lines.push(`${String(index + 1).padStart(2)}. ${marker} ${formatDate(row.modified)}  ${row.version.padEnd(12)}  ${row.title}`);
+        lines.push(`${String(index + 1).padStart(2)}. ${marker} ${row.version.padEnd(12)}  ${row.title}`);
         if (row.isRegistered === true)
             lines.push(`         └ 미완료: ${summarizeUnfinished(row.path)}`);
     }

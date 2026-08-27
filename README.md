@@ -1,6 +1,6 @@
 # Orca 워크스페이스
 
-**이게 뭔가:** 이 저장소는 Unity 게임 프로젝트(GeometryDefender, HouseRulez)를 Claude Code + Orca 앱으로 관리하기 위한 **메타 작업공간**이다. 게임 코드 자체는 여기 없다(각 Unity 프로젝트 폴더에 따로 있음) — 여긴 코딩 규칙, 서브에이전트 정의, 프로젝트 문서(class/prefab/design/qa), 실행 스크립트, 운용 원칙 문서를 모아둔 곳이다.
+**이게 뭔가:** 이 저장소는 Unity 게임 프로젝트(GeometryDefender, HouseRulez)를 Claude Code·Codex + Orca 앱으로 관리하기 위한 **메타 작업공간**이다. 게임 코드 자체는 여기 없다(각 Unity 프로젝트 폴더에 따로 있음) — 여긴 코딩 규칙, 에이전트 역할 계약, 프로젝트 문서(class/prefab/design/qa), 실행 스크립트, 운용 원칙 문서를 모아둔 곳이다.
 
 **작성일:** 2026-08-22
 **GitHub:** https://github.com/purityzero/Orca (private) — 여러 PC에서 이 폴더를 clone해서 같은 상태로 이어 쓸 수 있다.
@@ -51,9 +51,10 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 <ORCA>\
 ├── README.md                    ← 이 문서 (전체 사용법)
 ├── CLAUDE.md                    ← 행동 지침 (같이 읽을 파일: CODE/PREFAB/AGENT)
+├── CODEX.md                     ← Codex가 우선 소유하는 작업과 완료 조건
 ├── CODE.MD                      ← C#/Unity 코딩 규칙 (네이밍, 스타일 등)
 ├── PREFAB.MD                    ← 프리팹/UI 컴포넌트 규칙
-├── AGENT.MD                     ← 서브에이전트 8개 라우팅 기준(누구를 언제 부를지)
+├── AGENT.MD                     ← Codex/Claude 실행자 선택 + Claude 서브에이전트 라우팅
 │
 ├── ParallelWorkContract.MD      ← Orca 모델·Unity 제약·병렬 레인 분할/평가 계약 (Main→워커 핸드오프 규격)
 │
@@ -71,7 +72,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 ├── WorkBranch.ps1               ← 브랜치 시작/병합 스크립트 본체
 ├── WorkBranch.cmd               ← 브랜치 스크립트 진입점
 │
-├── agents\                      ← 서브에이전트 정의 8개, **마스터**
+├── agents\                      ← Claude 서브에이전트 정의 9개 + 진단용 test-echo, **마스터**
 │   ├── code-architect.md        (설계, opus/high)
 │   ├── code-writer.md           (구현, sonnet/low)
 │   ├── client-bugfixer.md       (버그 수정-큰 범위, sonnet/medium)
@@ -88,7 +89,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 └── Unity\                       ← 프로젝트별 문서 사본 (정본은 여기)
     ├── README.md                ← 이 폴더 전용 상세 설명(마스터-사본 규칙, 동기화 함정)
     ├── GeometryDefender\.claude\
-    │   ├── agents\ (8)           ← 마스터 + 이 프로젝트 전용 노하우 병합본
+    │   ├── agents\                ← 마스터 + 이 프로젝트 전용 노하우 병합본
     │   ├── class\ (100+)         ← 클래스별 기록
     │   ├── prefab\ (20+)         ← 프리팹별 기록
     │   ├── design\ (5)           ← 기획 스펙
@@ -97,7 +98,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
     │   ├── UNFINISHED.md         ← 이 프로젝트(GeometryDefender)의 미완료 작업
     │   └── settings.local.json
     └── HouseRulez\.claude\
-        ├── agents\ (8)
+        ├── agents\
         ├── class\ (5)
         ├── rules\glory.md
         ├── UNFINISHED.md         ← 이 프로젝트(HouseRulez)의 미완료 작업
@@ -117,7 +118,8 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 
 | 문서 | 언제 읽나 |
 |---|---|
-| `CLAUDE.md`/`CODE.MD`/`PREFAB.MD`/`AGENT.MD` | 어떤 세션이든 항상(자동 로드) — 코딩/행동 규칙 |
+| `CLAUDE.md`/`CODEX.md`/`CODE.MD`/`PREFAB.MD`/`AGENT.MD` | 작업 에이전트에 맞춰 읽는 행동·코딩·라우팅 규칙 |
+| `CODEX.md` | 저장소 분석, 자동화, 테스트, 리팩터링, 문서 정합성 작업을 Codex에 배정할 때 |
 | 이 문서 §5 "알려진 이슈" | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |
 | `Unity\{P}\.claude\UNFINISHED.md` | 특정 프로젝트 작업 시작 시 |
 | `ParallelWorkContract.MD` | 레인 2개 이상으로 병렬 작업을 짤 때, 또는 Orca/Unity CLI 모델 자체를 다시 확인할 때 (특히 §11 이름 기반 소프트 락) |
@@ -137,6 +139,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 4. **MCP for Unity는 전역 자동연결 켜둠** — `MCPForUnity.AutoStartOnLoad`가 레지스트리(모든 프로젝트 공유)에 `true`로 설정돼 있어, 이 런처로 여는 어떤 프로젝트든 자동으로 서버가 뜬다. (`UnityLauncher.MD` §6)
 5. **검증 전 변경은 기본 브랜치에 올리지 않는다** — Unity 프로젝트의 동작을 바꾸는 수정은 `work/{날짜}-{주제}` 브랜치에서 하고, Play Mode 확인까지 끝난 뒤 `--no-ff`로 합류한다. (`WorkBranchFlow.MD`)
 6. **기록용 md 파일은 그 프로젝트가 없는 한 만들지 않는다** — 특정 프로젝트 얘기(클래스명, 파일명)를 이 루트의 공용 문서에 직접 섞지 않는다. `CLAUDE.md`의 "피드백 반영 프로세스" 참고.
+7. **Codex는 후속 처리 전용이 아니다** — 저장소 전체 분석·자동화·테스트·리팩터링·문서 정합성은 처음부터 Codex에 배정한다. Unity 에디터 전용 검증과 프로젝트별 Claude 노하우는 필요할 때 명시적으로 핸드오프한다. (`CODEX.md` 참고)
 
 ---
 

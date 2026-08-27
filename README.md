@@ -53,6 +53,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 <ORCA>\
 ├── README.md                    ← 이 문서 (전체 사용법)
 ├── Orca_사용설명서.html         ← 처음 사용자를 위한 브라우저용 실전 안내서
+├── AGENTS.md                    ← Codex가 세션 시작·대상 확정 후 읽을 문서를 지정하는 진입 지침
 ├── CLAUDE.md                    ← 행동 지침 (같이 읽을 파일: CODE/PREFAB/AGENT)
 ├── CODEX.md                     ← Codex가 우선 소유하는 작업과 완료 조건
 ├── CODE.MD                      ← C#/Unity 코딩 규칙 (네이밍, 스타일 등)
@@ -122,6 +123,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 | 문서 | 언제 읽나 |
 |---|---|
 | `Orca_사용설명서.html` | 처음 Orca를 쓰거나 전체 작업 흐름을 빠르게 훑을 때 — 브라우저에서 바로 열기 |
+| `AGENTS.md` | Codex 세션 시작 시 자동 적용되는 진입 지침 — 필수 공통 문서와 작업 대상별 추가 문서의 로드 순서를 정의 |
 | `CLAUDE.md`/`CODEX.md`/`CODE.MD`/`PREFAB.MD`/`AGENT.MD` | 작업 에이전트에 맞춰 읽는 행동·코딩·라우팅 규칙 |
 | `CODEX.md` | Codex 작업 배정, 내부 역할별 model/effort 선택, 완료 조건을 확인할 때 |
 | 이 문서 §5 "알려진 이슈" | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |

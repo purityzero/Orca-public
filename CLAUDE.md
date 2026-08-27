@@ -13,6 +13,7 @@ LLM이 코딩할 때 흔히 저지르는 실수를 줄이기 위한 행동 지�
 - `CODEX.md`에 정의된 저장소 전체 분석·자동화·테스트·리팩터링·문서 정합성 작업은 Codex의 우선 소유 영역이다. 해당 작업을 Claude Code에만 고정하지 않는다.
 - Codex와 협업하거나 비교 실행할 때는 `AGENT.MD`의 실행자 선택과 `ParallelWorkContract.MD`의 파일 소유권·평가 계약을 따른다.
 - Codex가 이미 소유한 파일을 동시에 수정하지 않는다. Unity MCP·Play Mode처럼 Claude Code가 맡은 배타 자원 검증 결과는 파일 변경과 분리해 전달한다.
+- 최종 stage·commit·merge·push와 병합 완료 브랜치 삭제는 Codex 메인 세션이 담당한다. Claude Code와 그 서브에이전트는 변경 파일, 검증 결과, 남은 위험을 보고하고 Git 마무리를 요청한다.
 
 ## 커뮤니케이션
 - 모든 대화는 한국어로

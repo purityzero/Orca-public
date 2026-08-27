@@ -329,7 +329,7 @@ MemoryPoolFactory<T, string>
 - 테스트 결과와 diff를 우선한다. 에이전트의 문장 설명은 근거가 아니다.
 - 둘 다 통과하면 변경 줄 수가 아니라 **원인 제거 여부**와 예외 처리 명확성으로 고른다.
 - 둘 다 실패하면 억지로 섞지 말고, 실패 로그를 새 worktree의 입력으로 넘긴다.
-- 채택한 브랜치만 stage → commit → push. 남은 worktree는 기록 확인 후 archive/삭제.
+- 채택 결과를 Codex 메인 세션에 인계한다. Codex가 stage → commit → merge → push를 수행하고, 포함 관계 확인 후 남은 worktree/브랜치를 archive 또는 삭제한다.
 - 기록 md는 **채택 후 원본에서 한 번만** 남긴다.
 
 ---

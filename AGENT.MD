@@ -17,6 +17,8 @@ Orca의 작업을 Codex 또는 Claude Code 서브에이전트에 배정하는 �
 - 한 작업을 Codex와 Claude Code가 비교 수행하면 동일한 목표·범위·성공 조건을 주고, 설명의 설득력이 아니라 테스트와 diff로 채택한다.
 - Codex와 Claude Code가 협업하면 파일 소유권을 먼저 나누고, Unity 에디터 검증은 한 번에 하나만 수행한다. 상세는 `ParallelWorkContract.MD`를 따른다.
 
+Codex로 배정한 뒤에는 `CODEX.md` §2의 프로필로 model/effort를 고른다. 기본 대응은 복잡한 설계·감사=`gpt-5.6-sol/high`, 일반 구현·문서=`gpt-5.6-terra/medium`, 명확한 국소 수정=`gpt-5.6-luna/low`다. 서브에이전트가 필요 없는 단일 흐름은 Codex 메인 세션이 직접 끝낸다.
+
 ## Claude Code 서브에이전트 감독 방식
 별도 감독 에이전트를 따로 두지 않는다 — **Claude Code 메인 세션이 아래 기준으로 분류해 맞는 서브에이전트를 순차로(병렬 아님) 호출**한다. Codex 작업은 이 표 밖에서 `CODEX.md`에 따라 직접 수행한다.
 

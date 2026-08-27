@@ -119,7 +119,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 | 문서 | 언제 읽나 |
 |---|---|
 | `CLAUDE.md`/`CODEX.md`/`CODE.MD`/`PREFAB.MD`/`AGENT.MD` | 작업 에이전트에 맞춰 읽는 행동·코딩·라우팅 규칙 |
-| `CODEX.md` | 저장소 분석, 자동화, 테스트, 리팩터링, 문서 정합성 작업을 Codex에 배정할 때 |
+| `CODEX.md` | Codex 작업 배정, 내부 역할별 model/effort 선택, 완료 조건을 확인할 때 |
 | 이 문서 §5 "알려진 이슈" | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |
 | `Unity\{P}\.claude\UNFINISHED.md` | 특정 프로젝트 작업 시작 시 |
 | `ParallelWorkContract.MD` | 레인 2개 이상으로 병렬 작업을 짤 때, 또는 Orca/Unity CLI 모델 자체를 다시 확인할 때 (특히 §11 이름 기반 소프트 락) |
@@ -140,6 +140,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 5. **검증 전 변경은 기본 브랜치에 올리지 않는다** — Unity 프로젝트의 동작을 바꾸는 수정은 `work/{날짜}-{주제}` 브랜치에서 하고, Play Mode 확인까지 끝난 뒤 `--no-ff`로 합류한다. (`WorkBranchFlow.MD`)
 6. **기록용 md 파일은 그 프로젝트가 없는 한 만들지 않는다** — 특정 프로젝트 얘기(클래스명, 파일명)를 이 루트의 공용 문서에 직접 섞지 않는다. `CLAUDE.md`의 "피드백 반영 프로세스" 참고.
 7. **Codex는 후속 처리 전용이 아니다** — 저장소 전체 분석·자동화·테스트·리팩터링·문서 정합성은 처음부터 Codex에 배정한다. Unity 에디터 전용 검증과 프로젝트별 Claude 노하우는 필요할 때 명시적으로 핸드오프한다. (`CODEX.md` 참고)
+8. **Codex model/effort는 작업 난도로 고른다** — 설계·감사는 Sol/high, 일반 구현·문서는 Terra/medium, 국소 수정은 Luna/low를 기본값으로 쓰되, 무조건 최고 effort를 선택하지 않는다. (`CODEX.md` §2 참고)
 
 ---
 

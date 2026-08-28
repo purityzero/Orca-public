@@ -212,7 +212,7 @@ worktree-A의 에이전트가 자기 폴더를 고친 뒤 검증 명령을 돌�
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-> `<verify-compile>`/`<verify-tables>`는 아직 실제로 만들지 않았다(README.md 부록 A의 `CliCommand` 메커니즘으로 구현 예정) — 각 프로젝트 `UNFINISHED.md`의 최우선 항목.
+> HouseRulez에서는 2026-08-28 실제 구현·검증 완료. 원본 에디터가 변경을 import/compile해 idle이 된 뒤 `unity command verify-compile --project-path <원본:HouseRulez>`과 `unity command verify-tables --project-path <원본:HouseRulez>`를 실행한다. 두 명령 모두 성공 종료 코드 0, 의도적 오류를 넣은 실패 경로 종료 코드 6을 확인했다. 다른 프로젝트에는 프로젝트 구조에 맞는 `CliCommand`를 별도로 구현해야 한다.
 
 ---
 
@@ -409,7 +409,7 @@ Agent를 스폰할 때 `name`을 대상 식별자로 짓는다 — 기존 `.clau
 - 워커의 blocking ask/reply로 Main에 선점 추가를 요청하는 흐름
 - 레인 diff의 소유 목록 부분집합 검사를 자동화할 방법 (현재는 수동 `git diff --name-only`)
 - 병합 후 1회 검증이 레인별 검증을 실제로 대체 가능한지 (레인 간 상호작용 버그를 놓칠 가능성)
-- HouseRulez에서 Unity CLI `1.0.0-beta.6` + Pipeline `0.5.0-exp.1` 연결은 검증 완료(2026-08-28): 에디터 재시작 후 `unity status`가 `ready`, `unity command editor_status` 성공. `unity doctor`는 연결 판정 명령이 아니라 환경 진단 명령임을 실측으로 정정
+- HouseRulez에서 Unity CLI `1.0.0-beta.6` + Pipeline `0.5.0-exp.1` 연결과 `verify-compile`/`verify-tables` 성공·실패 종료 코드 검증 완료(2026-08-28). `unity doctor`는 연결 판정 명령이 아니라 환경 진단 명령임을 실측으로 정정
 - GeometryDefender에서도 같은 CLI/Pipeline 연결 절차가 동작하는지
 - MCP 브릿지 멀티 인스턴스 지원 여부 (§2 참고, `README.md` §5에 기록됨)
 

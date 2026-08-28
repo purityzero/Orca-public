@@ -213,7 +213,14 @@ unity "$PWD"
 
 Unity CLI(`unity install/doctor/pipeline`)는 이미 실행 중인 에디터를 셸에서 제어할 수 있어(Pipeline), Unity 에디터 락과 경쟁하지 않고 검증이 가능하다. **`CliCommand` 속성**(C# 정적 메서드에 부착)으로 프로젝트 전용 검증 명령을 노출하면, `ParallelWorkContract.MD` §5/§10의 `<verify-compile>`/`<verify-tables>`를 실제 종료 코드로 판정하는 CLI 명령으로 만들 수 있다.
 
-**2026-08-28 HouseRulez 실측:** Windows `winget install Unity.CLI`로 CLI `1.0.0-beta.6`을 설치했고, 프로젝트에는 `com.unity.pipeline` `0.5.0-exp.1`을 추가했다. 패키지 추가 직후 실행 중이던 에디터에는 서버가 뜨지 않아 에디터를 한 번 재시작해야 했다. 재시작 뒤 `unity status --format json`이 `state: ready`, `unity command editor_status --project-path <원본:HouseRulez> --format json`이 성공했고 Pipeline 서버는 `127.0.0.1:7800`에서 응답했다. `unity doctor`는 CLI/PATH/에디터 설치 환경 진단용이며, 실행 중인 Pipeline 연결 판정은 `unity status` 또는 `unity pipeline list`로 해야 한다. 아직 남은 일은 HouseRulez 프로젝트 전용 `verify-compile`/`verify-tables` 명령 구현이다.
+**2026-08-28 HouseRulez 실측:** Windows `winget install Unity.CLI`로 CLI `1.0.0-beta.6`을 설치했고, 프로젝트에는 `com.unity.pipeline` `0.5.0-exp.1`을 추가했다. 패키지 추가 직후 실행 중이던 에디터에는 서버가 뜨지 않아 에디터를 한 번 재시작해야 했다. 재시작 뒤 `unity status --format json`이 `state: ready`, `unity command editor_status --project-path <원본:HouseRulez> --format json`이 성공했고 Pipeline 서버는 `127.0.0.1:7800`에서 응답했다. `unity doctor`는 CLI/PATH/에디터 설치 환경 진단용이며, 실행 중인 Pipeline 연결 판정은 `unity status` 또는 `unity pipeline list`로 해야 한다.
+
+HouseRulez의 프로젝트 전용 명령도 구현 완료했다. 둘 다 성공 시 종료 코드 0, 의도적 오류를 넣은 실패 검증에서 종료 코드 6을 반환했다. `verify-compile`은 컴파일을 새로 요청하는 명령이 아니라 **Unity가 변경을 import/compile해 idle이 된 뒤 최신 컴파일 결과를 판정**하는 명령이다.
+
+```powershell
+unity command verify-compile --project-path "<원본:HouseRulez>" --format json
+unity command verify-tables --project-path "<원본:HouseRulez>" --format json
+```
 
 주의: `eval`은 임의 C# 실행이라 신뢰할 수 없는 입력에 노출 금지, experimental이라 의존하는 자동화는 얇게 유지.
 
@@ -233,7 +240,7 @@ Unity CLI(`unity install/doctor/pipeline`)는 이미 실행 중인 에디터를 
   - [ ] `unity install <프로젝트 버전>` / `unity pipeline install`
   - [ ] `unity doctor`로 CLI/PATH/에디터 설치 환경 확인
   - [ ] `unity status`와 `unity pipeline list`로 실행 중인 에디터 및 Pipeline 서버 연결 확인 ← 갈림길, 안 붙으면 에디터 재시작 후 재확인하고 그래도 실패하면 EditMode 테스트 + CI 사본 경로로 우회
-  - [ ] 위 검증 2개를 `CliCommand`로 노출
+  - [ ] 위 검증 2개를 `CliCommand`로 노출 (HouseRulez는 2026-08-28 완료, 신규 프로젝트마다 별도 구현 필요)
 - [ ] **4. MCP 브릿지**
   - [ ] `mcpforunity://instances`로 멀티 인스턴스 지원 여부 확정 (`ParallelWorkContract.MD` §2)
   - [ ] 단일 인스턴스뿐이면 "한 번에 Unity 하나" 규칙을 문서·훅에 명시

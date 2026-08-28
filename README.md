@@ -211,7 +211,9 @@ unity "$PWD"
 
 ### Unity CLI — `verify-compile`/`verify-tables` 구현 메커니즘
 
-Unity CLI(`unity install/doctor/pipeline`)는 이미 실행 중인 에디터를 셸에서 제어할 수 있어(Pipeline), Unity 에디터 락과 경쟁하지 않고 검증이 가능하다. **`CliCommand` 속성**(C# 정적 메서드에 부착)으로 프로젝트 전용 검증 명령을 노출하면, `ParallelWorkContract.MD` §5/§10의 `<verify-compile>`/`<verify-tables>`를 실제 종료 코드로 판정하는 CLI 명령으로 만들 수 있다 — 아직 Unity CLI 자체가 미설치라 각 프로젝트 `UNFINISHED.md`의 최우선 미적용 항목으로 남아있음.
+Unity CLI(`unity install/doctor/pipeline`)는 이미 실행 중인 에디터를 셸에서 제어할 수 있어(Pipeline), Unity 에디터 락과 경쟁하지 않고 검증이 가능하다. **`CliCommand` 속성**(C# 정적 메서드에 부착)으로 프로젝트 전용 검증 명령을 노출하면, `ParallelWorkContract.MD` §5/§10의 `<verify-compile>`/`<verify-tables>`를 실제 종료 코드로 판정하는 CLI 명령으로 만들 수 있다.
+
+**2026-08-28 HouseRulez 실측:** Windows `winget install Unity.CLI`로 CLI `1.0.0-beta.6`을 설치했고, 프로젝트에는 `com.unity.pipeline` `0.5.0-exp.1`을 추가했다. 패키지 추가 직후 실행 중이던 에디터에는 서버가 뜨지 않아 에디터를 한 번 재시작해야 했다. 재시작 뒤 `unity status --format json`이 `state: ready`, `unity command editor_status --project-path <원본:HouseRulez> --format json`이 성공했고 Pipeline 서버는 `127.0.0.1:7800`에서 응답했다. `unity doctor`는 CLI/PATH/에디터 설치 환경 진단용이며, 실행 중인 Pipeline 연결 판정은 `unity status` 또는 `unity pipeline list`로 해야 한다. 아직 남은 일은 HouseRulez 프로젝트 전용 `verify-compile`/`verify-tables` 명령 구현이다.
 
 주의: `eval`은 임의 C# 실행이라 신뢰할 수 없는 입력에 노출 금지, experimental이라 의존하는 자동화는 얇게 유지.
 
@@ -229,7 +231,8 @@ Unity CLI(`unity install/doctor/pipeline`)는 이미 실행 중인 에디터를 
   - [ ] `verify-tables` — 데이터 파일 헤더 ↔ 코드 필드명 대조 (존재하지 않는 컬럼도 에러 없이 기본값을 반환하는 파서가 많아 자동 검증 1순위)
 - [ ] **3. Unity CLI** (부록 A 참고)
   - [ ] `unity install <프로젝트 버전>` / `unity pipeline install`
-  - [ ] `unity doctor`로 실행 중인 에디터에 실제로 붙는지 확인 ← 갈림길, 안 붙으면 EditMode 테스트 + CI 사본 경로로 우회
+  - [ ] `unity doctor`로 CLI/PATH/에디터 설치 환경 확인
+  - [ ] `unity status`와 `unity pipeline list`로 실행 중인 에디터 및 Pipeline 서버 연결 확인 ← 갈림길, 안 붙으면 에디터 재시작 후 재확인하고 그래도 실패하면 EditMode 테스트 + CI 사본 경로로 우회
   - [ ] 위 검증 2개를 `CliCommand`로 노출
 - [ ] **4. MCP 브릿지**
   - [ ] `mcpforunity://instances`로 멀티 인스턴스 지원 여부 확정 (`ParallelWorkContract.MD` §2)

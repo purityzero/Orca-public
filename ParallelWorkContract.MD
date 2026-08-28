@@ -409,7 +409,8 @@ Agent를 스폰할 때 `name`을 대상 식별자로 짓는다 — 기존 `.clau
 - 워커의 blocking ask/reply로 Main에 선점 추가를 요청하는 흐름
 - 레인 diff의 소유 목록 부분집합 검사를 자동화할 방법 (현재는 수동 `git diff --name-only`)
 - 병합 후 1회 검증이 레인별 검증을 실제로 대체 가능한지 (레인 간 상호작용 버그를 놓칠 가능성)
-- `unity doctor`가 실행 중인 에디터에 실제로 붙는지 (CLI 자체가 미설치라 확인 못함)
+- HouseRulez에서 Unity CLI `1.0.0-beta.6` + Pipeline `0.5.0-exp.1` 연결은 검증 완료(2026-08-28): 에디터 재시작 후 `unity status`가 `ready`, `unity command editor_status` 성공. `unity doctor`는 연결 판정 명령이 아니라 환경 진단 명령임을 실측으로 정정
+- GeometryDefender에서도 같은 CLI/Pipeline 연결 절차가 동작하는지
 - MCP 브릿지 멀티 인스턴스 지원 여부 (§2 참고, `README.md` §5에 기록됨)
 
 ---

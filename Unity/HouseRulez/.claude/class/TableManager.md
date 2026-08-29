@@ -18,3 +18,9 @@ GeometryDefender 프로젝트의 `Assets/Scripts/Glory/` 전체를 HouseRulez로
 
 ### 검증 상태 — 미검증
 Unity 에디터로 실제 컴파일 확인 안 됨(파일 시스템 조작만 수행). 다음 세션에서 에디터를 열어 컴파일 에러 0건인지, `UITable`/`SoundTable`/`ToggleListTable`/`ToggleMenuTable` 조회가 정상 동작(빈 테이블이라도 예외 없이)하는지 확인 필요.
+
+## 2026-08-29-0 — `HouseUpgradeTable` 등록
+
+종족별 영구 메타 업그레이드의 읽기 전용 골격을 위해 `init()`에 `HouseUpgradeTable.csv` 로드, `HouseUpgradeTable` 생성, 타입 딕셔너리 등록을 추가했다. CSV는 승인된 노드가 없어 헤더만 있다.
+
+`verify-compile`과 `verify-tables`를 통과했으며 테이블 검증 대상은 총 10개다.

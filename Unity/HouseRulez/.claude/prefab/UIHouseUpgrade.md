@@ -205,3 +205,45 @@ En/Cn/Jp도 같은 길이로 줄였다.
 - 자식의 world corner가 패널 밖으로 벗어남
 
 **QA 교훈**: 이전 검증은 "내가 의심한 항목"만 봤다. 전 종족 × 전 노드 × 전 텍스트를 **기계 판정으로 훑었어야** 했다 — 한 종족만 눈으로 보면 다른 종족의 같은 결함이 그대로 남는다.
+
+## 2026-08-29-5 — 우측 칸 정렬과 영어 이름 잘림
+
+### MAX LEVEL과 비용이 줄마다 어긋나던 이유
+
+최대 레벨 줄은 `CostText`를 `SetActive(false)`로 껐다. 레이아웃 그룹은 **비활성 자식을 아예 세지 않으므로** 그 폭(200)과 간격(8)만큼 오른쪽 칸이 통째로 당겨졌다. 게다가 `MaxText`는 폭 200·Center, `UpgradeButton`은 폭 160이라 기준선도 달랐다.
+
+**수정**
+- `CostText`는 최대 레벨에서도 **끄지 않고 문자열만 비운다.** 칸이 유지되어 열이 고정된다.
+- `MaxText` 폭을 버튼과 같은 **160**으로 맞추고 자식 순서를 `UpgradeButton` **뒤**로 옮겼다. 둘은 배타이므로 항상 같은 슬롯을 차지한다.
+
+결과: 일반 줄과 최대 줄의 합계가 둘 다 `1124`, 우측 칸 위치가 `@1028(w160)`으로 동일하다.
+
+| 칸 | 시작 X | 폭 |
+|---|---|---|
+| NameText | 126 | 220 |
+| DescText | 414 | 340 |
+| LevelText | 662 | 140 |
+| CostText | 840 | 200 |
+| UpgradeButton / MaxText | **1028** | **160** |
+
+### 영어 이름 잘림
+
+`Stronghold Reinforcement`가 360으로 220 칸을 넘어 4종족에서 말줄임됐다(`Ellipsis` 덕에 흐르지는 않았다). `Stronghold HP`로 줄였다.
+
+**한국어만 보고 끝내면 안 된다** — 같은 칸에 4개 언어가 들어간다.
+
+### 전수 판정 — 4언어 × 6종족, 문제 0건
+
+판정 항목: 가로/세로 넘침, 행 이탈, 패널 이탈, **줄 간 우측 칸 위치 일치**.
+
+```
+[Korean]  옥새 42
+  본거지 보강    런 시작 본거지 HP 증가   Lv 2/2              MAX LEVEL
+  스핀 코인      연차당 스핀 코인 증가     Lv 3/3              MAX LEVEL
+  스왑 횟수      연차당 스왑 횟수 증가     Lv 0/3   옥새 3      [강화]
+
+[English] Royal Seal 42
+  Stronghold HP  Starting stronghold HP   Lv 2/2              MAX LEVEL
+  Spin Coins     Spin coins per year      Lv 3/3              MAX LEVEL
+  Swap Count     Swaps per year           Lv 0/3   3 Seals    [Upgrade]
+```

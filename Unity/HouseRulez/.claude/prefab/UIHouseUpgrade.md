@@ -154,3 +154,54 @@ Lv 3/3  (숨김)   MAX LEVEL   royal 56
 ```
 
 전 구간 `잘림=아니오`, 차감액이 비용과 일치, 창열림 유지.
+
+## 2026-08-29-4 — 설명 텍스트가 상자 밖으로 삐져나감
+
+사용자 지적(체스 스왑 횟수). 6종족 전 노드를 전수 측정하니 **10건 전부 같은 원인**이었다.
+
+`DescText`는 `HouseButtonTemplate`의 `Locked`("미해금") 복제다. 짧은 라벨이라 원본은 **`textWrappingMode = NoWrap` + `overflowMode = Overflow`**였고, 그 설정이 그대로 따라왔다. 그래서 340 상자에 418이 필요한 문구가 **접히지도 잘리지도 않고 그대로 밖으로 흘렀다.**
+
+### 수정 두 겹
+
+**(1) 문구 단축** — `StringTable`
+
+| 키 | 이전 | 이후 |
+|---|---|---|
+| `HouseUpgradeHomeHpDesc` | 런 시작 본거지 HP가 늘어난다 | 런 시작 본거지 HP 증가 |
+| `HouseUpgradeSpinCoinDesc` | 연차마다 주어지는 스핀 코인이 늘어난다 | 연차당 스핀 코인 증가 |
+| `HouseUpgradeSwapDesc` | 연차마다 주어지는 스왑 횟수가 늘어난다 | 연차당 스왑 횟수 증가 |
+| `HouseUpgradeStartGoldDesc` | 런 시작 골드가 늘어난다 | 런 시작 골드 증가 |
+
+En/Cn/Jp도 같은 길이로 줄였다.
+
+**(2) 넘침 자체를 불가능하게** — `NodeTemplate`의 텍스트 5개
+
+| 오브젝트 | wrap | overflow |
+|---|---|---|
+| `DescText` | Normal | Ellipsis |
+| `NameText` / `LevelText` / `CostText` / `MaxText` | NoWrap | Ellipsis |
+
+문구만 줄이면 다음에 긴 문자열이나 다른 언어가 들어올 때 같은 증상이 재발한다. **`Overflow`는 어떤 텍스트에도 두지 않는다** — 넘치면 접히거나 말줄임되어야지 밖으로 흐르면 안 된다.
+
+### 복제 오염 3종 정리
+
+`UpgradeButton`/`MaxText`/`DescText` 모두 복제로 만들었고, 셋 다 원본의 무언가를 물고 왔다.
+
+| 무엇이 딸려왔나 | 어디서 |
+|---|---|
+| UnityEvent 영구 호출 | `CloseButton` → `UpgradeButton` (2026-08-29-2) |
+| 텍스트 내용 | `CloseButton`/`NameText` → `UpgradeButton`/`MaxText` (2026-08-29-2) |
+| TMP 줄바꿈·넘침 설정 | `Locked` → `DescText` (여기) |
+
+**복제로 오브젝트를 만들면 이벤트·텍스트·컴포넌트 설정 세 가지를 모두 확인한다.** 이름과 위치만 바꿔놓고 넘어가면 원본의 성격이 계속 남는다.
+
+### 재검증 — 전수 자동 판정
+
+6종족 × 각 3노드의 모든 텍스트에 대해 다음을 기계 판정했고 **문제 0건**이다.
+
+- `preferredWidth > rect.width` (가로 넘침)
+- `preferredHeight > rect.height` (세로 넘침)
+- 자식의 world corner가 행 밖으로 벗어남
+- 자식의 world corner가 패널 밖으로 벗어남
+
+**QA 교훈**: 이전 검증은 "내가 의심한 항목"만 봤다. 전 종족 × 전 노드 × 전 텍스트를 **기계 판정으로 훑었어야** 했다 — 한 종족만 눈으로 보면 다른 종족의 같은 결함이 그대로 남는다.

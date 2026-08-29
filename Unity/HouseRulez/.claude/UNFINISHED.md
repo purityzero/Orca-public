@@ -1,5 +1,19 @@
 # 미완료 작업
 
+## 2026-08-29-0 — Git 마무리 상태 (브랜치 정리 완료)
+
+HouseRules `main` 병합 커밋 `d6ab769`까지 원격 푸시 완료. 병합 후에도 `verify-compile`과 `verify-tables`(10개) 통과를 확인했다.
+Orca 정본 문서는 `5b17beb`로 별도 커밋해 푸시했다(사용자 미커밋 변경인 루트 `CLAUDE.md`는 제외).
+
+`main`에 병합되고 푸시까지 끝난 작업 브랜치 4개를 로컬·원격 모두 삭제했다 — `work/2026-08-28-house-upgrade`(`67bd379`),
+`work/2026-08-28-qa-toolbar-api`(`153f387`), `work/2026-08-28-settings-popup`(`8f09cb7`), `work/2026-08-28-unity-pipeline`(`f0d0913`).
+
+**남아 있는 것**
+- `work/2026-08-28-ingame-canvas-fit` — **미병합**, 커밋 1개(`eac6d6e` InGame Canvas 레이아웃을 1920x1080에 맞춤).
+  사람 눈 확인 전이라 로컬·원격 모두 유지한다.
+- HouseRules 작업 트리 미커밋 — `ProjectSettings.asset`의 `runInBackground: 0 → 1` 한 줄.
+  `Assets/font/*.asset` 2개는 내용 차이 없이 CRLF 정규화 경고만 뜨는 것이다.
+
 ## 2026-08-28-4 — 기획 문서 HTML 정본 전환
 
 완료. HouseRulez의 기존 `.claude/design/*.md` 기획 문서 6개를 UTF-8 단독 HTML로 교체했다. 문서마다 목차, heading anchor, 반응형 표/코드블록, 인쇄 스타일을 적용했고 기획 문서 간 링크와 역할 에이전트의 산출물 규칙도 `.html` 기준으로 변경했다.

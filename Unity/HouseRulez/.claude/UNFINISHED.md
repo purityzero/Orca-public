@@ -1,5 +1,28 @@
 # 미완료 작업
 
+## 2026-08-29-1 — 종족별 업그레이드 콘텐츠 (브랜치 `work/2026-08-29-upgrade-content`, 커밋 없음)
+
+M-2~M-6을 사용자 승인으로 확정하고 노드 데이터·영구 재화·구매·런 반영까지 구현했다. **기계 검증과 Play Mode 실측은 통과했고, 사람 눈 확인만 남았다.**
+
+**확정된 결정** (기획 정본 `.claude/design/upgrade-system.html`, 설계 `.claude/architecture/house-upgrade.md`)
+- M-2 선형 단계 목록 / M-3 단일 공용 재화 "옥새" / M-4 런 시작값 4축 중 종족별 3축 / M-5 재분배 없음 / M-6 현재 플레이 종족
+
+**구현**
+- `eCurrencyType.Royal`, `PlayerData.royal`·`TryPurchaseHouseUpgrade()`(원자적), `PlayerManager` 구매·보너스 API
+- `HouseUpgradeTable.csv` 48행(종족당 3노드 / 8레벨 / 8행 / 51옥새 균일), `GameConfigTable` 옥새 키 2개, `StringTable` 12행
+- `RunData.Init()`에서 메타 스냅샷 1회 반영, `UIHouseUpgradeNode` 신규 + 팝업 프리팹에 노드 목록·옥새 표시 추가
+
+**검증 통과**: `verify-compile` exit 0, `verify-tables` exit 0(10개), Play Mode에서 탭별 노드 구성 상이·구매·잔액 부족 거절·최대 레벨 표시·저장 유지·`RunData` 반영·유령 보너스 없음 실측.
+
+**남은 것**
+- **사람 눈 확인** — 노드 줄 배치·가독성·잘림을 아직 본 적이 없다. 통과해야 `main` 합류.
+- `RunData.GetRoyalReward()`에 **호출부가 없다** — 런 종료 단계 자체가 없어서다. 종료 처리가 생기면 `PlayerManager.AddRoyal()`로 연결(코드에 `TODO`).
+- 스핀 코인 3→6이 4축 중 가장 강한데 전투·판정이 없어 실측 불가. 판정기가 붙은 뒤 재조정 대상.
+- 종족 고유 기구(`HoldMax`·판돈·`PoolCount`)는 밸런스 시뮬레이션 수단이 없어 이번 범위에서 제외했다. 유닛 시스템 이후 M-4 2차.
+- 테이블에서 뺀 노드가 저장본에 남는다(개발 중 저장본 한정, 유령 보너스는 안 생김). 출시 전 마이그레이션 필요 여부 판단.
+
+**작업 메모**: `manage_gameobject`가 비활성 오브젝트를 못 잡는다(`by_path`·`by_id` 둘 다). 비활성 템플릿 내부 작업은 `execute_code`로 프리팹 스테이지를 직접 잡는 쪽이 왕복이 훨씬 적다 — 상세는 `.claude/prefab/UIHouseUpgrade.md`.
+
 ## 2026-08-29-0 — Git 마무리 상태 (브랜치 정리 완료)
 
 HouseRules `main` 병합 커밋 `d6ab769`까지 원격 푸시 완료. 병합 후에도 `verify-compile`과 `verify-tables`(10개) 통과를 확인했다.

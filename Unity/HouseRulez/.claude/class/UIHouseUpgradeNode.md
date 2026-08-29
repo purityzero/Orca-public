@@ -37,3 +37,19 @@ PREFAB.MD의 "비활성 사유가 여러 개인 화면은 사유별 오브젝트
 ### 검증
 
 `verify-compile` exit 0. Play Mode에서 구매·잔액 부족 거절·최대 레벨 표시 실측 확인.
+
+## 2026-08-29-1 — 문구를 코드에서 채운다
+
+`m_MaxObject`(GameObject)를 **`m_MaxText`(TextMeshProUGUI)**로 바꾸고 **`m_UpgradeButtonText`**를 추가했다. `SetData()`가 `_purchaseLabel`과 `_maxLabel`을 받아 매번 넣는다.
+
+**프리팹에 남은 텍스트를 믿지 않는다.** 이 오브젝트들은 다른 오브젝트를 복제해 만들었기 때문에, 코드가 손대지 않으면 복제 원본의 문구가 그대로 화면에 남는다 — 실제로 강화 버튼에 `X`, 최대 레벨 자리에 `종족`이 떴다. 현지화 대상이기도 하므로 문구는 전부 `StringTable`에서 온다.
+
+토글만 하고 문구를 안 넣는 필드는 이제 없다.
+
+검증: Play Mode에서 `onClick.Invoke()`로 실제 클릭해 버튼 `강화` / 최대 시 `MAX LEVEL` 표시 확인.
+
+## 2026-08-29-2 — 비용을 포맷된 문자열로 받는다
+
+`SetData()`의 `int _cost`를 **`string _costLabel`**로 바꿨다. 노드는 숫자를 받아 스스로 문자열로 만들지 않고, 이미 현지화·포맷된 문구를 받아 그대로 넣는다.
+
+맨숫자 `3`만 표시하니 옆의 `Lv 0/3`과 섞여 비용인지 알아볼 수 없다는 지적이 있었다. 포맷을 노드가 들고 있으면 언어별 어순(`옥새 {0}` vs `{0} Seals`)을 처리할 수 없으므로 `StringTable`을 아는 [[UIHouseUpgrade]]가 만들어 넘긴다.

@@ -82,3 +82,75 @@ MCP는 연결돼 있었지만 **`manage_gameobject`가 비활성 오브젝트를
 - 저장된 `.prefab` YAML에서 신규 오브젝트 9개와 `UIHouseUpgradeNode` 컴포넌트 존재를 grep으로 대조.
 - Play Mode: 6개 탭 전환 시 종족별 노드 구성 상이, 구매·잔액 부족 거절·최대 레벨 표시·저장 유지 실측.
 - **사람 눈 확인은 아직 안 받았다** — 배치·가독성·잘림은 미검증이다.
+
+## 2026-08-29-2 — 복제로 딸려온 오염 3건 수정
+
+`UpgradeButton`을 `CloseButton` 복제로 만든 대가를 사용자 플레이에서 받았다. **복제는 컴포넌트 구성을 보장해주지만, 원본의 이벤트와 텍스트까지 함께 가져온다.**
+
+| 증상 | 원인 | 수정 |
+|---|---|---|
+| 강화 버튼을 누르면 팝업이 닫힘 | `UpgradeButton`의 `m_OnClick`에 `UIHouseUpgrade.OnClickCloseButton` **영구 호출**이 복제돼 있었다 | 영구 호출 배열을 비웠다. 클릭은 `UIHouseUpgradeNode`가 런타임 `AddListener`로만 받는다 |
+| 버튼에 `X`가 표시됨 | `UpgradeButton/Label`의 `m_text`가 `"X"`인데 코드가 버튼 텍스트를 세팅하지 않았다 | `m_UpgradeButtonText` 필드를 추가해 `StringTable`의 `HouseUpgradePurchase`로 매번 덮어쓴다 |
+| 최대 레벨에 `종족`이 표시됨 | `MaxText`가 `NameText` 복제라 `m_text`가 `"종족"`. 코드는 켜고 끄기만 했다 | `m_MaxObject`(GameObject)를 `m_MaxText`(TMP)로 바꾸고 `HouseUpgradeMaxLevel`로 매번 덮어쓴다 |
+
+`HouseUpgradeMaxLevel` 문구를 `최대`/`MAX`에서 **`MAX LEVEL`**로 바꿨다.
+
+### 왜 앞선 검증이 이걸 못 잡았나 — 두 가지 구멍
+
+1. **표시 문자열을 안 읽었다.** `activeSelf`와 `interactable`만 확인해 "최대 레벨이면 MaxText가 켜진다"까지만 봤다. **켜진 오브젝트에 무엇이 쓰여 있는지**는 확인 대상이 아니었다.
+2. **콜백 메서드를 직접 불렀다.** `node.OnClickUpgradeButton()`을 호출했는데, 이건 UnityEvent를 거치지 않으므로 **영구 호출이 실행되지 않는다.** 실제 클릭과 다른 경로를 검증한 것이다.
+
+**앞으로 UI 검증은 이렇게 한다.**
+- 상태 플래그가 아니라 **화면에 실제로 들어간 문자열**을 읽는다.
+- 버튼은 콜백 메서드가 아니라 **`button.onClick.Invoke()`**로 누른다. 영구 호출까지 함께 도는 유일한 경로다.
+- 오브젝트를 복제해 만들었으면 **원본에 딸린 UnityEvent와 텍스트를 반드시 확인**한다. PREFAB.MD가 영구 호출은 읽기 리소스로 확인이 안 되니 저장 후 YAML을 grep하라고 적어둔 이유가 이것이다.
+
+### 재검증 (Play Mode, 실제 `onClick.Invoke`)
+- 프리팹 전체 Button 전수 조사: `CloseButton` 1건(`OnClickCloseButton`), `UpgradeButton` 0건, `HouseButtonTemplate` 0건 — 저장된 YAML에서도 동일 확인.
+- 체스에서 본거지 3연속 실제 클릭: 창열림 유지, 옥새 98→95→89→77(비용 3/6/12 정확), Lv3 도달 후 버튼·비용 숨김 + `MAX LEVEL` 표시.
+- 버튼 라벨 `강화` 표시 확인.
+
+## 2026-08-29-3 — 비용이 안 읽히던 문제
+
+사용자 지적: "밑에 옥새가 얼마나 들어가는지는 1도 안나오네". 확인해 보니 `CostText`는 켜져 있고 화면 안에 있었지만 **내용이 맨숫자 `3` 하나**였다. 바로 옆이 `Lv 0/3`이라 같은 숫자가 반복되는 꼴이었고, 무엇을 치르는지도 드러나지 않았다.
+
+| 항목 | 이전 | 이후 |
+|---|---|---|
+| 비용 문구 | `3` | `옥새 3` (`HouseUpgradeCostFormat` 신규 키) |
+| 비용 색 | 흰색(다른 텍스트와 동일) | 금색 `#F0C24A` |
+| 비용 정렬 | Center | Right (버튼 바로 왼쪽에 붙음) |
+| 보유 옥새 색 | 흰색 | 금색 `#F0C24A` (비용과 짝) |
+
+### 폭 재배분
+
+`옥새 12`를 담으려면 비용 칸이 넓어야 해 전체를 다시 나눴다.
+
+| 칸 | 이전 | 이후 |
+|---|---|---|
+| NameText | 260 | 220 |
+| DescText | 420 | 340 |
+| LevelText | 140 | 140 |
+| CostText | 120 | **200** |
+| MaxText | 160 | **200** |
+| UpgradeButton | 160 | 160 |
+
+일반 줄 합계 `1124`, 최대 레벨 줄 합계 `956` — 둘 다 1160 폭 안이다(패딩 32, 간격 8 포함).
+
+### 측정에서 배운 것 — 레이아웃은 같은 프레임에 안 잡힌다
+
+진단 중 첫 측정에서 자식 폭이 전부 `175`, X 위치가 전부 겹쳐 나와 "가로 레이아웃이 안 먹는다"고 오판할 뻔했다. **팝업을 연 그 프레임에 잰 값이라 레이아웃 리빌드 전이었다.** `Canvas.ForceUpdateCanvases()` + `LayoutRebuilder.ForceRebuildLayoutImmediate()` 후 다시 재니 의도한 폭(259/418/139/120/159)이 그대로 나왔다.
+
+PREFAB.MD의 "패널이 방금 활성화된 직후에는 레이아웃이 아직 반영되지 않는다"가 측정에도 똑같이 적용된다. **UI 레이아웃을 코드로 검증할 땐 반드시 강제 리빌드 후에 잰다.**
+
+### 검증 (Play Mode, 실제 `onClick.Invoke` + 강제 리빌드)
+
+마작 스핀 코인을 Lv3까지 실제 클릭:
+
+```
+Lv 0/3  옥새 3   [강화]      royal 77
+Lv 1/3  옥새 6   [강화]      royal 74
+Lv 2/3  옥새 12  [강화]      royal 68
+Lv 3/3  (숨김)   MAX LEVEL   royal 56
+```
+
+전 구간 `잘림=아니오`, 차감액이 비용과 일치, 창열림 유지.

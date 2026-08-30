@@ -8,3 +8,6 @@ LocalPaths.json
 
 # 세션용 서브에이전트 임시 사본 (마스터는 agents/ — ParallelWorkContract.MD §11)
 .claude/agents/
+
+# QA 캡처 산출물 (검증 증거일 뿐 저장소에 남길 필요 없음)
+output/

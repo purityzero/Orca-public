@@ -6,7 +6,9 @@
 
 종족별 영구 메타 업그레이드 팝업이다. `UIManager`가 `PopupCanvas` 아래에 생성한다.
 
-## 구조 (2026-08-29-1 기준)
+## 구조 (현재 상태 — 2026-08-29-6 기준)
+
+> 이 트리는 **항상 최신 상태를 적는다.** 아래 날짜별 항목은 변경 경위와 근거일 뿐 현재 명세가 아니다. 값을 바꾸면 여기부터 고친다.
 
 ```text
 UIHouseUpgrade                        (RectTransform, UIHouseUpgrade)
@@ -27,18 +29,22 @@ UIHouseUpgrade                        (RectTransform, UIHouseUpgrade)
    │  └─ EmptyText                    (TextMeshProUGUI)
    └─ NodeRoot                        (VerticalLayoutGroup)    y=-190, 1160×300
       └─ NodeTemplate                 (비활성 템플릿, Image, LayoutElement, HorizontalLayoutGroup, UIHouseUpgradeNode)
-         ├─ NameText                  (TextMeshProUGUI, 폭 260, Left)
-         ├─ DescText                  (TextMeshProUGUI, 폭 420, Left)
+         ├─ NameText                  (TextMeshProUGUI, 폭 220, Left)
+         ├─ DescText                  (TextMeshProUGUI, 폭 340, Left, wrap Normal)
          ├─ LevelText                 (TextMeshProUGUI, 폭 140, Center)
-         ├─ CostText                  (TextMeshProUGUI, 폭 120, Center)
-         ├─ MaxText                   (TextMeshProUGUI, 폭 160, Center)
-         └─ UpgradeButton             (Image, UIButton, LayoutElement 폭 160)
-            └─ Label                  (TextMeshProUGUI, 앵커 스트레치)
+         ├─ CostText                  (TextMeshProUGUI, 폭 200, Right, 금색 #F0C24A)
+         ├─ UpgradeButton             (Image, UIButton, LayoutElement 폭 160)
+         │  └─ Label                  (TextMeshProUGUI, 앵커 스트레치)
+         └─ MaxText                   (TextMeshProUGUI, 폭 160, Center)
 ```
 
 `NodeRoot`와 `EmptyStatePanel`은 **같은 영역을 공유한다.** 노드가 있으면 `EmptyStatePanel`이 꺼지고, 없으면 켜진다. 둘이 동시에 보이는 상태는 없다.
 
-`MaxText`와 `UpgradeButton`도 배타다 — 최대 레벨이면 버튼·비용이 꺼지고 `MaxText`가 켜진다. 그래서 한 줄의 가로 합은 항상 1100 안쪽이라 1160 폭에 들어간다.
+`MaxText`와 `UpgradeButton`이 배타다 — 최대 레벨이면 버튼이 꺼지고 `MaxText`가 켜진다. 둘의 폭이 160으로 같고 `MaxText`가 버튼 **뒤** 자식이라, 어느 쪽이 켜지든 같은 슬롯을 차지한다.
+
+**`CostText`는 최대 레벨에서도 끄지 않는다.** 문자열만 비운다 — 오브젝트를 끄면 레이아웃 그룹이 그 칸을 세지 않아 오른쪽 칸이 당겨지고, 줄마다 버튼 위치가 어긋난다.
+
+그래서 일반 줄과 최대 레벨 줄의 가로 합이 **둘 다 1124**로 같다(패딩 32, 간격 8×4 포함). 1160 폭 안이다.
 
 ## 2026-08-29-1 — 노드 목록·옥새 표시 추가
 
@@ -247,3 +253,9 @@ En/Cn/Jp도 같은 길이로 줄였다.
   Spin Coins     Spin coins per year      Lv 3/3              MAX LEVEL
   Swap Count     Swaps per year           Lv 0/3   3 Seals    [Upgrade]
 ```
+
+## 2026-08-29-6 — 종족 수에 따른 탭 폭 자동 조절
+
+`HouseButtonRoot`의 저장 폭은 1260, 간격은 18이다. 템플릿 폭 195는 6종족 전용 값이라 윷놀이까지 7개가 되면 마지막 버튼이 패널 밖으로 나갔다.
+
+프리팹의 고정 수치를 다시 맞추는 대신 `UIHouseUpgrade`가 실행 시 루트 폭·패딩·간격·현재 종족 수로 탭 폭을 계산한다. 따라서 프리팹 구조는 유지하고, 7개 탭은 각각 약 164.57 폭으로 배치된다. 1280×720 Play Mode 캡처에서 윷놀이 탭 우측 끝이 패널 안에 들어오는 것을 확인했다.

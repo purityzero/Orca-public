@@ -19,6 +19,25 @@ Orca의 작업을 Codex 또는 Claude Code 서브에이전트에 배정하는 �
 
 Codex로 배정한 뒤에는 `CODEX.md` §2의 프로필로 model/effort를 고른다. 기본 대응은 복잡한 설계·감사=`gpt-5.6-sol/high`, 일반 구현·문서=`gpt-5.6-terra/medium`, 명확한 국소 수정=`gpt-5.6-luna/low`다. 서브에이전트가 필요 없는 단일 흐름은 Codex 메인 세션이 직접 끝낸다.
 
+## Claude Code가 Codex를 직접 호출하는 경우 (2026-08-30 확인)
+
+`codex` CLI가 로컬에 설치돼 있어 Claude Code가 `codex exec`로 비대화형 실행을 시킬 수 있다. 다만 **`ListAgents`에는 Codex가 안 잡힌다** — 돌고 있는 Codex 세션에 `SendMessage`로 지시하는 건 불가능하고, 새 프로세스를 띄우는 것만 된다.
+
+**허용 — 읽기 전용 분석·교차검증에 한한다.**
+
+```
+codex exec --sandbox read-only --color never -C "<작업 루트>" -o "<보고서 경로>" "<지시>"
+```
+
+- `--sandbox read-only`를 **반드시** 붙인다. 이걸 빼면 Codex가 파일을 고칠 수 있고, 그 순간 `ParallelWorkContract.MD`의 파일 소유권 계약이 깨진다.
+- 긴 문서·코드의 **앞뒤 모순 찾기**에 실제로 쓸 만하다(문서 6곳의 낡은 서술을 정확히 짚어낸 사례 확인). 반대로 **단순 계수는 틀렸다**(줄 수를 158로 답했는데 실제는 223) — 숫자는 그대로 쓰지 말고 직접 실측한다.
+- 받은 보고서는 **핵심 주장을 원본에서 재확인한 뒤에만** 사용한다. Codex 출력도 「검증은 프로덕션 경로를 타야 한다」의 적용 대상이다.
+
+**금지**
+- 쓰기 모드(`workspace-write`·`danger-full-access`·`--dangerously-bypass-approvals-and-sandbox`)로 호출하지 않는다.
+- Git 마무리(stage·commit·merge·push)를 `codex exec`로 대신하지 않는다. 그건 Codex **메인 세션**의 몫이고, 여기서 띄우는 건 별도 프로세스라 같은 저장소를 두 주체가 동시에 건드리게 된다.
+- 사용자 계정의 토큰이 소모되므로, 가벼운 조회가 아니면 호출 전에 알린다.
+
 ## Claude Code 서브에이전트 감독 방식
 별도 감독 에이전트를 따로 두지 않는다 — **Claude Code 메인 세션이 아래 기준으로 분류해 맞는 서브에이전트를 순차로(병렬 아님) 호출**한다. Codex 작업은 이 표 밖에서 `CODEX.md`에 따라 직접 수행한다.
 

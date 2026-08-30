@@ -254,6 +254,31 @@ if (block == null) continue;
 if (isDone == true) break;
 ```
 
+### 이벤트 구독은 `-=` 후 `+=`
+- 같은 인스턴스를 다시 쓰는 코드(목록 증분 갱신, 풀링, 재바인딩, 재부트)에서 `+=`만 하면 리스너가 계속 쌓여 한 번 누른 게 여러 번 실행된다.
+- 해제를 먼저 부르면 중복 구독이 구조적으로 막힌다. 등록 안 된 델리게이트를 `-=` 해도 아무 일도 일어나지 않으므로 항상 안전하다.
+
+```csharp
+// ✅ 올바른 사용
+m_UpgradeButton.onClick.RemoveListener(OnClickUpgradeButton);
+m_UpgradeButton.onClick.AddListener(OnClickUpgradeButton);
+
+// ❌ 잘못된 사용 — 이 오브젝트가 재사용될 때마다 리스너가 늘어난다
+m_UpgradeButton.onClick.AddListener(OnClickUpgradeButton);
+```
+
+### 로그
+- 카테고리 접두를 붙인다: `[UIHouseUpgrade]`, `[Save]` 형식.
+- 메시지는 **무엇이 · 어떤 값이라 · 무엇을 기대했는지** 세 요소를 담는다. "실패했다"만 남기면 로그를 보고도 다시 재현해야 한다.
+
+```csharp
+// ✅ 올바른 사용
+Logger.Error($"[GameConfigTable] GetValue Failed! key not found - {_key} (기대: CSV에 해당 행 존재)");
+
+// ❌ 잘못된 사용
+Logger.Error("설정을 읽지 못했습니다");
+```
+
 ### 주석
 - 3줄 이상 XML 주석(`///`)은 매개변수가 있거나, 복잡한 변수·속성·필드에만 사용
 - 간단한 로직에는 주석 생략

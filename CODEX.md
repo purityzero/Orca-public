@@ -99,7 +99,7 @@ Codex 메인 세션은 Orca에 등록된 저장소의 Git 마무리 담당이다
 Codex는 별도 실험 환경이 아니라 현재 Orca 작업 흐름 안에서 다음 순서로 일한다.
 
 1. 루트의 `README.md`, `CODEX.md`, `AGENT.MD`와 작업에 필요한 공통 규칙을 읽는다.
-2. 특정 프로젝트 작업이면 `LocalPaths.json`으로 실제 경로를 확인하고, 그 프로젝트의 `UNFINISHED.md`와 관련 class/prefab/design 문서를 읽는다.
+2. 특정 프로젝트 작업이면 `LocalPaths.json`으로 실제 경로를 확인하고, 그 프로젝트의 `UNFINISHED.md`와 관련 class/prefab/design 문서를 읽는다. Claude Code가 쌓아온 사실·교훈은 `~/.claude/projects/<프로젝트>/memory/MEMORY.md`(프로젝트 루트 기준 경로 유도)에 있다 — 관련 작업이면 이것도 확인한다.
 3. `AGENT.MD`로 Codex 단독 수행, Codex 프로필 위임, Claude Code 단독 수행, 비교 실행, 순차 핸드오프 중 하나를 정한다.
 4. 수정 전에 브랜치, 소유 파일, 성공 조건, Unity 배타 자원 사용 여부를 확정한다.
 5. Codex 소유 작업은 분석에서 멈추지 않고 구현·검증·관련 문서 갱신까지 수행한다.

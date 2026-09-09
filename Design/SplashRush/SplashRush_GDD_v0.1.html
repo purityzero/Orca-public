@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SplashRush 기획서 v0.1</title>
+<style>
+  :root{
+    --bg:#f5f8fb; --panel:#ffffff; --ink:#16232e; --sub:#5b6b7a;
+    --line:#dbe4ec; --accent:#0d7ec9; --accent2:#00b0a0;
+    --warn:#c9702a; --bad:#c0392b; --ok:#2c8a4a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font-family:"Malgun Gothic","맑은 고딕",system-ui,sans-serif;line-height:1.65}
+  .wrap{max-width:1080px;margin:0 auto;padding:32px 20px 80px}
+  header{background:linear-gradient(135deg,#0d7ec9,#00b0a0);color:#fff;
+         border-radius:14px;padding:28px 30px;margin-bottom:28px}
+  header h1{margin:0 0 6px;font-size:30px;letter-spacing:-.5px}
+  header p{margin:0;opacity:.92}
+  .meta{margin-top:14px;font-size:13px;opacity:.85}
+  h2{margin:38px 0 14px;font-size:22px;padding-bottom:8px;border-bottom:2px solid var(--accent)}
+  h3{margin:24px 0 10px;font-size:17px;color:var(--accent)}
+  h4{margin:16px 0 6px;font-size:15px}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+          padding:6px 24px 22px;margin-bottom:22px}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#eef4f9;font-weight:700}
+  td.num,th.num{text-align:right}
+  .tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;
+       background:#e7f1f8;color:var(--accent);margin-right:4px}
+  .tag.todo{background:#fdf0e2;color:var(--warn)}
+  .tag.fix{background:#e6f5eb;color:var(--ok)}
+  .box{border-left:4px solid var(--accent);background:#f2f8fc;padding:12px 16px;
+       margin:14px 0;border-radius:0 8px 8px 0}
+  .box.todo{border-color:var(--warn);background:#fdf6ee}
+  .box.risk{border-color:var(--bad);background:#fdefee}
+  .box b{display:block;margin-bottom:4px}
+  ul{margin:8px 0;padding-left:22px}
+  li{margin:4px 0}
+  code{background:#eef2f6;padding:1px 6px;border-radius:4px;font-size:13px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:14px 0}
+  .card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:#fbfdff}
+  .card h4{margin:0 0 6px;color:var(--accent)}
+  .card p{margin:0;font-size:14px;color:var(--sub)}
+  .flow{font-family:Consolas,monospace;font-size:13px;background:#16232e;color:#d8e6f0;
+        padding:16px;border-radius:10px;overflow-x:auto;white-space:pre}
+  .toc{columns:2;font-size:14px}
+  .toc a{color:var(--accent);text-decoration:none}
+  .scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>SplashRush · 스플래시 러시</h1>
+  <p>레인 위를 달리는 3D 수영 아이템 레이싱 게임 — 기획서 초안</p>
+  <div class="meta">v0.2 · 2026-08-31 · 작성: Claude Code (사용자 구술 기반) · 외부 리뷰: Codex(gpt-5.6-sol) 반영 · 상태: 초안, 사용자 결정 대기 9건 (§14.1)</div>
+</header>
+
+<section>
+  <h2 id="toc">목차</h2>
+  <div class="toc">
+    <a href="#one">1. 한 줄 요약 / 핵심 재미</a><br>
+    <a href="#core">2. 코어 루프</a><br>
+    <a href="#camera">3. 시점과 조작</a><br>
+    <a href="#rhythm">4. 리듬 · 부스터 (스타트 / 턴)</a><br>
+    <a href="#track">5. 트랙 구조 · 수심 · 영법</a><br>
+    <a href="#item">6. 아이템</a><br>
+    <a href="#char">7. 캐릭터</a><br>
+    <a href="#stat">8. 능력치와 성장</a><br>
+    <a href="#gear">9. 장비 · 세트</a><br>
+    <a href="#eco">10. 재화 · 경제 순환</a><br>
+    <a href="#stage">11. 경기장</a><br>
+    <a href="#mode">12. 모드 · 진행</a><br>
+    <a href="#tech">13. 기술 전제</a><br>
+    <a href="#open">14. 미확정 · 결정 필요 목록</a><br>
+    <a href="#history">15. 개정 이력</a>
+  </div>
+</section>
+
+<section>
+  <h2 id="one">1. 한 줄 요약 / 핵심 재미</h2>
+  <p><b>"수영으로 하는 마리오카트."</b> 3D 3인칭 시점, 레인이 나뉜 수영장을 달리며 아이템을 먹고 던지고, 스타트·턴 타이밍을 정확히 맞춰 부스터를 터뜨려 1등을 노린다.</p>
+
+  <h3>레이싱 게임과 다른 이 게임만의 축</h3>
+  <div class="grid">
+    <div class="card"><h4>턴이 곧 코너다</h4><p>카트의 드리프트 = 수영의 <b>플립턴</b>. 50m마다 벽을 차는 순간이 순위가 뒤집히는 지점.</p></div>
+    <div class="card"><h4>스태미나</h4><p>카트는 연료가 없지만 수영은 지친다. 스퍼트를 언제 쓸지가 판단 요소.</p></div>
+    <div class="card"><h4>물 = 지형</h4><p>파도, 해류, 다른 선수가 만든 물살(드래프팅). 코스가 매 순간 조금씩 변한다.</p></div>
+    <div class="card"><h4>귀여움</h4><p>뚱뚱보가 물보라를 일으키며 1등하는 그림. 캐주얼 코미디 톤이 아트의 기준선.</p></div>
+  </div>
+
+  <div class="box">
+    <b>드래프팅 (제안)</b>
+    앞 선수 바로 뒤에 붙으면 물살에 빨려 저항이 줄어 서서히 가속된다. 1등이 계속 1등하기 어렵게 만들고, 아이템 밸런싱 없이도 순위가 붙게 하는 장치. 마리오카트의 슬립스트림과 같은 역할이며 <b>수영에서는 실제로 존재하는 현상</b>이라 설명이 필요 없다.
+  </div>
+</section>
+
+<section>
+  <h2 id="core">2. 코어 루프</h2>
+  <div class="flow">[레이스 90~120초]
+   ├─ 스타트 다이빙 타이밍 → 초반 부스터
+   ├─ 레인 이동 / 아이템 획득 / 공격 · 방어
+   ├─ 턴 타이밍 (25m 또는 50m마다) → 부스터
+   └─ 골인 순위 확정
+        ↓
+[보상] 코인 + 캐릭터 경험치 + (확률) 장비 조각
+        ↓
+[성장] 코인으로 능력치 강화 / 장비 구매 · 강화 · 세트 완성
+        ↓
+[해금] 새 캐릭터 · 새 경기장 · 상위 리그
+        ↓
+    다시 레이스 (더 빠른 상대와)</div>
+
+  <p>한 판이 짧아야 "한 판만 더"가 성립한다. <b>목표 1레이스 = 100초 내외</b>(로딩·결과 제외). 100m(50m 풀 왕복) 기준.</p>
+</section>
+
+<section>
+  <h2 id="camera">3. 시점과 조작</h2>
+
+  <h3>3.1 시점 — 네, 3D여야 합니다</h3>
+  <p>말씀하신 "캐릭터 살짝 뒤" 시점은 <b>3인칭 추격 카메라(third-person chase cam)</b>이고, 이건 3D 공간에서만 성립합니다. 다만 게임 자체는 3D여도 <b>플레이는 레인 위 좌우 이동으로 제한</b>되므로(온레일에 가까움) 물리·AI 난이도는 완전 자유 3D 레이싱보다 훨씬 낮습니다.</p>
+  <table>
+    <tr><th style="width:130px">항목</th><th>값</th><th>비고</th></tr>
+    <tr><td>카메라 위치</td><td>캐릭터 뒤 3.5m, 위 1.6m, 살짝 내려다봄(약 -8°)</td><td>수치는 실제 붙여보고 조정</td></tr>
+    <tr><td>속도 연출</td><td>부스터 시 FOV 60→75, 화면 가장자리 물보라, 모션블러 약하게</td><td>속도감의 8할은 FOV와 이펙트</td></tr>
+    <tr><td>수면</td><td>카메라가 수면에 반쯤 걸침 — 물 위/아래가 화면에 같이 보임</td><td>수영 게임 정체성. 물속 굴절 셰이더 필요</td></tr>
+    <tr><td>턴 연출</td><td>턴 순간 카메라 짧게 당겼다 밀기 + 화면 흔들림</td><td>Perfect일 때만 강하게</td></tr>
+  </table>
+
+  <h3>3.2 조작 (모바일 기준 / PC 병행)</h3>
+  <table>
+    <tr><th style="width:150px">입력</th><th>동작</th></tr>
+    <tr><td>좌우 스와이프 / ←→</td><td>레인 변경 (1레인씩, 이동 중 잠깐 느려짐)</td></tr>
+    <tr><td>화면 탭 / Space</td><td>타이밍 판정 입력 (스타트, 턴, 호흡 QTE)</td></tr>
+    <tr><td>아이템 버튼 / Ctrl</td><td>아이템 사용 (길게 눌러 뒤로 발사)</td></tr>
+    <tr><td>스퍼트 버튼 / Shift</td><td>스태미나 소모 가속. 누르는 동안 지속</td></tr>
+  </table>
+  <div class="box todo">
+    <b>결정 필요 — 전진 방식 2안</b>
+    <b>A안 (추천): 자동 전진.</b> 캐릭터는 알아서 헤엄치고, 플레이어는 레인·타이밍·아이템·스퍼트만 관리. 마리오카트에 가깝고 모바일에서 손이 편하다. 한 손 플레이 가능.<br>
+    <b>B안: 리듬 입력 전진.</b> 좌우 번갈아 탭해 스트로크를 만들고, 리듬이 맞으면 속도 유지. 수영 느낌은 훨씬 강하지만 100초 내내 연타라 피로하고, 아이템 조작과 손가락이 충돌한다.<br>
+    → <b>A안을 기본으로 가되, B안의 리듬감은 "스퍼트 구간에서만" 부분 도입</b>하는 절충(스퍼트 중에만 리듬 링이 떠서 맞추면 추가 가속)을 권합니다.
+  </div>
+</section>
+
+<section>
+  <h2 id="rhythm">4. 리듬 · 부스터 (스타트 / 턴)</h2>
+  <p>이 게임의 실력 축은 <b>타이밍 3종</b>이다. 전부 동일한 판정 UI(좁아지는 링 또는 움직이는 게이지)를 쓰되, 보상 크기가 다르다.</p>
+
+  <table>
+    <tr><th style="width:120px">타이밍</th><th>발생</th><th>Perfect</th><th>Good</th><th>Miss</th></tr>
+    <tr><td><b>스타트 다이빙</b></td><td>레이스 시작 1회</td><td>속도 +40%, 3초</td><td>+20%, 2초</td><td>부정출발 → 0.8초 정지</td></tr>
+    <tr><td><b>턴 (벽 차기)</b></td><td>25m마다 (100m 코스 = 3회)</td><td>속도 +35%, 2.5초 + 스태미나 소량 회복</td><td>+15%, 1.5초</td><td>가속 없음 + 0.3초 감속</td></tr>
+    <tr><td><b>호흡</b> <span class="tag todo">선택</span></td><td>일정 주기 (스태미나 낮을 때만)</td><td>스태미나 회복 +30%</td><td>+15%</td><td>회복 없음, 잠깐 감속</td></tr>
+  </table>
+
+  <div class="box">
+    <b>판정 창</b> Perfect <b>±90ms</b> / Good <b>±200ms</b>부터 시작(체감 보고 조정).<br>
+    최초안은 ±60ms였으나, 모바일은 터치 샘플링·디스플레이 지연만으로 기기 간 <b>30~80ms</b>가 갈린다. ±60ms에서는 실력이 아니라 <b>기기 성능이 판정을 가른다.</b> 리듬 전문 게임이 아니라 캐주얼 레이싱이므로 창을 넓게 잡고 시작한다.<br>
+    <b>운</b> 스탯이 높으면 판정 창이 넓어지는 방식은 쓰지 않는다 — 실력 축과 성장 축을 섞으면 "돈으로 잘하는 게임"이 된다. 성장은 <b>보상 크기</b>만 키운다(같은 Perfect라도 부스터 스탯이 높으면 더 빠름).
+  </div>
+  <div class="box todo">
+    <b>입력 지연 보정</b> 옵션에 <b>타이밍 오프셋 조정</b>(-100ms ~ +100ms)을 반드시 넣는다. 리듬 요소가 있는 게임에서 이게 없으면 특정 기기 사용자는 영구히 불리하다. 초회 실행 시 자동 캘리브레이션 3회 탭으로 기본값을 잡아준다.
+  </div>
+  <div class="box risk">
+    <b>주의</b> 턴이 3회뿐이면 타이밍 재미가 희소하다. 반대로 25m마다는 화면이 정신없을 수 있다. <b>50m 풀 왕복(턴 1회) / 25m 풀 4번 왕복(턴 3회)</b> 중 어느 쪽을 기본 코스로 할지 초기에 프로토타입으로 확인할 것.
+  </div>
+</section>
+
+<section>
+  <h2 id="track">5. 트랙 구조 · 수심 · 영법</h2>
+  <ul>
+    <li><b>레인 수: 8 = 참가 인원과 동일</b>. 실제 수영 경기와 같은 구조이며, "5레인에 8명"은 겹침 처리 규칙을 억지로 만들게 되므로 채택하지 않는다.</li>
+    <li>레인 변경은 <b>1레인 단위</b>, 변경 중 속도 5% 감소 (무작정 지그재그 방지)</li>
+    <li>레인 위 배치물: <b>아이템 박스 / 부스터 패드(물살) / 장애물 / 지름길 게이트</b></li>
+    <li>레인 로프(구분선)에 부딪히면 감속 — 레인 변경 타이밍도 실력 요소</li>
+  </ul>
+
+  <h3>5.1 충돌 · 추월 우선순위</h3>
+  <p>같은 레인에 두 명이 겹치는 순간의 규칙. 이게 없으면 접전이 매번 "누가 이겼는지 모르겠는" 상황이 된다.</p>
+  <table>
+    <tr><th style="width:180px">상황</th><th>처리</th></tr>
+    <tr><td>같은 레인 · 뒷사람이 더 빠름</td><td>드래프팅 구간 → 접촉 없이 통과. <b>추월 자체는 항상 가능</b></td></tr>
+    <tr><td>레인 변경 중 몸이 겹침</td><td>먼저 그 레인에 있던 쪽이 <b>우선</b>. 들어오는 쪽이 감속(-8%)</td></tr>
+    <tr><td>양쪽이 동시에 같은 레인으로</td><td>둘 다 원래 레인으로 튕김, 둘 다 감속. 요행 없음</td></tr>
+    <tr><td>스턴 중인 캐릭터와 접촉</td><td>스턴 대상은 <b>충돌 판정에서 제외</b>(통과). 사고 연쇄를 막는다</td></tr>
+    <tr><td>아이템 피격 우선순위</td><td>무적 &gt; 거품막 &gt; 스턴 &gt; 감속. 상위가 있으면 하위는 아예 적용되지 않음</td></tr>
+  </table>
+  <div class="box">
+    <b>레인 간 유불리는 없다</b> 직선 코스에서는 안/바깥 레인의 거리 차이가 없다. 따라서 배치물을 "불리한 레인 보상"으로 쓰지 않는다 — 배치물의 목적은 <b>레인마다 다른 선택지를 주는 것</b>(A레인은 부스터 패드가 있지만 장애물도 있음, B레인은 안전하지만 밋밋함)이다.
+  </div>
+  <table>
+    <tr><th style="width:150px">배치물</th><th>효과</th><th>배치 원칙</th></tr>
+    <tr><td>아이템 박스</td><td>아이템 1개 획득</td><td>레인마다 같은 거리에 배치(공평). 1구간당 1개</td></tr>
+    <tr><td>부스터 패드(해류)</td><td>1.5초 가속</td><td>매 구간 <b>일부 레인에만</b> 배치. 어느 레인이 좋은지가 구간마다 바뀌어 레인 이동 동기를 만듦</td></tr>
+    <tr><td>장애물(부표/얼음/해파리)</td><td>접촉 시 감속 또는 짧은 스턴</td><td>부스터 패드 옆에 배치해 "먹으려면 위험" 구조</td></tr>
+    <tr><td>지름길 게이트</td><td>수중 통로 등 짧은 우회로. 진입 조건 있음</td><td>경기장별 1~2개. 스퍼트 or Perfect턴 직후에만 진입 가능</td></tr>
+  </table>
+
+  <h3>5.2 수심 레이어 — 수면 / 수중 <span class="tag fix">신규</span></h3>
+  <div class="box">
+    <b>왜 필요한가</b> 좌우 레인 이동만 있으면 이건 "물에서 하는 자동차 게임"이다. 물의 정체성은 <b>위아래로도 움직일 수 있다</b>는 데 있다. 레인(좌우) × 수심(상하)의 2축이 되면, 같은 코스에서 훨씬 많은 판단이 생긴다.
+  </div>
+  <table>
+    <tr><th style="width:110px">레이어</th><th>속도</th><th>장점</th><th>대가</th></tr>
+    <tr><td><b>수면</b> (기본)</td><td>100%</td><td>스태미나 정상 회복, 시야 넓음, 아이템 박스 대부분이 여기</td><td>모든 공격의 표적</td></tr>
+    <tr><td><b>수중</b> (잠수)</td><td>105%</td><td><b>날아오는 아이템 회피</b>, 해류 지대 이용, 수중 지름길 진입</td><td>산소 게이지 감소(약 4초 한계), 시야 흐림, 아이템 획득 불가</td></tr>
+  </table>
+  <ul>
+    <li>조작: <b>아래 스와이프 = 잠수 / 위 스와이프 = 부상</b>. 전환에 0.4초 소요(즉시 회피는 불가 — 미리 읽어야 함)</li>
+    <li>산소가 0이 되면 강제 부상 + 2초간 감속. <b>체력 스탯이 산소 지속시간에도 관여</b>한다</li>
+    <li>턴 직후 <b>돌핀킥 구간</b>: Perfect 턴을 하면 잠수 상태로 시작하며 이 구간만 속도 120%. 실제 수영 전술 그대로다</li>
+  </ul>
+
+  <h3>5.3 영법 전환 <span class="tag todo">검토</span></h3>
+  <p>자유형만 있으면 "속도 하나"뿐이지만, 영법이 여러 개면 <b>지금 무엇이 부족한가</b>를 매 순간 판단하게 된다.</p>
+  <table>
+    <tr><th style="width:100px">영법</th><th>속도</th><th>스태미나</th><th>쓰는 순간</th></tr>
+    <tr><td><b>자유형</b></td><td>100%</td><td>보통 소모</td><td>기본. 대부분의 구간</td></tr>
+    <tr><td><b>접영</b></td><td>115%</td><td>급격히 소모</td><td>골인 직전, 추월 승부처</td></tr>
+    <tr><td><b>평영</b></td><td>88%</td><td><b>회복</b></td><td>순위가 안정적일 때 숨 고르기, 파도 대기</td></tr>
+    <tr><td><b>배영</b> <span class="tag todo">선택</span></td><td>95%</td><td>보통</td><td>뒤를 볼 수 있음 — 뒤에서 오는 아이템 확인 가능</td></tr>
+  </table>
+  <div class="box risk">
+    <b>도입 판단</b> 이건 <b>재미를 크게 키울 수도, 조작을 감당 못 하게 만들 수도 있다.</b> 레인 이동 + 수심 + 타이밍 + 아이템 + 스퍼트에 영법까지 얹으면 모바일 한 손 조작으로는 불가능하다.<br>
+    → <b>수심 레이어를 먼저 넣고 프로토타입에서 조작 부하를 재본 뒤</b> 영법 도입을 결정한다. 둘 다 넣는다면 영법은 자동 전환(스태미나 낮으면 알아서 평영)으로 단순화하는 안도 있다.
+  </div>
+</section>
+
+<section>
+  <h2 id="item">6. 아이템</h2>
+  <p>마리오카트/카트라이더 계열을 수영 테마로 번안. <b>공격 / 방해 / 자기강화 / 방어</b> 4계열을 균형 있게 둔다.</p>
+  <div class="scroll">
+  <table>
+    <tr><th style="width:120px">아이템</th><th style="width:80px">계열</th><th>효과</th><th style="width:110px">원본 대응</th></tr>
+    <tr><td>어뢰</td><td>공격</td><td>바로 앞 1명 추적, 명중 시 1.2초 스턴</td><td>초록/빨강 등껍질</td></tr>
+    <tr><td>물폭탄</td><td>공격</td><td>앞쪽 지정 위치에 착탄, 반경 내 전원 감속</td><td>물폭탄(카트라이더)</td></tr>
+    <tr><td>상어 지느러미</td><td>공격</td><td>1등을 끝까지 추적. 명중 시 크게 스턴 + 아이템 드롭</td><td>파란 등껍질</td></tr>
+    <tr><td>미역 뭉치</td><td>방해</td><td>뒤에 설치. 밟으면 3초간 최고속도 -30%</td><td>바나나</td></tr>
+    <tr><td>기름띠</td><td>방해</td><td>레인 폭 전체 설치, 통과 시 조작 미끄러짐</td><td>오일</td></tr>
+    <tr><td>해파리 떼</td><td>방해</td><td>앞 순위 전원 화면에 해파리가 붙어 1.5초 시야 방해</td><td>먹물</td></tr>
+    <tr><td>돌고래 튜브</td><td>자기강화</td><td>3초 가속 + 그동안 무적</td><td>스타 / 부스터</td></tr>
+    <tr><td>산소통</td><td>자기강화</td><td>스태미나 즉시 60% 회복</td><td>(수영 고유)</td></tr>
+    <tr><td>거품막</td><td>방어</td><td>공격 1회 무효. 사용 중 앞으로 던져 공격도 가능</td><td>방어막</td></tr>
+    <tr><td>역류 파도</td><td>방해</td><td>자신보다 앞 순위 전원을 살짝 뒤로 밀어냄</td><td>번개(약화판)</td></tr>
+    <tr><td>물살 견인</td><td>자기강화</td><td>앞 선수까지 순간 접근(짧은 순간이동에 가까움)</td><td>총알(불릿 빌)</td></tr>
+  </table>
+  </div>
+
+  <h3>6.1 획득 확률</h3>
+  <p>순위가 낮을수록 강한 아이템이 뜨는 <b>러버밴딩 테이블</b>을 기본으로 하고, <b>운</b> 스탯이 이 테이블을 상위 등급 쪽으로 밀어준다.</p>
+  <table>
+    <tr><th>순위 구간</th><th class="num">하급</th><th class="num">중급</th><th class="num">상급</th></tr>
+    <tr><td>1~2위</td><td class="num">70%</td><td class="num">28%</td><td class="num">2%</td></tr>
+    <tr><td>3~5위</td><td class="num">40%</td><td class="num">45%</td><td class="num">15%</td></tr>
+    <tr><td>6~8위</td><td class="num">15%</td><td class="num">45%</td><td class="num">40%</td></tr>
+  </table>
+  <p><span class="tag fix">확정 2026-08-31</span> 운은 <b>상급 확률을 올리지 않는다.</b> 대신 두 가지만 건드린다:</p>
+  <ul>
+    <li><code>중급 이상 확률 += 운스탯 × 0.4%p</code> (상한 +10%p) — 하급에서 차감. <b>즉 운이 높으면 "꽝이 덜 뜬다". "대박이 더 뜬다"가 아니다.</b></li>
+    <li><code>아이템 박스 쿨다운 -= 운스탯 × 0.5%</code> (상한 -12%) — 같은 코스에서 아이템을 조금 더 자주 먹는다</li>
+  </ul>
+  <p><b>수치는 전부 CSV 테이블로</b> 관리하고 코드에 박지 않는다.</p>
+  <div class="box">
+    <b>왜 상급 확률을 안 올리나</b> 아이템 레이싱에서 상급 아이템 1개의 가치는 스피드 몇 %보다 훨씬 크다. 운이 상급 확률을 직접 올리면 <b>운 = 유일한 정답 스탯</b>이 되어 다른 세 스탯이 죽는다. "꽝을 줄이는" 방향은 체감은 확실하되 상한이 명확해서 폭주하지 않는다.
+  </div>
+  <div class="box risk">
+    <b>남은 위험</b> 그래도 초롱의 고유 특성 <b>"아이템 2개 획득"</b>은 여전히 세다 — 사실상 상급 확률을 두 번 굴리는 것과 같다. 발동 확률을 <b>5% 이하</b>로 잡고, <b>1,000회 시뮬레이션으로 캐릭터별 승률을 실측</b>해 45~55% 범위를 벗어나면 조정한다.
+  </div>
+</section>
+
+<section>
+  <h2 id="char">7. 캐릭터</h2>
+  <p>이름은 제안이며 얼마든지 바꿔도 됩니다. 톤은 <b>물·수영에서 온 귀여운 별명</b>으로 통일했습니다.</p>
+  <div class="scroll">
+  <table>
+    <tr><th style="width:110px">이름</th><th style="width:110px">타입</th><th>컨셉 / 외형</th><th>특화</th><th>고유 특성 (제안)</th></tr>
+    <tr>
+      <td><b>부글</b></td><td>뚱뚱보</td>
+      <td>물에 뜨는 게 특기인 낙천 뚱보. 배로 미끄러지는 모션, 물보라가 제일 큼. 마스코트 후보 1순위</td>
+      <td>부스터 ★★★</td>
+      <td><b>물보라</b> — 부스터 종료 시 뒤쪽 1명에게 물보라를 뿌려 짧게 시야 방해</td>
+    </tr>
+    <tr>
+      <td><b>퐁당</b></td><td>어린아이</td>
+      <td>튜브 낀 꼬맹이. 체력이 무한한 것처럼 계속 첨벙거림</td>
+      <td>체력 ★★★</td>
+      <td><b>지치지 않아</b> — 스태미나 30% 이하일 때 회복 속도 2배</td>
+    </tr>
+    <tr>
+      <td><b>초롱</b></td><td>귀여운 여성</td>
+      <td>커다란 물안경, 늘 운이 좋음. 코믹 럭키 캐릭터</td>
+      <td>운 ★★★</td>
+      <td><b>행운의 물방울</b> — 아이템 박스에서 낮은 확률로 아이템 2개 획득</td>
+    </tr>
+    <tr>
+      <td><b>유하</b></td><td>섹시한 여성</td>
+      <td>날렵한 선수형 실루엣, 유선형 폼. 가장 "진짜 수영선수" 같은 캐릭터</td>
+      <td>스피드 ★★★</td>
+      <td><b>유선형</b> — 아이템을 들고 있지 않은 동안 최고속도 +4%</td>
+    </tr>
+    <tr>
+      <td><b>태오</b></td><td>훈남</td>
+      <td>정석적인 잘생긴 선수. 튜토리얼 기본 캐릭터</td>
+      <td>밸런스 ★★</td>
+      <td><b>페이스 메이커</b> — 드래프팅(앞 선수 뒤에 붙기) 효과 +50%</td>
+    </tr>
+  </table>
+  </div>
+  <div class="box">
+    <b>기본 스탯 배분</b> 총합을 <b>동일하게</b> 유지하고 배분만 다르게 한다(캐릭터 간 강약이 아니라 성격 차이가 되게). 예: 총합 40 고정.
+    <table>
+      <tr><th>캐릭터</th><th class="num">체력</th><th class="num">스피드</th><th class="num">부스터</th><th class="num">운</th><th class="num">합</th></tr>
+      <tr><td>부글</td><td class="num">10</td><td class="num">8</td><td class="num">16</td><td class="num">6</td><td class="num">40</td></tr>
+      <tr><td>퐁당</td><td class="num">16</td><td class="num">9</td><td class="num">8</td><td class="num">7</td><td class="num">40</td></tr>
+      <tr><td>초롱</td><td class="num">9</td><td class="num">9</td><td class="num">7</td><td class="num">15</td><td class="num">40</td></tr>
+      <tr><td>유하</td><td class="num">8</td><td class="num">16</td><td class="num">9</td><td class="num">7</td><td class="num">40</td></tr>
+      <tr><td>태오</td><td class="num">10</td><td class="num">10</td><td class="num">10</td><td class="num">10</td><td class="num">40</td></tr>
+    </table>
+    <b>주의: 총합이 같다고 강함이 같지는 않다.</b> 스탯마다 1포인트의 실제 가치가 다르기 때문이다(§8). 총합 고정은 <b>출발점</b>일 뿐이고, 실제 균형은 <b>캐릭터별 1,000회 AI 대전 승률이 45~55%에 드는지</b>로 판정한다. 벗어나면 스탯 배분이 아니라 <b>계수</b>를 조정한다.
+  </div>
+  <div class="box todo">
+    <b>고유 특성 관련 미결 2건</b>
+    <ul>
+      <li><b>초롱 "아이템 2개 획득"</b> — 발동 확률 5% 이하로 제한 필요. 근거는 §6.1</li>
+      <li><b>태오 "드래프팅 +50%"</b> — 상어 4세트(+60%)와 겹치면 폭주. §9의 <b>합연산 + 상한 +100%</b> 규칙으로 눌러둠</li>
+      <li><b>캐릭터 정의 축</b> — "섹시한 여성" 등 신체 유형 기반 분류에 대한 리뷰 지적은 <b>§14.1의 4번</b> 참조. 사용자 결정 대기 중이며 원안 그대로 두었다</li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2 id="stat">8. 능력치와 성장</h2>
+  <table>
+    <tr><th style="width:130px">스탯</th><th>게임 내 의미</th><th>1포인트당 (초안)</th></tr>
+    <tr><td><b>체력</b></td><td>최대 스태미나, 회복 속도. 스퍼트를 얼마나 오래/자주 쓸 수 있는가</td><td>최대치 +2%, 회복 +1.5%</td></tr>
+    <tr><td><b>스피드</b></td><td>기본 최고 속도</td><td><b>+0.25%</b></td></tr>
+    <tr><td><b>순간스피드(부스터)</b></td><td>모든 부스터(스타트·턴·아이템·패드)의 <b>가속량만</b>. 지속시간은 건드리지 않는다</td><td>가속량 +1%</td></tr>
+    <tr><td><b>운</b></td><td>중급 이상 아이템 확률, 아이템 박스 재획득 쿨다운</td><td>§6.1 참조</td></tr>
+  </table>
+  <div class="box">
+    <b>스탯 계수를 낮춘 이유</b> (2026-08-31 수정)<br>
+    최초안은 스피드 <code>+0.6%/pt</code>였는데, 유하(16)와 초롱(9)의 <b>7포인트 차이만으로 상시 최고속도가 4.2% 벌어진다.</b> 레이싱에서 상시 4%는 아이템으로도 못 뒤집는 격차다. → <code>+0.25%/pt</code>로 낮춰 같은 차이가 <b>1.75%</b>가 되게 했다.<br>
+    부스터도 마찬가지로 <b>가속량과 지속시간을 동시에</b> 올리면 실효 이득이 곱연산(1.01 × 1.008)이 되어 한 스탯만 몰아주는 게 정답이 된다. → 지속시간 보정을 삭제하고 <b>가속량 하나만</b> 남겼다. 지속시간은 <b>장비(오리발)로만</b> 늘린다.<br>
+    <b>원칙: 상시 효과(스피드)는 계수를 작게, 순간 효과(부스터·운)는 크게.</b> 상시 우위는 역전 불가를 만들고, 순간 우위는 "언제 쓰느냐"라는 실력 축을 남긴다.
+  </div>
+
+  <h3>8.1 강화</h3>
+  <ul>
+    <li>스탯별 <b>레벨 1~20</b>, 레벨당 스탯 +1. 코인으로 강화.</li>
+    <li><b>특화 스탯은 상한 25</b>, 비특화는 15까지 — 캐릭터 개성이 성장 후에도 남게 한다.</li>
+    <li>강화 비용 <code>cost = 120 × level^1.6</code> (Lv1→2 = 120, Lv10→11 ≈ 4,780, Lv19→20 ≈ 14,600)</li>
+    <li>캐릭터 <b>레벨</b>은 레이스 경험치로 오르고, 오를 때마다 <b>강화 가능 상한</b>이 열린다(코인만으로 순식간에 만렙 되는 걸 막는 게이트).</li>
+    <li>강화는 <b>실패 없음</b>. 캐주얼 레이싱에 확률 강화는 이탈 요인.</li>
+  </ul>
+</section>
+
+<section>
+  <h2 id="gear">9. 장비 · 세트</h2>
+  <p>4부위 착용. 부위별로 <b>주 스탯이 고정</b>되어 있어 "무엇을 사야 할지"가 직관적이다.</p>
+  <table>
+    <tr><th style="width:110px">부위</th><th style="width:110px">주 스탯</th><th>부가</th></tr>
+    <tr><td>수경</td><td>운</td><td>시야 관련 방해 효과 지속시간 -%</td></tr>
+    <tr><td>수영모</td><td>체력</td><td>스태미나 소모 -%</td></tr>
+    <tr><td>수영복</td><td>스피드</td><td>레인 변경 시 감속 완화</td></tr>
+    <tr><td>오리발</td><td>부스터</td><td>턴 판정 후 가속 지속 +%</td></tr>
+  </table>
+
+  <h3>9.1 등급과 세트</h3>
+  <ul>
+    <li>등급: <b>일반 / 고급 / 희귀 / 전설</b>. 등급이 오를수록 주 스탯 계수 상승.</li>
+    <li><b>세트 효과</b>: 같은 세트 2부위 / 4부위 착용 시 발동.</li>
+  </ul>
+  <table>
+    <tr><th style="width:130px">세트</th><th>2세트</th><th>4세트</th><th style="width:90px">획득</th></tr>
+    <tr><td><b>돌고래</b></td><td>부스터 +5%</td><td>턴 Perfect 시 가속 지속 +30%</td><td>캐시</td></tr>
+    <tr><td><b>거북이</b></td><td>체력 +6%</td><td>피격 시 잃는 속도 -25%</td><td>코인</td></tr>
+    <tr><td><b>상어</b></td><td>스피드 +3%</td><td>드래프팅 가속량 +60%, <b>단 1위일 때는 세트 효과 전부 미적용</b></td><td>캐시</td></tr>
+    <tr><td><b>해파리</b></td><td>운 +6%</td><td>아이템 박스 쿨다운 -20%</td><td>코인</td></tr>
+    <tr><td><b>인어</b> <span class="tag">시즌</span></td><td>전 스탯 +3%</td><td>스태미나 0이어도 3초간 스퍼트 가능</td><td>시즌 패스</td></tr>
+  </table>
+  <div class="box risk">
+    <b>P2W 경계선</b> 캐시 전용 세트가 코인 세트보다 <b>일방적으로 강하면</b> 캐주얼 레이싱의 수명이 짧아진다. 원칙: <b>캐시 세트는 "다른 플레이 스타일"을 열어주고, 총 전투력 상한은 코인 세트와 비슷하게</b> 맞춘다. 순수 성능 우위는 스킨·연출·획득 편의(시간 단축)로 판다.<br>
+    <b>검증 방법:</b> "캐시 세트 최대 강화 vs 코인 세트 최대 강화"로 AI 대전 1,000회를 돌려 <b>승률 격차가 55:45를 넘지 않는지</b> 기계로 확인한다. 눈으로 보고 "비슷한 것 같다"로 끝내지 않는다.
+  </div>
+  <div class="box">
+    <b>세트 효과 중첩 상한</b> (2026-08-31 추가)<br>
+    캐릭터 고유 특성과 세트 효과가 <b>같은 항목</b>을 건드리면 곱연산으로 폭주한다. 예: 태오의 드래프팅 +50% × 상어 4세트 +60% = 2.4배.<br>
+    → <b>규칙: 같은 항목에 붙는 배율은 곱하지 않고 더한다</b>(50% + 60% = +110%), 그리고 <b>항목별 총 보정 상한 +100%</b>를 둔다. 이 규칙은 스탯·세트·아이템·캐릭터 특성 전부에 공통 적용한다.
+  </div>
+</section>
+
+<section>
+  <h2 id="eco">10. 재화 · 경제 순환</h2>
+  <div class="flow">[레이스 완주]
+   ├─ 코인      ← 순위 · 경기장 등급 · 일일 보너스
+   ├─ 경험치     ← 캐릭터 레벨 (강화 상한 해금)
+   └─ 장비 조각   ← 낮은 확률, 코인 장비 제작용
+        ↓
+    ┌──────────────┬──────────────┐
+[코인 소모]              [캐시(다이아) 소모]
+ ├ 능력치 강화             ├ 캐시 세트 장비
+ ├ 코인 세트 장비/제작       ├ 캐릭터 즉시 해금
+ └ 장비 강화               ├ 스킨 · 이펙트
+                          └ 시즌 패스</div>
+
+  <h3>10.1 재화 종류</h3>
+  <table>
+    <tr><th style="width:110px">재화</th><th>획득</th><th>소모</th><th>상한/제어</th></tr>
+    <tr><td><b>코인</b></td><td>레이스 순위 보상, 일일 미션, 첫 승 보너스(캐릭터별 1일 1회)</td><td>스탯 강화, 코인 장비, 장비 강화</td><td>일일 획득 상한 없음 대신 <b>강화 비용 지수 상승</b>으로 흡수</td></tr>
+    <tr><td><b>다이아</b></td><td>구매, 시즌/업적/랭킹 소량 지급</td><td>캐시 장비, 캐릭터 해금, 스킨, 패스</td><td>—</td></tr>
+    <tr><td><b>장비 조각</b></td><td>레이스 드랍, 중복 장비 분해</td><td>코인 장비 제작·승급</td><td>세트별로 조각 종류 분리</td></tr>
+    <tr><td><b>티켓</b> <span class="tag todo">선택</span></td><td>시간 회복</td><td>보상 레이스 입장</td><td>도입 여부 결정 필요</td></tr>
+  </table>
+
+  <h3>10.2 보상 테이블 (초안)</h3>
+  <table>
+    <tr><th>순위</th><th class="num">코인</th><th class="num">경험치</th><th class="num">조각 확률</th></tr>
+    <tr><td>1위</td><td class="num">250</td><td class="num">100</td><td class="num">22%</td></tr>
+    <tr><td>2~3위</td><td class="num">200</td><td class="num">75</td><td class="num">15%</td></tr>
+    <tr><td>4~5위</td><td class="num">160</td><td class="num">55</td><td class="num">10%</td></tr>
+    <tr><td>6~8위</td><td class="num">130</td><td class="num">40</td><td class="num">7%</td></tr>
+  </table>
+  <p><b>꼴등도 0은 아니다</b> — 캐주얼 레이싱에서 무보상은 이탈로 직결.</p>
+  <div class="box">
+    <b>격차를 4.3배 → 1.9배로 줄인 이유</b> (2026-08-31 수정)<br>
+    최초안은 1위 300 / 꼴등 70 (4.3배)에 상위 경기장 배율 ×2.0까지 겹쳐 <b>최대 8.6배</b>였다. 이건 <b>승자 독식</b>이다 — 이긴 사람이 더 빨리 강해지고, 강해져서 또 이긴다. 실력 격차가 시간이 갈수록 벌어져 하위권이 이탈한다.<br>
+    → 순위 보상 격차는 <b>1.9배</b>로 좁히고, 경기장 배율도 <b>×1.2 / ×1.4</b>로 낮춘다(최대 2.7배). 승리 동기는 <b>재화의 양이 아니라</b> 티어 승급·업적·랭킹 같은 <b>비재화 보상</b>으로 만든다.
+  </div>
+  <div class="box">
+    <b>추가 보상 (재화 격차를 안 만들면서 승리를 보상하는 장치)</b>
+    <ul>
+      <li><b>첫 승 보너스</b> — 캐릭터별 1일 1회, 코인 2배. 매일 이길 이유를 만들되 반복 파밍 효과는 없다</li>
+      <li><b>연승 보너스</b> — 3연승마다 장비 조각 확정 1개. <b>재화가 아니라 조각</b>이라 인플레를 안 만든다</li>
+      <li><b>기록 갱신</b> — 타임 어택 자기 기록 경신 시 코인. 남과 비교하지 않는 성장 보상</li>
+    </ul>
+  </div>
+
+  <div class="box">
+    <b>인플레이션 통제</b> 코인은 계속 들어오는데 쓸 곳이 떨어지면 경제가 죽는다. 싱크(sink)를 3층으로 둔다: ① 지수 강화 비용 ② 장비 강화(실패 없이 재화만 소모, 상위 등급일수록 급증) ③ 시즌마다 열리는 신규 코인 세트. <b>스탯 만렙 도달 예상 시간을 먼저 정하고(예: 무과금 40시간) 거기서 역산해 비용을 잡는다.</b>
+  </div>
+</section>
+
+<section>
+  <h2 id="stage">11. 경기장</h2>
+  <p>경기장은 <b>고유 기믹 1개 + 지름길 1~2개</b>를 갖는다. 기믹이 없으면 배경만 바뀐 같은 코스가 된다.</p>
+  <div class="scroll">
+  <table>
+    <tr><th style="width:150px">경기장</th><th>톤</th><th>고유 기믹</th><th style="width:90px">해금</th></tr>
+    <tr><td><b>시립 수영장</b></td><td>정석 실내풀, 밝고 깨끗</td><td>없음(기본기 학습용). 레인 구분이 가장 명확</td><td>기본</td></tr>
+    <tr><td><b>워터파크</b></td><td>알록달록, 튜브와 슬라이드</td><td><b>슬라이드 지름길</b> — 진입하면 조작 불가 대신 고속. 출구 위치가 랜덤</td><td>레벨 5</td></tr>
+    <tr><td><b>파도풀</b></td><td>인공 파도, 함성</td><td><b>주기적 역류</b> — 8초마다 파도가 밀려와 전원 감속. 파도 직전 스퍼트로 넘어가는 게 실력</td><td>레벨 10</td></tr>
+    <tr><td><b>산호초 바다</b></td><td>열대, 물고기 떼, 시야 넓음</td><td><b>해류 지대</b> — 레인마다 흐름 방향이 다름. 매 랩 바뀜</td><td>레벨 15</td></tr>
+    <tr><td><b>빙하 호수</b></td><td>차갑고 푸름, 유빙</td><td><b>결빙</b> — 수면 일부가 얼어 우회 필요. 체력 소모 +20%</td><td>레벨 20</td></tr>
+    <tr><td><b>나이트 풀파티</b></td><td>네온, 음악, 야간</td><td><b>비트 싱크</b> — 음악 비트에 맞춰 타이밍 링이 뜸. 리듬 게임화</td><td>시즌</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2 id="mode">12. 모드 · 진행</h2>
+  <table>
+    <tr><th style="width:140px">모드</th><th>내용</th><th style="width:120px">우선순위</th></tr>
+    <tr><td>싱글 그랑프리</td><td>AI 7명과 레이스. 경기장 3개 묶음 누적 점수</td><td><span class="tag fix">1차 개발</span></td></tr>
+    <tr><td>타임 어택</td><td>혼자 기록 경신. 고스트와 경쟁. 아이템 없음 — 순수 타이밍 실력</td><td><span class="tag fix">1차 개발</span></td></tr>
+    <tr><td>실시간 대전</td><td>최대 8인 매칭</td><td><span class="tag todo">2차</span></td></tr>
+    <tr><td>랭킹전</td><td>시즌 티어</td><td><span class="tag todo">2차</span></td></tr>
+    <tr><td>이벤트</td><td>특수 규칙(아이템 무한, 스태미나 무한 등)</td><td><span class="tag todo">3차</span></td></tr>
+  </table>
+  <h3>12.1 공정성 — 성장이 대전을 망치지 않게 <span class="tag fix">신규</span></h3>
+  <div class="box risk">
+    <b>이 절이 없으면 실시간 대전은 반드시 P2W가 된다.</b> §8~9의 영구 스탯·장비가 그대로 경기 성능이 되기 때문이다. 싱글에서는 문제없지만, 사람과 붙는 순간 "누가 더 오래·더 많이 썼는가"가 승부를 결정한다.
+  </div>
+  <table>
+    <tr><th style="width:150px">모드</th><th>스탯·장비 적용</th><th>매칭</th></tr>
+    <tr><td>싱글 그랑프리</td><td><b>100% 적용</b> — 성장을 체감하는 곳. AI 난이도가 내 전투력에 맞춰 오름</td><td>—</td></tr>
+    <tr><td>실시간 대전 (일반)</td><td><b>100% 적용</b></td><td><b>전투력 구간 매칭</b> — 비슷한 성장도끼리만 붙임</td></tr>
+    <tr><td><b>랭킹전</b></td><td><b>정규화</b> — 모든 스탯을 상한값으로 통일, 장비는 <b>세트 효과만</b> 적용(수치 보정 미적용)</td><td>티어 매칭</td></tr>
+    <tr><td>타임 어택</td><td>100% 적용, 단 <b>순위표를 전투력 구간별로 분리</b></td><td>—</td></tr>
+  </table>
+  <p><b>핵심:</b> 성장은 <b>싱글과 일반전에서 보상</b>하고, <b>랭킹전에서는 실력만 남긴다.</b> 이러면 과금이 "더 강해지는" 게 아니라 "더 빨리 컨텐츠를 여는" 것이 되어 P2W 비난을 피한다. 랭킹전에서 세트 효과를 남기는 건, 그게 수치가 아니라 <b>플레이 스타일 선택</b>이기 때문이다.</p>
+
+  <h3>12.2 개발 단계와 MVP 범위</h3>
+  <div class="box">
+    <b>이 문서의 대부분은 아직 만들지 않는다.</b> 아래 태그로 단계를 구분한다. <span class="tag fix">MVP</span>가 아닌 것은 <b>설계만 해두고 손대지 않는다</b> — 지우지 않는 이유는 나중에 같은 고민을 다시 하지 않기 위해서다.
+  </div>
+  <table>
+    <tr><th style="width:80px">단계</th><th style="width:130px">목표</th><th>포함</th><th>제외</th></tr>
+    <tr>
+      <td><b>P0</b><br><span class="tag fix">MVP</span></td>
+      <td>"이게 재밌나?"<br>단 하나만 확인</td>
+      <td>경기장 1개(시립 수영장), 캐릭터 1명(태오), 헤엄 + 스타트 + 턴 + 부스터, 수심 레이어, <b>AI 없이 혼자</b></td>
+      <td>아이템·성장·경제·상점·다른 캐릭터 전부</td>
+    </tr>
+    <tr>
+      <td><b>P1</b></td><td>경쟁의 재미</td>
+      <td>AI 7명, 아이템 <b>3종</b>(어뢰 / 거품막 / 돌고래 튜브), 순위·보상 화면</td>
+      <td>아이템 나머지 8종, 장비, 세트</td>
+    </tr>
+    <tr>
+      <td><b>P2</b></td><td>계속할 이유</td>
+      <td>캐릭터 5종, 스탯 강화, 코인 경제, 아이템 전종</td>
+      <td>캐시 상점, 세트, 시즌</td>
+    </tr>
+    <tr>
+      <td><b>P3</b></td><td>수익 구조</td>
+      <td>장비 4부위, 세트, 캐시 상점, 경기장 확장</td>
+      <td>네트워크</td>
+    </tr>
+    <tr>
+      <td><b>P4</b></td><td>지속 운영</td>
+      <td>실시간 대전, 랭킹전, 시즌</td>
+      <td>—</td>
+    </tr>
+  </table>
+  <div class="box risk">
+    <b>P0에서 재미가 안 나오면 P1 이후를 만들어도 안 난다.</b> 아이템과 성장은 <b>이미 재미있는 것을 증폭</b>할 뿐, 재미없는 것을 재미있게 만들지 못한다. P0 판정 기준을 미리 정해둔다: <b>"아이템도 상대도 없이 혼자 3분 이상 반복하게 되는가."</b> 안 되면 조작이나 코스 설계를 갈아엎고, 다음 단계로 넘어가지 않는다.
+  </div>
+</section>
+
+<section>
+  <h2 id="tech">13. 기술 전제</h2>
+  <ul>
+    <li><b>3D 필수</b> — 3인칭 추격 시점 때문. 단, 이동은 레인 제한이라 물리는 단순화 가능(캐릭터는 스플라인 위를 진행, 좌우 오프셋만 관리).</li>
+    <li>물 표현이 이 게임의 인상을 좌우 — <b>수면 셰이더 + 물보라 파티클 + 물속 굴절</b>이 최소 요구. 모바일 타깃이면 여기서 성능이 먼저 깎인다.</li>
+    <li>캐릭터 스윔 애니메이션은 <b>자유형 루프 1개 + 턴 + 다이빙 + 피격</b>이 최소 세트. 5종 × 4모션.</li>
+    <li>모든 밸런스 수치(스탯 계수, 아이템 확률, 강화 비용, 보상)는 <b>CSV 테이블</b>로. 코드 상수 금지.</li>
+    <li>타깃 플랫폼 <span class="tag todo">결정 필요</span> — 모바일 우선인지 PC 우선인지에 따라 조작·아트 예산이 크게 갈린다.</li>
+  </ul>
+</section>
+
+<section>
+  <h2 id="open">14. 미확정 · 결정 필요 목록</h2>
+  <h3>14.1 사용자 결정이 필요한 것 <span class="tag todo">대기</span></h3>
+  <div class="scroll">
+  <table>
+    <tr><th style="width:40px">#</th><th style="width:150px">항목</th><th>선택지</th><th style="width:110px">영향</th></tr>
+    <tr><td>1</td><td><b>전진 방식</b></td><td>A 자동 전진(추천) / B 리듬 연타 / 절충(스퍼트 중에만 리듬)</td><td>코어 조작 — <b>이게 정해져야 P0을 시작할 수 있다</b></td></tr>
+    <tr><td>2</td><td>타깃 플랫폼</td><td>모바일 / PC / 둘 다</td><td>조작·아트·성능 예산</td></tr>
+    <tr><td>3</td><td>코스 길이와 턴 횟수</td><td>50m 왕복(턴1) / 25m 4회(턴3)</td><td>코어 재미 밀도</td></tr>
+    <tr>
+      <td>4</td>
+      <td><b>"섹시한 여성" 캐릭터</b></td>
+      <td>원안 유지 / 역할 기반 재정의(추천) / 절충</td>
+      <td>연령등급 · 광고 플랫폼 · 유저층</td>
+    </tr>
+    <tr><td>5</td><td>영법 전환 도입</td><td>도입 / 미도입 / 자동 전환만 (§5.3)</td><td>조작 부하</td></tr>
+    <tr><td>6</td><td>호흡 QTE</td><td>도입 / 미도입</td><td>조작 부하</td></tr>
+    <tr><td>7</td><td>티켓(입장권) 제도</td><td>도입 / 미도입</td><td>수익모델·이탈률</td></tr>
+    <tr><td>8</td><td>캐릭터 이름</td><td>부글/퐁당/초롱/유하/태오 (제안) 또는 재작명</td><td>톤앤매너</td></tr>
+    <tr><td>9</td><td>무과금 만렙 목표 시간</td><td>미정 — 정해야 §8·§10 비용을 역산 가능</td><td>경제 전반</td></tr>
+  </table>
+  </div>
+
+  <div class="box risk">
+    <b>4번 상세 — 외부 리뷰(Codex)에서 제기된 사항</b><br>
+    현재 5인 구성은 <b>뚱뚱보 · 어린아이 · 귀여운 여성 · 섹시한 여성 · 훈남</b>으로, 캐릭터가 <b>세계관이 아니라 신체 유형으로</b> 정의되어 있다. 특히 "섹시한 여성"에는 세 가지 실질 위험이 있다.
+    <ul>
+      <li><b>연령등급·광고</b> — 수영복이 기본 복장인 게임에서 성적 어필 캐릭터는 스토어 등급과 광고 플랫폼(특히 해외) 심사에 걸릴 수 있다. 등급이 올라가면 <b>어린이 캐릭터가 있는 캐주얼 게임인데 접근 가능 연령이 좁아지는</b> 모순이 생긴다</li>
+      <li><b>상품군 배치</b> — 같은 상점에 어린이 캐릭터와 성적 어필 캐릭터의 수영복 스킨이 나란히 놓이는 그림 자체가 문제 소지다</li>
+      <li><b>유저층</b> — 캐주얼 레이싱의 주 확장 대상은 여성·저연령층인데, 이 방향은 그 층을 밀어낸다</li>
+    </ul>
+    <b>대안:</b> 캐릭터를 <b>태도와 역할</b>로 재정의한다. 예) "유하 — 국가대표 출신 엘리트 라이벌. 도도하고 승부욕 강함." 날렵한 선수형 실루엣과 성인 여성 캐릭터라는 원안의 매력은 그대로 두면서, 정의의 축만 <b>몸매 → 성격·경력</b>으로 옮기는 것이다. 스탯(스피드 특화)과 고유 특성은 변경 없음.<br>
+    <b>이건 제가 임의로 바꾸지 않았습니다.</b> 원안 유지도 충분히 가능한 선택이며, 결정은 사용자 몫입니다.
+  </div>
+
+  <h3>14.2 이번 리뷰에서 확정한 것 <span class="tag fix">2026-08-31</span></h3>
+  <table>
+    <tr><th style="width:150px">항목</th><th>결정</th><th style="width:80px">절</th></tr>
+    <tr><td>레인 수</td><td>5 → <b>8</b> (참가 인원과 동일). 겹침 규칙 신설</td><td>§5</td></tr>
+    <tr><td>레인 유불리</td><td>직선 코스엔 안/바깥 유불리가 <b>없다</b>. 배치물의 목적을 "보상"이 아니라 "선택지"로 재정의</td><td>§5</td></tr>
+    <tr><td>스피드 계수</td><td>0.6%/pt → <b>0.25%/pt</b> (캐릭터 간 상시 격차 4.2% → 1.75%)</td><td>§8</td></tr>
+    <tr><td>부스터 계수</td><td>가속+지속 동시 상승 → <b>가속량만</b> (곱연산 제거)</td><td>§8</td></tr>
+    <tr><td>운 스탯</td><td>상급 확률↑ → <b>중급 이상 확률↑ + 쿨다운↓</b></td><td>§6.1</td></tr>
+    <tr><td>판정 창</td><td>Perfect ±60ms → <b>±90ms</b> + 입력 지연 캘리브레이션 필수</td><td>§4</td></tr>
+    <tr><td>보상 격차</td><td>최대 8.6배 → <b>2.7배</b>. 승리 동기는 비재화 보상으로</td><td>§10</td></tr>
+    <tr><td>상어 세트</td><td>+5%/2배 → <b>+3%/+60%, 1위일 땐 미적용</b></td><td>§9</td></tr>
+    <tr><td>효과 중첩</td><td>같은 항목은 <b>합연산 + 총 상한 +100%</b></td><td>§9</td></tr>
+    <tr><td>수심 레이어</td><td><b>도입 확정</b> — 수면/수중 2층. 수영 정체성의 핵심</td><td>§5.2</td></tr>
+    <tr><td>드래프팅</td><td><b>도입 확정</b></td><td>§1</td></tr>
+    <tr><td>대전 공정성</td><td>랭킹전은 <b>스탯 정규화</b>, 일반전은 전투력 매칭</td><td>§12.1</td></tr>
+    <tr><td>멀티플레이</td><td><b>P4로 연기 확정</b></td><td>§12.2</td></tr>
+    <tr><td>개발 범위</td><td>P0~P4 단계 구분. <b>P0는 아이템·성장 전부 제외</b></td><td>§12.2</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2 id="history">15. 개정 이력</h2>
+  <table>
+    <tr><th style="width:110px">버전</th><th style="width:100px">날짜</th><th>내용</th></tr>
+    <tr>
+      <td><b>v0.1</b></td><td>2026-08-31-0</td>
+      <td>최초 작성. 사용자 구술(수영 레이싱 컨셉, 캐릭터 5종, 능력치 4종, 장비 4부위, 경제·경기장 요구)을 기획서로 정리</td>
+    </tr>
+    <tr>
+      <td><b>v0.2</b></td><td>2026-08-31-1</td>
+      <td>
+        Codex(gpt-5.6-sol) 읽기 전용 리뷰 반영.<br>
+        <b>수정:</b> 레인 수·충돌 규칙(§5), 스탯 계수(§8), 운 설계(§6.1), 판정 창(§4), 보상 격차(§10), 상어 세트·중첩 상한(§9)<br>
+        <b>신설:</b> 수심 레이어(§5.2), 영법 전환(§5.3), 대전 공정성(§12.1), MVP 단계(§12.2), 개정 이력(§15)<br>
+        <b>미반영(사용자 결정 대기):</b> 캐릭터 4번 재정의 — §14.1<br>
+        <b>미반영(의도적):</b> "과설계 항목 삭제" 권고 → 삭제 대신 P0~P4 태그로 단계 구분. 지우면 같은 고민을 다시 하게 되므로
+      </td>
+    </tr>
+  </table>
+</section>
+
+</div>
+</body>
+</html>

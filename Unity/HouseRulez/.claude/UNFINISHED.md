@@ -1,121 +1,82 @@
 # 미완료 작업
 
-## 2026-08-30-1 — 인게임 전투 1·2단계 (브랜치 `work/2026-08-29-upgrade-content`, 커밋 없음)
+---
 
-**1단계 적/웨이브 테이블, 2단계 판정기까지 완료.** 전부 미커밋이다.
+> 📁 이 파일은 **색인**이다. 항목 본문은 `.claude/unfinished/` 아래에 주제별로 나뉘어 있고,
+> 완료·커밋된 과거 기록은 `.claude/archive/` 아래로 옮겼다(2026-09-10).
+> 원래 1084줄 한 덩어리라 실제 미완료 항목이 파묻혀 있었다. **지운 게 아니라 옮긴 것이다.**
 
-**만든 것**
-- `EnemyTable`(7행) / `WaveTable`(36행) / `JudgeTable`(9행) / `UnitGradeTable`(3행) — 테이블 10 → 14개
-- `Judge`(4종족 판정기) + `JudgeResult`/`SummonSlot`
-- `GameConfigTable`에 `WaveBasePower`, `StringTable`에 적 이름·등급 10행
+## 📍 현재 저장소 상태 (2026-09-10 실측)
 
-**확정된 규칙**
-- 전력 1 = 1성 유닛 1기. 9칸을 넘으면 **등급으로 전환**(1→2→3성)
-- 웨이브 마릿수는 CSV에 안 적고 `PowerCoef`에서 역산
+### 브랜치 (원격 `https://github.com/purityzero/HouseRules.git`)
 
-**Codex 독립 QA 통과** — 판정 4종족이 GDD 게시값 완전 재현, 무결성 200만 시행 결함 0, 종족 간 전력 차이 2.09 → 0.29 개선.
+| 브랜치 | HEAD | main 병합 |
+|---|---|---|
+| `main` | 최신 원격과 일치 | — |
+| `work/2026-08-28-ingame-canvas-fit` | `eac6d6e` | ❌ **보류** — 충돌 82곳 + 주제 중복(바로 아래 「2026-09-09 병합」 참고) |
 
-**⚠️ 밸런스 재확인 필요 — 승인 근거에 오류가 있었다**
-36웨이브 표를 승인받을 때 "12연차 최종 110 vs 플레이어 6기 × 18.0 = 108"로 계산했는데, **×18.0은 프리즘 배수**다. 판정 소환의 최대 등급은 3성(×7.0)이라 실제로는 **6기 × 7.0 = 42**다. 최종 웨이브가 계산보다 훨씬 어렵다. 코어·각인·프리즘이 붙어야 메워지는 격차이므로 **전투가 돌아간 뒤 실제 클리어율로 재조정해야 한다.**
+### 2026-09-10 QA·Git 마무리
 
-**남은 것**
-- 3단계 소환 연결(스핀 결과 → 전장 3×3 배치), 4단계 적 스폰·최소 전투
-- 적 아트 없음 — `Image/InGame/Enemy/enemy_*` 규약만 정해둠
-- 슬롯·마작·윷 3종족 판정기 미구현(GDD에 계수가 없고 각 design 문서에 별도로 있음)
-- 웨이브당 적 1종뿐 — 혼합 편성은 `EnemyGroupTable` 필요
-- 승격 기준이 "비용의 절반"이라 배치 전력이 목표보다 평균 0.05~0.19 높다(장기 6.46 · 포커 6.39)
+`work/2026-09-09-font-unify`의 인게임 결과 처리·배너 타이밍·설정 닫기 로컬라이제이션은
+Play Mode QA를 통과해 `07d6a1f`로 커밋했다. 배너 상세는 `archive/2026-09-10-banner-spoiler.md` 참고.
 
+전투 연출 `80121a0`도 QA 통과 후 `main`에 `--no-ff` 병합하고 push했다(`f009e31`).
+상세는 `archive/2026-09-09-battle-motion.md` 참고.
 
-## 2026-08-29-3 — 윷놀이 UI QA 수정
+폰트 통일·설정 닫기 로컬라이제이션·인게임 결과 처리·배너 수정은 최종 결합 QA 후
+`main`에 `--no-ff` 병합하고 push했다(`9744ff4`). 완료된 작업 브랜치는 정리 대상이다.
 
-- 회전 시 윷 심볼이 튀어나가거나 사라져 보이던 원인은 각 PNG가 `SpriteMode.Multiple` 자동 슬라이스로 서로 다른 타이트 사각형을 사용한 것이었다. 윷놀이 normal/blur/x8 18개를 `SpriteMode.Single`로 통일해 32×32 전체 캔버스와 중앙 피벗을 유지했다.
-- 업그레이드의 7번째 윷놀이 탭은 6종족 전용 고정 폭 때문에 팝업 밖으로 213px 넘쳤다. 현재 루트 폭을 종족 수로 균등 분배하도록 `UIHouseUpgrade`를 수정했다.
-- 1280×720 Play Mode에서 윷놀이 선택 상태의 정지·회전 중·정지 후 슬롯 화면과 업그레이드 팝업을 캡처해 확인했다. 회전 중 9개 심볼 모두 릴 마스크 안, 7개 탭 모두 팝업 안에 있었다.
-- `verify-compile`, `verify-tables` 재검증 완료. QA용 임시 진입 코드는 제거했다.
+⚠️ **폰트 아틀라스 4개**(`Assets/font/*.asset` 3개 + `LiberationSans SDF - Fallback.asset`)도
+더티로 뜨지만 **커밋하지 않는다** — 에디터가 켜지면 글리프가 쌓이는 알려진 현상이다(`unfinished/repo-notes.md` 참고).
 
-### 2026-08-30 이어받아 마무리한 것
+### 2026-09-09 병합 (사용자가 이 건에 한해 Claude Code에 Git 마무리를 위임)
 
-**빠져 있던 것: 윷놀이의 업그레이드 노드가 0행이었다.** 다른 6종족은 각 8행인데 윷만 비어 있어, 업그레이드 팝업에서 윷 탭만 빈 상태로 떴다. `HouseTable`·`StringTable`·아트·탭 폭은 다 맞춰져 있었는데 `HouseUpgradeTable`만 안 채워진 상태였다.
+`work/2026-08-30-enemy-art`의 **검증된 19커밋을 `main`에 fast-forward** 병합하고 원격에 push했다
+(`d6ab769` → `33dca3f`). 병합 커밋이 생기지 않았다 — main에만 있던 커밋이 0개였다.
 
-- 윷 배분 **본거지 — / 코인 3 / 스왑 3 / 자금 2** (8행 추가, 총 56행). 윷·모가 나오면 한 번 더 던지고 말을 업거나 지름길로 옮기는 종족이라 코인·스왑을 최대까지 열었다. 대신 본거지 보강이 없다.
-- 7종족 전부 **노드 3종 / 8행 / 8레벨 / 51옥새**로 균일함을 기계 확인했다.
-- 기획 정본(`design/upgrade-system.html`), 설계(`architecture/house-upgrade.md`), `class/HouseUpgradeRecord.md`의 배분표에 윷 행을 반영했다.
+- **`80121a0`(전투 연출)은 검증 전이라 일부러 뺐다.** 2026-09-10 Play Mode QA는 통과했고,
+  「기본 브랜치엔 사람이 돌려보고 통과시킨 것만 합류시킨다」에 걸린다.
+  `BattleUnit.cs` 한 파일만 건드리는 독립 커밋이라 깔끔히 분리됐다.
+  → 이제 **main 병합과 push만 남았다.** `archive/2026-09-09-battle-motion.md` 참고.
+- `work/2026-08-29-upgrade-content`(`93846fb`)는 enemy-art에 포함돼 있어 main에 함께 들어갔다.
+  **로컬·원격 모두 삭제 완료.**
+- `work/2026-08-28-ingame-canvas-fit`(`eac6d6e`)은 **건드리지 않았다.**
+  같은 `Assets/Scenes/InGameScene.unity`를 건드려 **병합 시 충돌 82곳**이고,
+  enemy-art의 `4d71c80 인게임 화면이 캔버스를 못 채우던 문제와 HUD 겹침 수정`이
+  **같은 주제를 이미 고친 것으로 보인다.** 병합 전에 두 커밋의 diff를 대조해
+  실제로 중복인지부터 판정할 것 — 중복이면 병합하지 말고 브랜치를 버린다.
 
-**검증**: `verify-tables` exit 0(10개 테이블), `verify-compile` exit 0.
+옛 브랜치 5개(`2026-08-26-player-data` · `2026-08-26-slot-reel` · `2026-08-27-title-to-ingame` ·
+`2026-08-27-ingame-hud` · `2026-08-27-slot-house`)는 **로컬·원격 모두 이미 삭제됐다.**
+그 내용이 main에 녹아든 뒤의 과거 기록은 `.claude/archive/branches-1-5.md`에 있다.
 
-**Play Mode 실측 완료 (2026-08-30, MCP 연결 세션)**
-- 탭 7개 전부 생성, 어느 탭도 패널 밖으로 안 나감
-- 7종족 전부 노드 3줄, 빈 상태 패널 꺼짐 — 윷은 스핀 코인 / 스왑 횟수 / 초기 자금
-- 윷 스핀 코인을 실제 `onClick.Invoke()`로 Lv3까지 구매: 옥새 81→78→72→60(비용 3/6/12 일치), Lv3에서 `MAX LEVEL` 표시, 창 유지
-- `RunData`: 윷 선택 시 `spinCoinMax=6`(3+3), `swapCountMax=2`(미구매), `homeHpMax=8`(윷엔 본거지 노드 없음) — 전부 기대값
+### 2026-09-09 커밋 (사용자가 이 건에 한해 Claude Code에 Git 마무리를 위임)
 
-참고: `unity command verify-*`는 MCP와 별개 경로라 MCP 미연결 상태에서도 동작한다(2026-08-30 확인).
+| 파일 | 내용 | 검증 |
+|---|---|---|
+| `.claude/UNFINISHED.md` · `.claude/class/BattleUnit.md` | 기록을 실제 저장소 상태로 정정 | ✅ `git log` 대조 |
+| `.gitignore` | `Assets/_Recovery/` 무시 규칙 추가 | ✅ 자명 |
+| `Assets/Scripts/InGame/Battle/BattleUnit.cs` | 전투 공격/피격/사망 연출(DOTween) +109/−3 | ⬜ **미검증** — `unfinished/2026-09-09-battle-motion.md`. 코드만 별도 커밋으로 분리했다 |
 
-**배분은 기획 판단이라 바뀔 수 있다.** CSV 8행만 고치면 되므로 다른 배분을 원하면 말해달라.
+---
 
-## 2026-08-29-2 — 로컬라이제이션을 UIText 컴포넌트로 전환 (같은 브랜치)
+## 📑 미완료 항목 — 파일별 색인
 
-GeometryDefender의 `UIText`를 이식해 정적 라벨 17개를 컴포넌트 방식으로 바꿨다. 화면마다 흩어져 있던 수동 `GetString()` 호출과 직렬화 필드 13개를 제거했다.
+이 파일이 470줄까지 불어나서 2026-09-10에 주제별로 나눴다(**한 파일 200줄 이하** 유지).
+아래 표가 전체 목록이다. 세션 시작 시 이 표만 보고 어디를 열지 정한다.
 
-- `StringTable.LANGUAGE`(관찰 값)를 구독해 언어 변경 시 스스로 갱신한다.
-- 씬 오브젝트는 `OnEnable`이 테이블 로드보다 먼저 돌아 `UIText.RefreshAll()`로 최초 1회를 채운다.
-- 포맷 인자가 있거나 키가 런타임에 정해지는 표시는 대상이 아니다 — 해당 화면이 직접 구독해 다시 그린다.
+| 상태 | 항목 | 파일 |
+|---|---|---|
+| 🐛 결함 1건 남음 | 버튼 폰트 GD 방식 통일 — `柶`(U+67F6) 글리프 누락. **중국어 번역어 결정 대기(기획 판단)** | [`unfinished/2026-09-09-font-unify.md`](unfinished/2026-09-09-font-unify.md) |
+| 🐛 진단만 3건 | 토스트 시스템 사망 · EventSystem 2개 · 윷 심볼 3.4배 작음 | [`unfinished/known-issues.md`](unfinished/known-issues.md) |
+| 📋 백로그 | 골드 소모 경로 없음 · AccentColor 미연결 · 아트 보강 · `Assets/Screenshots/` 정리 | [`unfinished/backlog.md`](unfinished/backlog.md) |
+| 📌 계속 유효 | 재발 방지 메모(MCP 연결 시점, Codex 위임 한계, `read_console` 함정) | [`unfinished/lessons.md`](unfinished/lessons.md) |
+| 📌 참고 | 폰트 아틀라스 기준선(커밋하면 안 되는 더티) · 다른 컴퓨터에서 이어받기 | [`unfinished/repo-notes.md`](unfinished/repo-notes.md) |
 
-**함께 고친 공용 버그**: `ObservableVariable.NotifyObservers`가 원본 리스트를 순회해, 알림 도중 UI가 켜지고 꺼지면 `Collection was modified`로 **알림이 중간에 끊겼다.** 사본 순회로 수정했다.
+**완료·커밋된 과거 기록**은 [`.claude/archive/`](archive/README.md)에 있다(미완료 아님, 되짚을 때만 연다).
 
-**검증**: `verify-compile`/`verify-tables` exit 0. 타이틀 4 + 인게임 5 + 팝업 8을 4개 언어로 순환시켜 즉시 갱신 확인. 비활성 라벨이 켜질 때 현재 언어로 채워지는 것도 실측.
+2026-09-10 인게임 전수 QA 결과는 [`archive/2026-09-10-ingame-qa.md`](archive/2026-09-10-ingame-qa.md)에 있다.
 
-**남은 것**: 사람 눈 확인. `UISetting`/`TitleScene`의 **값 표시**(언어명·FPS 값)는 여전히 수동 갱신이다 — 정적 라벨만 옮겼다.
-
-## 2026-08-29-1 — 종족별 업그레이드 콘텐츠 (브랜치 `work/2026-08-29-upgrade-content`, 커밋 없음)
-
-M-2~M-6을 사용자 승인으로 확정하고 노드 데이터·영구 재화·구매·런 반영까지 구현했다. **기계 검증과 Play Mode 실측은 통과했고, 사람 눈 확인만 남았다.**
-
-**확정된 결정** (기획 정본 `.claude/design/upgrade-system.html`, 설계 `.claude/architecture/house-upgrade.md`)
-- M-2 선형 단계 목록 / M-3 단일 공용 재화 "옥새" / M-4 런 시작값 4축 중 종족별 3축 / M-5 재분배 없음 / M-6 현재 플레이 종족
-
-**구현**
-- `eCurrencyType.Royal`, `PlayerData.royal`·`TryPurchaseHouseUpgrade()`(원자적), `PlayerManager` 구매·보너스 API
-- `HouseUpgradeTable.csv` 48행(종족당 3노드 / 8레벨 / 8행 / 51옥새 균일), `GameConfigTable` 옥새 키 2개, `StringTable` 12행
-- `RunData.Init()`에서 메타 스냅샷 1회 반영, `UIHouseUpgradeNode` 신규 + 팝업 프리팹에 노드 목록·옥새 표시 추가
-
-**검증 통과**: `verify-compile` exit 0, `verify-tables` exit 0(10개), Play Mode에서 탭별 노드 구성 상이·구매·잔액 부족 거절·최대 레벨 표시·저장 유지·`RunData` 반영·유령 보너스 없음 실측.
-
-**남은 것**
-- **사람 눈 확인** — 노드 줄 배치·가독성·잘림을 아직 본 적이 없다. 통과해야 `main` 합류.
-- `RunData.GetRoyalReward()`에 **호출부가 없다** — 런 종료 단계 자체가 없어서다. 종료 처리가 생기면 `PlayerManager.AddRoyal()`로 연결(코드에 `TODO`).
-- 스핀 코인 3→6이 4축 중 가장 강한데 전투·판정이 없어 실측 불가. 판정기가 붙은 뒤 재조정 대상.
-- 종족 고유 기구(`HoldMax`·판돈·`PoolCount`)는 밸런스 시뮬레이션 수단이 없어 이번 범위에서 제외했다. 유닛 시스템 이후 M-4 2차.
-- 테이블에서 뺀 노드가 저장본에 남는다(개발 중 저장본 한정, 유령 보너스는 안 생김). 출시 전 마이그레이션 필요 여부 판단.
-
-**작업 메모**: `manage_gameobject`가 비활성 오브젝트를 못 잡는다(`by_path`·`by_id` 둘 다). 비활성 템플릿 내부 작업은 `execute_code`로 프리팹 스테이지를 직접 잡는 쪽이 왕복이 훨씬 적다 — 상세는 `.claude/prefab/UIHouseUpgrade.md`.
-
-## 2026-08-29-0 — Git 마무리 상태 (브랜치 정리 완료)
-
-HouseRules `main` 병합 커밋 `d6ab769`까지 원격 푸시 완료. 병합 후에도 `verify-compile`과 `verify-tables`(10개) 통과를 확인했다.
-Orca 정본 문서는 `5b17beb`로 별도 커밋해 푸시했다(사용자 미커밋 변경인 루트 `CLAUDE.md`는 제외).
-
-`main`에 병합되고 푸시까지 끝난 작업 브랜치 4개를 로컬·원격 모두 삭제했다 — `work/2026-08-28-house-upgrade`(`67bd379`),
-`work/2026-08-28-qa-toolbar-api`(`153f387`), `work/2026-08-28-settings-popup`(`8f09cb7`), `work/2026-08-28-unity-pipeline`(`f0d0913`).
-
-**남아 있는 것**
-- `work/2026-08-28-ingame-canvas-fit` — **미병합**, 커밋 1개(`eac6d6e` InGame Canvas 레이아웃을 1920x1080에 맞춤).
-  사람 눈 확인 전이라 로컬·원격 모두 유지한다.
-- HouseRules 작업 트리 미커밋 — `ProjectSettings.asset`의 `runInBackground: 0 → 1` 한 줄.
-  `Assets/font/*.asset` 2개는 내용 차이 없이 CRLF 정규화 경고만 뜨는 것이다.
-
-## 2026-08-28-4 — 기획 문서 HTML 정본 전환
-
-완료. HouseRulez의 기존 `.claude/design/*.md` 기획 문서 6개를 UTF-8 단독 HTML로 교체했다. 문서마다 목차, heading anchor, 반응형 표/코드블록, 인쇄 스타일을 적용했고 기획 문서 간 링크와 역할 에이전트의 산출물 규칙도 `.html` 기준으로 변경했다.
-
-## 2026-08-28-3 — 종족별 업그레이드 시스템
-
-읽기 전용 최소 수직 슬라이스 완료. `HouseUpgradeTable`/헤더 전용 CSV, `HouseKey/nodeKey`별 영구 진행 저장 골격, 공용 `UIHouseUpgrade` 팝업, `UITable`/`StringTable`, 타이틀 버튼 연결을 구현했다. 화면에는 6개 종족 탭과 현지화된 빈 상태가 보이며, 열람 탭을 바꿔도 플레이 종족 저장값은 바뀌지 않는다.
-
-2026-08-29에 `verify-compile`, `verify-tables`(10개), Unity Console error 0, Play Mode 실제 버튼/탭/닫기, 1280×720 화면 배치를 확인했다. 새 음원은 추가하지 않았고 현재 유효한 클릭 SFX 키가 없어 신규 버튼의 SFX 키는 비워 두었다.
-
-실제 구매 가능한 콘텐츠는 아직 미완료다. 다음 구현 전에 M-2 트리 형태, M-3 재화/획득 경로, M-4 종족별 효과와 수치, M-5 재분배/최대 진행, M-6 혼혈 적용 규칙, 구매 저장 원자성과 효과 적용 순서를 확정해야 한다. 기존 GDD의 "초기 빌드 영구 강화 트리 제외" 문구도 최신 결정에 맞춰 개정 대상이다.
-
-## 2026-08-28-2 — 설정/종족 선택 팝업 UITable 전환
-
-완료. `UISetting`과 `UIHouseSelect`를 `UITable`/`UIManager` 경로로 등록하고, BGM·SFX 볼륨 옵션을 연결했다. GeometryDefender 음원 파일은 이식하지 않았다. Play Mode 표시·상호작용과 컴파일/테이블 검증을 완료했다.
+### 사용자 결정을 기다리는 것
+1. **`柶` 중국어 번역어** — `尤茨`·`投掷游戏`·`木棒游戏`·`韩国游戏`는 폰트가 커버함을 기계로 확인했다
+2. **숫자 모양** — 한국어 화면의 `Lv 3/3`·`MAX LEVEL`만 산세리프. GD와 같은 방식이나 픽셀아트와 이질적

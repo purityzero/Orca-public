@@ -1,36 +1,101 @@
+# UIInGameHud
 
-## 2026-08-30-0 — 업그레이드로 늘어난 핍이 옆 항목을 덮던 문제
+연관: `InGameScene`(`Assets/Scripts/InGame/InGameScene.cs`), [[RunData]], [[GameConfigTable]], [[SutdaBetTable]], `HouseRecord`, `StringTable`
+
+## 2026-08-27-0 — 신설 (인게임 상단 HUD)
+
+### 개요
+기획서 §10 ScreenZones의 HUD 영역(네이티브 `0,0 – 640,20`)을 ×3한 **1920×60 띠**. 본거지 HP · 연차 ·
+골드 · 스핀 코인 · 판돈을 표시한다. 표시만 하고 값은 바꾸지 않는다 — 소유자는 `InGameScene`.
+
+파일: `Assets/Scripts/InGame/UI/UIInGameHud.cs` (신규 폴더 `Assets/Scripts/InGame/UI/`)
+
+### 계층 구조 (InGameScene.unity)
+```
+SafeRoot
+└─ Hud                     RectTransform 1920x60, SafeRoot 좌상단 (0,0)    ← UIInGameHud
+   ├─ Panel                Image #363B4A, stretch, m_RaycastTarget 0
+   ├─ HomeLabel            TMP, x=24  w=120  좌측정렬  #ADACA4
+   ├─ HomeHpPipRoot        RectTransform, x=150 w=234 (8칸 × 24 + 간격 6 × 7)
+   │  └─ PipTemplate       Image #D1554C 24x24  ★ 비활성 원본, 코드가 복제한다
+   ├─ YearText             TMP, x=400 w=220  #F6F5F0
+   ├─ GoldLabel            TMP, x=630 w=90   #ADACA4
+   ├─ GoldValue            TMP, x=730 w=140  #D6A441  fontSize 26
+   ├─ SpinCoinLabel        TMP, x=890 w=150  #ADACA4
+   ├─ SpinCoinPipRoot      RectTransform, x=1050 w=84 (3칸 × 24 + 간격 6 × 2)
+   │  └─ PipTemplate       Image #F6F5F0 24x24  ★ 비활성 원본
+   └─ BetText              TMP, 우측 앵커 x=-40 w=320  우측정렬  #D1554C
+```
+자식은 전부 앵커 `(0,0.5)` · 피벗 `(0,0.5)` · `y=0`(BetText만 우측 앵커) — 부모 좌측 기준 가로 배치 +
+세로 중앙. 색은 GDD 09장 팔레트(패널 `#454B5E`, 입력 웰 `#393E4E`, 최암부 한계 `#363B4A`,
+아군 본체 `#F6F5F0`, 음영 `#ADACA4`)를 따랐다.
+
+### 핍을 씬에 박지 않고 코드로 복제하는 이유
+HP 8칸 / 코인 3개는 **테이블 값**(`HomeHpMax`, `SpinCoinPerYear`)이다. 씬에 8개를 박아두면 CSV를 고쳤을 때
+화면만 8칸으로 남아 조용히 어긋난다. 그래서 슬롯머신의 `SymbolTemplate`과 같은 관례로 비활성 원본 1개를
+두고 `BuildPipList()`가 `_runData.homeHpMax` 개수만큼 복제한다.
+
+간격 계산의 기준 폭은 **템플릿의 실제 `sizeDelta.x`에서 읽는다** — 코드에 폭을 또 적으면 씬 값과
+이중 소스가 되어 나중에 한쪽만 바뀐다. 간격(`m_PipSpacing`)만 직렬화 필드다.
+
+### 직렬화 필드 ↔ 씬 fileID
+| 필드 | fileID | 타입 |
+|---|---|---|
+| `m_HomeLabelText` | 900200192 | TextMeshProUGUI |
+| `m_HomeHpPipRoot` | 900200201 | RectTransform |
+| `m_HomeHpPipTemplate` | 900200212 | Image |
+| `m_YearText` | 900200222 | TextMeshProUGUI |
+| `m_GoldLabelText` | 900200232 | TextMeshProUGUI |
+| `m_GoldValueText` | 900200242 | TextMeshProUGUI |
+| `m_SpinCoinLabelText` | 900200252 | TextMeshProUGUI |
+| `m_SpinCoinPipRoot` | 900200261 | RectTransform |
+| `m_SpinCoinPipTemplate` | 900200272 | Image |
+| `m_BetText` | 900200282 | TextMeshProUGUI |
+
+### 판돈 표시
+화투(섯다)만 쓰는 개념이라 `HouseRecord.isUseBet`이 0이면 `BetText` 오브젝트 자체를 끈다.
+종족 키를 코드에서 비교하지 않는다([[SutdaBetTable]] 참고).
+
+### 호출 순서
+`InGameScene.OnSetup()` → `Apply(runData, houseRecord)`(라벨 로컬라이즈 + 핍 생성 + 첫 그리기) →
+이후 값이 바뀔 때마다 `Refresh()`. 지금 `Refresh()`를 부르는 곳은 스핀 코인이 줄어드는 `OnClickSpinButton()` 하나다.
+
+### StringTable 키 (이번에 추가)
+`HudHome` / `HudYear`(`YEAR {0}/{1}`) / `HudGold` / `HudSpinCoin` / `HudBet`(`판돈 {0} ×{1}`)
+
+### 검증 상태 — 미검증
+Unity MCP 미연결 세션이라 씬 YAML을 직접 작성했다. 파일 정합성(fileID 중복/고아/역참조/개행)은
+스크립트로 대조해 통과했지만 **에디터로 열어보지도, 컴파일하지도, 플레이해보지도 않았다.**
+
+## 2026-08-30-0 — 업그레이드로 늘어난 핍이 YEAR 텍스트를 덮은 문제
 
 ### 증상
-인게임 상단에서 `YEAR 01/12`가 본거지 HP 핍 위에 겹쳐 그려졌다. 사용자는 "해상도가 안 맞는 것 같다"고 봤지만 해상도와 무관했다.
+`본거지 보강` 업그레이드를 올리면 HP 핍이 8개에서 11개로 늘어나는데, `YEAR 01/12`가 그 위에 겹쳐 찍혔다.
 
-### 원인 — 내가 만든 업그레이드가 이 HUD를 깨뜨렸다
+### 원인
+`HomeHpPipRoot`의 폭이 씬에 **234(8칸분)로 박혀 있었다.** 핍은 코드가 테이블 값만큼 복제하는데
+그 부모의 폭은 그대로여서, 11칸(474px)이 루트 밖으로 삐져나와 오른쪽 라벨을 침범했다.
+자식은 전부 좌측 앵커 고정 배치라 아무도 밀려나지 않았다.
 
-`HomeHpPipRoot`의 씬 저장 폭이 **234(핍 8개 전제)**로 박혀 있었고, `BuildPipList()`는 핍을 만들면서 **루트 폭을 갱신하지 않았다.** 그래서 핍이 루트 밖으로 뻗어도 뒤 항목들은 그 사실을 모른다.
+> 영구 메타 업그레이드를 넣으면서 내가 만든 회귀다. "테이블 값이 바뀌면 화면도 따라온다"를
+> 핍 개수에만 적용하고 **그 컨테이너 폭에는 적용하지 않았다.**
 
-`home_hp` 업그레이드가 `HomeHpMax`를 8 → 최대 11로 올리면서 핍이 11개가 됐다.
+### 수정 (두 겹)
+1. `BuildPipList()`가 실제 핍 개수로 `_root.sizeDelta`를 갱신한다 — 폭의 소유자를 코드로 옮겼다.
+2. Hud 루트를 `HorizontalLayoutGroup`(`m_Spacing: 16`, `m_ChildAlignment: 3` = MiddleLeft)으로 바꿨다.
+   폭이 변하는 자식이 생겨도 뒤 항목들이 알아서 밀린다 — 같은 사고가 다른 항목에서 또 나지 않게.
 
-| | 폭 | 끝 x |
-|---|---|---|
-| 설계 당시 8개 | 234 | 384 |
-| 업그레이드 Lv3, 11개 | 324 | **474** |
+### 검증 상태 — Codex QA 통과 (2026-08-30)
+본거지 보강 Lv0(8칸)/Lv3(11칸) 양쪽에서 `YEAR` 텍스트와 핍 영역이 겹치지 않음을 화면 좌표로 확인.
 
-`YearText`는 `x=400` **고정**이라 그 위에 얹혔다. 업그레이드를 안 산 상태에서는 재현되지 않아 앞선 검증을 전부 통과했다.
+## 2026-08-31-0 — 무료 스핀 강조 연출 `PlaySpinCoinBonus()`
 
-### 수정 두 겹
+코인 칸 하나가 돌아오는 게 전부라 그냥 두면 **화면 위쪽 작은 칸이라 그냥 지나친다.**
+방금 채워진 칸(`spinCoin - 1` 인덱스)에 `DOPunchScale`(0.6배 / 0.45초)을 준다.
 
-1. **`BuildPipList()`이 루트 폭을 실제 개수로 갱신한다.** 씬에 박아둔 폭이 남아 있으면 개수가 바뀌는 순간 어긋난다.
-2. **HUD 루트를 고정 좌표에서 `HorizontalLayoutGroup`으로 바꿨다**(padding 24, spacing 16, MiddleLeft). 이제 핍 개수가 변하면 뒤 항목이 알아서 밀린다. 배경 띠 `Panel`과 오른쪽 고정인 `BetText`는 `LayoutElement.ignoreLayout`으로 흐름에서 뺐다.
+`Refresh()`로 색을 이미 채운 **뒤에** 부른다 — 순서가 뒤집히면 아직 비어 있는 칸을 강조하게 된다.
 
-한 곳만 고치면 재발한다 — 폭 갱신만 하면 좌표가 여전히 고정이고, 레이아웃만 넣으면 루트 폭이 틀린 채로 흐른다.
+★ 시작 전에 `DOKill()` + `localScale = one`으로 되돌린다.
+이전 연출이 살아 있으면 어중간한 스케일에서 시작해 칸 크기가 조금씩 어긋난 채 남는다.
 
-### 교훈
-
-**값의 상한을 올렸으면 그 값을 그리는 UI가 감당하는지 확인해야 한다.** `CLAUDE.md`의 "공급자를 만들면 소비자 전환까지가 한 작업"과 같은 유형이다. 이 경우 공급자는 업그레이드 테이블이고 소비자는 HUD였다.
-
-또한 **기본값 상태로만 검증하면 안 된다.** 업그레이드 0레벨에서는 재현되지 않는다. 범위가 있는 값은 **최대치 상태로도** 봐야 한다.
-
-### 검증 (Play Mode, `homeHpMax=11` 상태)
-- HUD·ACTION 전 요소 쌍 겹침 **0건**, 화면 이탈 **0건** (스크린 픽셀로 변환해 판정)
-- `YearText` x 400→500으로 밀림, 이후 항목도 순차 이동
-- `verify-compile` exit 0, `verify-tables` exit 0
+토스트(`무료 스핀!`)는 [[InGameScene]]이 `UIManager.ShowToast()`로 띄운다 — 이 클래스는 HUD만 맡는다.

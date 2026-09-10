@@ -74,6 +74,17 @@ Play Mode 진입·조작·종료까지 실제 QA 1회를 완주했다.
 - → **QA 한 건 = `codex exec` 한 번.** 맥락은 매번 브리프로 싣는다.
 - 대화형 TUI는 Claude Code의 비대화형 셸에서 못 띄운다. 사용자가 직접 `! codex`로 여는 것은 가능하나, 그 결과는 세션으로 돌아오지 않는다.
 
+### Codex 작업 완료 후 원래 Claude Code 세션으로 직접 반환
+
+Claude Code가 Codex에 넘긴 작업은 Codex의 사용자 보고만으로 끝내지 않는다. 작업 완료 후 **인계한 원래 Claude Code 세션에 결과를 직접 전송**해야 한다.
+
+1. `orca worktree ps --json`과 `orca terminal list --json`으로 같은 워크트리의 기존 Claude 터미널을 찾는다.
+2. 프롬프트·최근 출력·터미널 identity를 대조해 인계한 세션을 특정한다. 애매하면 임의 전송하지 말고 사용자에게 확인한다.
+3. `orca terminal send --terminal <handle> --text "<인계 요약>" --enter --json`으로 결과를 직접 보낸다.
+4. 응답의 `accepted: true`를 확인한다. 실패하면 한 번 재조회·재시도하고, 그래도 실패할 때만 사용자에게 전달 불가 사실과 복사용 인계문을 보고한다.
+
+인계 요약에는 결과, 변경 파일 또는 커밋 해시, 검증 상태, 남은 위험과 다음 작업을 넣는다. **사용자에게 인계문만 보여주고 복사해 달라고 하거나, 새 Claude 프로세스를 띄우는 것은 직접 반환이 아니다.** 원래 세션이 이미 종료됐거나 찾을 수 없을 때만 사용자에게 대체 전달 방법을 요청한다.
+
 **금지**
 - `--dangerously-bypass-approvals-and-sandbox`로 호출하지 않는다. 승인이 필요하면 `--approve-for-me`를 쓴다.
 - Git 마무리(stage·commit·merge·push)를 `codex exec`로 대신하지 않는다. 그건 Codex **메인 세션**의 몫이고, 여기서 띄우는 건 별도 프로세스라 같은 저장소를 두 주체가 동시에 건드리게 된다.

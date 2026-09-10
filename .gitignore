@@ -13,4 +13,4 @@ LocalPaths.json
 output/
 
 # Codex/Claude QA 진행 로그 및 요약 산출물
-보고서/
+reports/

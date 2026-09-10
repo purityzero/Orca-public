@@ -11,3 +11,6 @@ LocalPaths.json
 
 # QA 캡처 산출물 (검증 증거일 뿐 저장소에 남길 필요 없음)
 output/
+
+# Codex/Claude QA 진행 로그 및 요약 산출물
+보고서/

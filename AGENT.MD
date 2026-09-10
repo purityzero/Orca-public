@@ -9,8 +9,8 @@ Orca의 작업을 Codex 또는 Claude Code 서브에이전트에 배정하는 �
 | 저장소 전체 분석, 대규모 리팩터링, 마이그레이션 | **Codex** | 여러 파일의 흐름을 추적하고 구현·테스트·문서를 한 작업으로 닫아야 함 |
 | CLI, PowerShell, 자동화, 검사기, 테스트 기반 수정 | **Codex** | 수동 규칙을 재현 가능한 명령과 종료 코드로 바꾸는 작업 |
 | 문서-코드 정합성, 중복 규칙, 오래된 참조 감사 | **Codex** | 저장소 전역 검색과 실제 파일 수정이 함께 필요 |
-| Unity MCP, 씬·프리팹 **편집** | **Claude Code** | 편집한 주체가 되돌리기·이어가기까지 맡는 편이 왕복이 적다 |
-| Play Mode **검증·QA** | **Codex 우선** | **구현한 주체가 자기 구현을 검증하지 않는다.** Codex도 `unityMCP`로 같은 에디터에 붙는다(§Codex의 Unity 접근 참고) |
+| Unity MCP 호출 전반 — 씬·프리팹 **편집**, 리임포트·재컴파일 | **Codex** | 2026-09-10 방침. `--approve-for-me`로 조작 도구가 통과한다(§Codex의 Unity 접근) |
+| Play Mode **검증·QA** | **Codex** | **구현한 주체가 자기 구현을 검증하지 않는다.** 구현=Claude Code / 검증=Codex로 가른다 |
 | 프로젝트 전용 기획·밸런스 | `design-planner` / `design-issue-resolver` | 기존 에이전트 정의의 절차와 누적 노하우 사용 |
 | 사용자가 실행자를 지정 | **사용자 지정 우선** | 다른 기준보다 우선 |
 
@@ -24,27 +24,58 @@ Codex로 배정한 뒤에는 `CODEX.md` §2의 프로필로 model/effort를 고�
 
 `codex` CLI가 로컬에 설치돼 있어 Claude Code가 `codex exec`로 비대화형 실행을 시킬 수 있다. 다만 **`ListAgents`에는 Codex가 안 잡힌다** — 돌고 있는 Codex 세션에 `SendMessage`로 지시하는 건 불가능하고, 새 프로세스를 띄우는 것만 된다.
 
-### Codex의 Unity 접근 — 된다 (2026-08-30 실측)
+### Codex의 Unity 접근 — 조작까지 된다 (2026-09-10 정정)
 
-`~/.codex/config.toml`에 `[mcp_servers.unityMCP] url = "http://127.0.0.1:8080/mcp"`가 등록돼 있어 **Codex도 같은 Unity 에디터에 붙는다.** `codex exec`에서 에디터 상태를 읽어 같은 인스턴스(`HouseRulez@...`)를 보고하는 것을 확인했다.
+`~/.codex/config.toml`에 `[mcp_servers.unityMCP] url = "http://127.0.0.1:8080/mcp"`가 등록돼 있어 **Codex도 같은 Unity 에디터에 붙는다.**
 
-**따라서 Play Mode QA는 Codex에 맡긴다.** 코드를 짠 주체가 자기 코드를 검증하면 같은 맹점을 두 번 지난다 — 실제로 하루에 세 번(콜백 직접 호출, 표시 문자열 미확인, 한 종족만 확인) 놓쳤다. 검증은 만든 사람이 아닌 쪽이 한다.
-
-> ⚠️ **`--sandbox read-only`는 에디터 조작을 막지 못한다.** 샌드박스는 셸·파일 접근을 제한할 뿐, MCP 도구 호출은 그 바깥이다. Codex에 Play Mode를 맡길 때는 "무엇을 켜고 끄는지"를 지시에 명시하고, 에디터를 쓰는 주체가 동시에 둘이 되지 않게 한 번에 하나만 돌린다.
-
-**허용 — 읽기 전용 분석·교차검증에 한한다.**
+**`--approve-for-me`를 붙이면 조작 도구까지 호출된다.**
 
 ```
-codex exec --sandbox read-only --color never -C "<작업 루트>" -o "<보고서 경로>" "<지시>"
+codex exec --approve-for-me --color never -C "<작업 루트>" -o "<보고서>" - < "<브리프 파일>"
 ```
 
-- `--sandbox read-only`를 **반드시** 붙인다. 이걸 빼면 Codex가 파일을 고칠 수 있고, 그 순간 `ParallelWorkContract.MD`의 파일 소유권 계약이 깨진다.
-- 긴 문서·코드의 **앞뒤 모순 찾기**에 실제로 쓸 만하다(문서 6곳의 낡은 서술을 정확히 짚어낸 사례 확인). 반대로 **단순 계수는 틀렸다**(줄 수를 158로 답했는데 실제는 223) — 숫자는 그대로 쓰지 말고 직접 실측한다.
+`refresh_unity` 호출에서 `PermissionRequest` 훅이 자동 심사로 통과하는 것을 실측했다(codex-cli 0.150.1).
+Play Mode 진입·조작·종료까지 실제 QA 1회를 완주했다.
+
+> 2026-09-09에 이 절은 "읽기만 된다"였다. 그건 **`--approve-for-me` 없이** 시험한 결과였고,
+> 그때 본 `MCP tool call requires approval, but approval policy is never`는 옵션 부재가 원인이었다.
+
+### ★ 방침 — Unity MCP를 부르는 작업은 Codex가 맡는다 (2026-09-10 사용자 지시)
+
+| 작업 | 담당 |
+|---|---|
+| **씬·프리팹 편집, Play Mode, 리임포트·재컴파일** (Unity MCP 호출 전반) | **Codex** |
+| `.cs` · CSV · md 파일 편집 | **Claude Code** |
+| Git 마무리(stage·commit·merge·push) | Codex **메인 세션** |
+
+**경계의 목적은 파일 소유가 안 겹치게 하는 것이다.** Claude Code가 코드를 쓰는 동안 Codex는 씬·프리팹만 만진다. 둘이 같은 파일을 동시에 건드리면 `ParallelWorkContract.MD`의 계약이 깨진다.
+
+**검증은 만든 쪽이 하지 않는다**(계속 유효). 코드를 짠 주체가 자기 코드를 검증하면 같은 맹점을 두 번 지난다 — 실제로 하루에 세 번(콜백 직접 호출, 표시 문자열 미확인, 한 종족만 확인) 놓쳤다. 이제 Play Mode를 Codex가 돌릴 수 있으므로, **구현=Claude Code / 검증=Codex**로 자연스럽게 갈린다.
+
+트레이드오프: 위치를 이미 아는 **작은 편집은 왕복이 늘어난다.** 구현자의 맥락이 Codex엔 없어 브리프에 전부 실어야 하고 사용자 토큰도 쓴다. 그래도 조작과 검증을 한쪽에 모으는 이점이 더 크다는 판단이다.
+
+### Codex에 넘길 때 지킬 것
+
+- **맥락은 브리프 파일로 넘긴다.** `.claude/briefs/{날짜}-{주제}.md`에 적고 그 파일을 stdin으로 준다.
+  세션을 이어붙이는 길이 Windows에선 막혀 있어서(아래) 브리프가 그 역할을 대신한다.
+- **진행 로그는 Orca 안에 남긴다** — `D:\Orca\보고서\{주제}-{날짜}.log`. 그래야 사용자가 다른 창에서 흐름을 본다.
+  `codex exec`의 stdout에는 세션 id·모델·승인 정책과 호출하는 MCP 도구가 한 줄씩 찍힌다.
+- **`--approve-for-me`는 workspace-write 샌드박스를 쓴다.** 파일 소유권을 지키려면
+  프롬프트에 **"프로젝트 파일 수정 금지, 산출물은 `Temp/` 아래에만"**을 명시한다.
+- 에디터를 쓰는 주체가 동시에 둘이 되지 않게 **한 번에 하나만** 돌린다.
 - 받은 보고서는 **핵심 주장을 원본에서 재확인한 뒤에만** 사용한다. Codex 출력도 「검증은 프로덕션 경로를 타야 한다」의 적용 대상이다.
-- **Codex가 낸 의견은 반드시 사용자에게 요약해 보여준다.** 보고서 파일 경로만 남기고 넘어가지 않는다 — 사용자는 그 파일을 열어보지 않는다. 최소한 ①무엇을 지적했나 ②그중 내가 사실 확인한 것과 못 한 것 ③채택/미채택과 그 이유를 짧게 적는다. 길면 표로 줄인다.
+  긴 문서의 **앞뒤 모순 찾기**엔 쓸 만하지만 **단순 계수는 틀린 적이 있다**(줄 수를 158로 답했는데 실제 223).
+- **Codex가 낸 의견은 반드시 사용자에게 요약해 보여준다.** 보고서 경로만 남기고 넘어가지 않는다 — 사용자는 그 파일을 열어보지 않는다. ①무엇을 지적했나 ②내가 사실 확인한 것과 못 한 것 ③채택/미채택과 이유를 짧게. 길면 표로.
+
+### Windows에서 막혀 있는 것 (2026-09-10 실측)
+
+- `codex app-server daemon`이 **`only supported on Unix platforms`** — 그래서 `codex agents`(세션 브라우징 TUI)와 `codex remote-control`을 쓸 수 없다.
+- `~/.codex/sessions/`에 **rollout이 안 남는다**(`codex exec`가 session id를 찍어도 파일이 없다) — `codex exec resume`으로 이어가거나 되짚을 수 없다.
+- → **QA 한 건 = `codex exec` 한 번.** 맥락은 매번 브리프로 싣는다.
+- 대화형 TUI는 Claude Code의 비대화형 셸에서 못 띄운다. 사용자가 직접 `! codex`로 여는 것은 가능하나, 그 결과는 세션으로 돌아오지 않는다.
 
 **금지**
-- 쓰기 모드(`workspace-write`·`danger-full-access`·`--dangerously-bypass-approvals-and-sandbox`)로 호출하지 않는다.
+- `--dangerously-bypass-approvals-and-sandbox`로 호출하지 않는다. 승인이 필요하면 `--approve-for-me`를 쓴다.
 - Git 마무리(stage·commit·merge·push)를 `codex exec`로 대신하지 않는다. 그건 Codex **메인 세션**의 몫이고, 여기서 띄우는 건 별도 프로세스라 같은 저장소를 두 주체가 동시에 건드리게 된다.
 
 > **Claude Code 자신도 Git 마무리를 하지 않는다.** `CODEX.md`의 전담 조항 그대로다. 사용자가 특정 건에 대해 "네가 처리해라"라고 하면 **그 건에 한해** 수행하고, 다음 작업부터는 다시 인계로 돌아간다 — 한 번의 허락을 상시 권한으로 확대하지 않는다. (근거: 2026-08-30, 한 건에 받은 허락을 세션 내내 이어가 8회 커밋한 사례)

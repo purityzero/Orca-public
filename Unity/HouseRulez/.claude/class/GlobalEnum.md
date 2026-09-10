@@ -31,30 +31,3 @@ HouseRulez에서 재화 체계를 설계하면 `Max` 앞에 실제 재화 값을
 
 ### 검증 상태 — 미검증
 `UIAssetBox`(Glory/UI/AssetBox)가 이 enum을 참조한다. 원래 `PlayerManager.instance.GetCurrencyAmount()`를 직접 호출해 컴파일 에러였으나, 2026-08-18-1에 `SetData(eCurrencyType, ObservableVariable<int>)`로 옵저버를 외부에서 주입받는 방식으로 바뀌어 해소됨 — 상세는 [[UIAssetBox]] 참고.
-
-## 2026-08-29-0 — 영구 재화 `Royal` 추가
-
-HouseRulez의 재화 체계가 정해져(옥새, 단일 공용) 2026-08-18-0에 비워둔 자리를 채웠다.
-
-**이전**:
-```csharp
-public enum eCurrencyType
-{
-    None = 0,
-    Max
-}
-```
-
-**이후**:
-```csharp
-public enum eCurrencyType
-{
-    None = 0,
-    Royal,
-    Max
-}
-```
-
-`Max`는 끝에 유지했다 — `UIAssetBox`가 `Max`를 "미지정" 판정에 쓴다([[UIAssetBox]]). 표시 이름은 `StringTable`의 `HouseUpgradeRoyal` 키이며 enum에 문구를 넣지 않는다.
-
-검증: `verify-compile` exit 0.

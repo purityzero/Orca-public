@@ -40,26 +40,59 @@
 HP 감소(선전포고 패배 −2), 연차 진행, 골드 증감, 판돈 변경, 스왑 소모 — 전부 그 단계(전투/외교/배치)가
 아직 없어 변경 API를 만들지 않았다. 필요해지는 시점에 그 단계와 함께 붙인다.
 
-## 2026-08-29-0 — 영구 메타 스냅샷 반영과 옥새 보상
+## 2026-08-30-0 — 웨이브 진행과 본거지 피해 추가
 
-### 런 시작값에 메타를 더한다
-`Init()`이 `GameConfigTable` 기본값 위에 `PlayerManager.GetRunConfigBonus(houseKey, 키)`를 더한다.
-대상은 `HomeHpMax`, `SpinCoinPerYear`, `SwapCountPerYear`, `RunStartGold` 네 개다.
-`RunYearMax`와 `BattleSpeedFast`는 강화 대상이 아니라 그대로 둔다.
+### 추가
+| 멤버 | 설명 |
+|---|---|
+| `WAVE_PER_YEAR = 3` | 연차당 웨이브 3개. 스핀 코인 1개가 웨이브 1개다 |
+| `waveIndex` | 현재 웨이브(1~3). `WaveTable.GetRecord(year, waveIndex)`의 키가 된다 |
+| `AdvanceWave()` | 웨이브 +1, 3을 넘기면 1로 되돌리고 연차 +1 |
+| `TakeHomeDamage(int)` | 본거지 HP 감소. 0 밑으로 내려가지 않는다 |
 
-`TargetKey`를 `GameConfigTable` 키 이름과 같게 맞춰뒀기 때문에, 자기가 읽는 키를 그대로 넘기면 된다.
-별도의 매핑 테이블이 필요 없다.
+### 아직 호출부가 없다
+`AdvanceWave()`·`TakeHomeDamage()`·`GetRoyalReward()` 셋 다 **부르는 곳이 없다.**
+웨이브 종료 처리(승패 확정 → 보상 → 다음 웨이브)가 아직 없기 때문이다.
+[[UIInGameBattle]]이 `result`와 `homeHit`을 이미 들고 있으므로, 종료 단계가 생기면 그 둘을 여기로 넘긴다.
+★ 안 적어두면 다음 사람이 "이미 연결돼 있다"고 믿고 그 위에 쌓는다.
 
-**스냅샷은 `Init()`에서 한 번만 적용한다.** 다른 곳에서 다시 더하지 않는다 — 런 도중 타이틀에서 산 것이
-진행 중인 런에 소급되면 안 되고, 두 경로가 생기면 값이 배수로 튄다.
+### 연차 전환 시 회복은 아직 없다
+`AdvanceWave()`에 스핀 코인·스왑 회복과 상점/외교 단계 진입이 `TODO`로만 있다.
 
-### GetRoyalReward()
-런 종료 시 줄 옥새를 계산한다. `도달 연차 × RoyalPerYear`, 도달 연차가 `yearMax` 이상이면
-`RoyalClearBonus`를 더한다. 패배해도 도달 연차만큼은 나온다.
+## 2026-08-31-0 — 당첨 배당(골드) 추가
 
-**호출부가 아직 없다.** 런 종료 단계 자체가 없어서다. 종료 처리가 생기면 이 결과를
-`PlayerManager.AddRoyal()`로 넘긴다 — 코드에 `TODO`로 남겨뒀다.
+### 배경
+**골드는 시작값 0에 증가 경로가 아예 없었다.** HUD의 `골드 0`이 계속 0이던 이유다.
+소비처(추가 스핀 25골드)도 `InGameScene.cs` 주석으로만 있었다.
 
-### 검증 (Play Mode 실측)
-슬롯에서 `home_hp` Lv1 / `spin_coin` Lv2를 산 상태로 `homeHpMax=9`(8+1), `spinCoinMax=5`(3+2),
-`swapCountMax=2`(슬롯엔 스왑 노드가 없어 기본값), `gold=0`을 확인했다.
+### `AwardGoldByPower(float _power)`
+`GameConfigTable`의 `GoldPerPower`(현재 2)를 곱해 지급하고 지급액을 돌려준다.
+`InGameScene.CoSpinAndStop`이 판정 직후 부르고 HUD를 갱신한다.
+
+★ **전력이 조금이라도 있으면 최소 1골드를 보장한다.** 반올림으로 0이 되면
+"맞았는데 빈손"이 골드 쪽에서 다시 생긴다.
+
+### 왜 전력과 분리된 축인가
+소환 수는 이미 종족별 평균 6.1~6.3으로 맞춰놨다. 골드를 그 축에 얹으면 전부 다시 잡아야 한다.
+그리고 이 통로가 **전력 0.5 미만이라 소환이 0기인 스핀(화투 6.57%)의 빈손을 메운다** —
+`Judge.BuildSummon`의 `Mathf.RoundToInt(Power)` 때문에 생기는 구간이다.
+
+감각: 평균 전력 6.2 × 2 = 스핀당 12골드 ≈ 연차당 37골드 ≈ 추가 스핀 1.5회(25골드).
+
+### 검증 — Codex QA 통과 (2026-08-31, Play Mode)
+`SpinButton.onClick.Invoke()`로 반복 호출하고 **HUD에 찍힌 실제 문자열**을 읽었다
+(`RunData.gold` 값이 아니라).
+- 골드 문자열 `15 → 21 → 23 → 26 → 49 → 50`
+- 소환 0기 사례 확인: 화투, Power 0.39045, `ListSummon.Count = 0`, 그런데 골드는 `49 → 50` — **빈손 아님**
+
+## 2026-08-31-1 — `AddSpinCoin(int)` 추가 (무료 스핀 지급)
+
+실제로 채운 개수를 돌려준다. 0이면 이미 가득 차서 연출할 게 없다는 뜻이다.
+
+### ★ `spinCoinMax`에서 막는다
+넘기면 HUD 핍이 `spinCoinMax` 개수만 만들어져 있어 **초과분이 화면에서 그냥 사라진다.**
+본거지 HP 핍([[UIInGameHud]] 2026-08-30-0)과 ACTION 바 스왑 칸([[UIInGameAction]] 2026-08-30-1)에서
+이미 두 번 겪은 함정이다 — 이번엔 지급 쪽에서 미리 막았다.
+
+스핀은 항상 코인을 먼저 쓰므로(`SpendSpinCoin`) 지급 시점엔 최대치 미만이라
+실제로 상한이 걸릴 일은 드물다. 그래서 **"무료 스핀 = 방금 쓴 코인을 돌려준다"**로 읽힌다.

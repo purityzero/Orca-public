@@ -1,23 +1,33 @@
 # UIAssetBoxGroup
 
-연관: [[UIAssetBox]]
+연관: [[UIAssetBox]], [[GlobalEnum]]
 
-Glory 공용 라이브러리(`Assets/Scripts/Glory/UI/AssetBox/UIAssetBoxGroup.cs`)의 `UIAssetBox` 배열 묶음 컨트롤러.
+Glory 공용 라이브러리(`Assets/Scripts/Glory/UI/AssetBox/UIAssetBoxGroup.cs`)의 재화 표시 위젯 묶음.
+인스펙터에 연결된 `UIAssetBox[]`를 순회해 일괄 갱신하는 얇은 래퍼다.
 
-## 2026-08-21-0 — 컴파일 에러 수정: 삭제된 UIAssetBox.SetData() 무인자 오버로드 호출 제거
-
-### 개요
-Unity MCP 자동 연결 작업 중 프로젝트 전체가 이 파일 때문에 컴파일 실패 상태였던 것을 발견(`Assembly-CSharp.dll` 자체가 안 만들어져 `Assets/Editor/` 밑 에디터 스크립트까지 전부 컴파일에서 빠지고 있었음). `UIAssetBox.SetData()`(무인자 버전)는 [[UIAssetBox]] 2026-08-18-1에서 PlayerManager 하드 의존 제거를 위해 이미 삭제됐는데, `UIAssetBoxGroup.SetData()`가 그 옛 시그니처를 그대로 호출하고 있어 `error CS1501: No overload for method 'SetData' takes 0 arguments` 발생.
+## 2026-08-24-0 — 컴파일 에러 유발하던 무인자 `SetData()` 제거
 
 ### 증상
+Unity가 **세이프 모드로 진입**해 에디터가 정상 동작하지 않음(Editor.log에 `[MODES] ModeService[safe_mode].LoadModes`).
+원인 로그:
 ```
-Assets\Scripts\Glory\UI\AssetBox\UIAssetBoxGroup.cs(22,29): error CS1501: No overload for method 'SetData' takes 0 arguments
+Assets\Scripts\Glory\UI\AssetBox\UIAssetBoxGroup.cs(22,29):
+error CS1501: No overload for method 'SetData' takes 0 arguments
 ```
 
 ### 원인
-[[UIAssetBox]]가 2026-08-18에 `SetData()`(무인자)/`SetData(eCurrencyType)` 오버로드를 제거했으나, 이 그룹 클래스는 갱신되지 않고 남아있었음.
+`UIAssetBoxGroup.SetData()`가 `m_AssetBoxes[i].SetData()`를 **인자 없이** 호출하는데,
+`UIAssetBox`에는 무인자 오버로드가 없다. `UIAssetBox`가 가진 오버로드는 셋뿐:
 
-### 수정 (`SetData()` 메서드 전체 제거)
+- `SetData(eCurrencyType, ObservableVariable<int>)`
+- `SetData(eCurrencyType, long)`
+- `SetData(long)`
+
+무인자 `SetData()`는 [[UIAssetBox]] 2026-08-18-1(PlayerManager 하드 의존 제거) 작업에서
+"값을 어디서 가져올지 알 방법이 없어져 의미가 사라졌다"는 이유로 `UIAssetBox`에서 제거됐는데,
+같은 시점에 만들어진 `UIAssetBoxGroup` 쪽 호출부가 함께 정리되지 않아 컴파일이 깨진 채 커밋됨(`605277d`).
+
+### 수정 (메서드 단위)
 **이전**:
 ```csharp
 public void SetData()
@@ -25,12 +35,37 @@ public void SetData()
     for (int i = 0; i < m_AssetBoxes.Length; ++i)
     {
         m_AssetBoxes[i].SetData();
-    }  
+    }
+}
+public void Refresh() { ... }
+```
+
+**이후**:
+```csharp
+// SetData() 제거 — Refresh()만 남음
+public void Refresh()
+{
+    for (int i = 0; i < m_AssetBoxes.Length; ++i)
+    {
+        m_AssetBoxes[i].Refresh();
+    }
 }
 ```
 
-**이후**: 메서드 자체를 삭제. `HouseRulez`엔 이 컴포넌트를 실제로 붙인 프리팹/호출부가 아직 없어([[UIAssetBox]] 2026-08-18-1 참고) 죽은 코드였음 — 그룹 단위로 여러 재화 값을 한 번에 넣어야 하는 실제 호출부가 생기면, 그때 `UIAssetBox.SetData(eCurrencyType, ObservableVariable<int>)` 시그니처에 맞춰 배열 파라미터를 받는 오버로드를 새로 설계할 것.
-`Refresh()`는 변경 없음(그대로 정상 컴파일됨).
+### 판단 근거
+사용자 확정(2026-08-24): 각 `UIAssetBox`가 인스펙터에 `m_CurrencyType`을 이미 들고 있으므로
+그룹은 데이터를 뿌릴 필요 없이 `Refresh()`만 일괄 호출하면 된다.
+그룹에 데이터 주입 API가 필요해지면 각 박스에 `SetData(eCurrencyType, ObservableVariable<int>)`를
+호출부(프로젝트 코드)에서 개별로 연결한다 — 그룹이 재화 저장소를 알게 만들지 않는다(Glory 프로젝트 비의존 원칙, `.claude/rules/glory.md`).
 
-### 검증 상태 — 컴파일만 확인, Play Mode 미검증
-이 수정 자체는 이 파일의 컴파일 에러만 없애는 목적이라 재컴파일 결과(Assembly-CSharp.dll 정상 생성 여부)까지만 확인 예정. `UIAssetBoxGroup`을 실제로 쓰는 씬/프리팹이 없어 런타임 동작 확인 대상 자체가 없음.
+### 영향 범위
+프로젝트 전체 grep 결과 `UIAssetBoxGroup`을 참조하는 코드·씬·프리팹이 **하나도 없다** — 호출부 파급 없음.
+
+### 검증 상태 — 미검증
+- Unity MCP 서버가 이 환경에 등록돼 있지 않아(`mcpforunity` 리소스 없음) 에디터를 통한 컴파일 확인 불가.
+- Unity가 세이프 모드에서 빠져나와 재컴파일에 성공하는지 사용자 확인 필요.
+- 작업 브랜치: `work/2026-08-24-assetboxgroup-setdata` (리포 루트는 `D:\Unity\HouseRules`)
+
+## 참고 — 함께 발견된 별개 이슈 (미수정)
+- `Assets/Resources/Table/*.csv` 4개(`SoundTable`/`ToggleListTable`/`ToggleMenuTable`/`UITable`)가 **헤더 한 줄뿐, 데이터 행 0개**. 최초 커밋(`605277d`)부터 그 상태 — 깨진 게 아니라 아직 안 채운 것.
+- `.claude/rules/glory.md`의 "재화 표시는 UIAssetBox(단일) / UIAssetBoxGroup(일괄 Refresh) 재사용 — 보유량은 PlayerManager 경유" 문장 중 **"보유량은 PlayerManager 경유"는 이미 낡은 서술**([[UIAssetBox]] 2026-08-18-1에서 PlayerManager 하드 의존을 제거함). 이번 작업 범위 밖이라 건드리지 않음.

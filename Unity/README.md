@@ -11,7 +11,7 @@
 
 ```
 <ORCA>\
-├── CLAUDE.md / CODEX.md / CODE.MD / PREFAB.MD / AGENT.MD
+├── CLAUDE.md / CODEX.md / CODE.MD / AGENT.MD
 │                                                   ← 에이전트 역할 + 코딩 규칙 + 라우팅, 정본
 ├── agents\*.md                                   ← Claude 에이전트 9개 + 진단용 test-echo, 정본
 ├── ParallelWorkContract.MD                       ← Orca 자체 운용 문서
@@ -30,7 +30,8 @@
 
 | 종류 | 정본 위치 | 원본 프로젝트 쪽 상태 |
 |---|---|---|
-| 에이전트·코딩 규칙 (CLAUDE.md/CODEX.md/CODE.MD/PREFAB.MD/AGENT.MD) | `<ORCA>` 루트, 1부만 | 각 프로젝트 `.claude`엔 없음 (중복 생성 금지) |
+| 에이전트·코딩 규칙 (CLAUDE.md/CODEX.md/CODE.MD/AGENT.MD) | `<ORCA>` 루트, 1부만 | 각 프로젝트 `.claude`엔 없음 (중복 생성 금지) |
+| 상황 한정 프리팹/UI 규칙 (`runbook/prefab-ui.md`) | `<ORCA>` 런북 | 프리팹·UI 작업 때만 읽음 |
 | 서브에이전트 정의 (`agents/*.md`) | `<ORCA>\agents\` | 각 프로젝트 `.claude\agents\`에 **복사본** 필요(아래 3절) |
 | 프로젝트 고유 문서 (class/prefab/design/qa/rules, UNFINISHED.md) | `<ORCA>\Unity\{프로젝트명}\.claude\` | 원본은 **스냅샷 고정** — Orca 쪽만 갱신 |
 

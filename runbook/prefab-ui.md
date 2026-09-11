@@ -1,4 +1,14 @@
-## 2. UI 컴포넌트
+# Runbook — UI 컴포넌트와 프리팹 편집
+
+프리팹·UI를 만들거나 고칠 때 읽는다. 자동 로드하지 않는다(2026-09-11에 `CLAUDE.md`의
+`@PREFAB.MD` 상시 주입을 끊고 여기로 내렸다 — 프리팹을 안 건드리는 세션에도 매번 들어왔다).
+
+같은 주제의 사고 기록은 [`scene-prefab-edit.md`](scene-prefab-edit.md)에 있다.
+이 문서는 **무엇을 쓸지와 어떻게 만들지**, 그쪽은 **무엇에 데였는지**다.
+
+---
+
+## UI 컴포넌트
 
 ### 표준 컴포넌트 기준
 
@@ -53,7 +63,7 @@
 
 ---
 
-## 3. 자주 쓰는 UI 패턴 레시피
+## 자주 쓰는 UI 패턴 레시피
 
 ### 스크롤 목록 — 항목 수가 적을 때 (수십 개 이하)
 - `ScrollRect` + `Content`에 `VerticalLayoutGroup`/`HorizontalLayoutGroup` + `ContentSizeFitter`(PreferredSize) 조합 + 단순 `Instantiate` 반복이면 충분하다.

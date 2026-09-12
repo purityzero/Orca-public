@@ -30,6 +30,37 @@
 | 일반 메서드 | 파스칼 표기법 | `public void TakeDamage()` |
 | 콜백 메서드 | `On` + 파스칼 표기법 | `void OnDamageReceived()` |
 | 코루틴 | `Co` + 파스칼 표기법 | `IEnumerator CoFadeIn()` |
+| **bool을 돌려주는 판정 메서드** | `Is` + 파스칼 표기법 | `bool IsAllReelIdle()`, `bool IsExtraSpinBuyable()` |
+
+### bool 반환 메서드
+- **"~인가"를 묻는 판정 메서드는 `Is`로 시작한다.** 필드(`isAlive`)와 같은 규칙을 메서드에도 적용한다 —
+  이름만 보고 그게 상태를 묻는 것인지 뭔가를 실행하는 것인지 알 수 있어야 한다.
+- **예외: 실행하고 그 성패를 bool로 돌려주는 메서드는 동사 이름을 유지한다.**
+  `IsSpendSpinCoin()`은 뜻이 통하지 않는다 — 이건 "코인을 쓴다"는 동작이고 bool은 성공 여부일 뿐이다.
+
+```csharp
+// ✅ 판정 — Is로 시작
+public bool IsExtraSpinBuyable()
+{
+    return m_Gold >= m_ExtraSpinGoldCost;
+}
+
+// ✅ 실행 + 성패 반환 — 동사 유지
+public bool SpendSpinCoin()
+{
+    if (m_SpinCoin <= 0)
+        return false;
+
+    m_SpinCoin -= 1;
+    return true;
+}
+
+// ❌ 판정인데 동사처럼 보인다
+public bool CanBuyExtraSpin() { }
+```
+
+(근거: 2026-09-10 사용자 지적. 프로젝트에 이미 `IsAllReelIdle()`·`IsState()`가 있어 관례였는데
+새 코드가 `CanBuy~`로 어긋나 있었다. 판정과 실행을 이름으로 가르는 것이 규칙의 목적이다)
 
 ### 특수 규칙
 

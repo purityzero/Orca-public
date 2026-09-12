@@ -115,6 +115,27 @@ function checkUnityHub() {
     }
 }
 
+// Unity MCP 브릿지가 살아 있는지. **세션이 열리는 이 순간**이 중요하다 —
+// MCP는 세션 시작 때 한 번만 연결을 시도하고, 뒤늦게 브릿지가 살아나도 재연결하지 않는다.
+// 그래서 Unity가 꺼진 채 세션을 열면 그 세션에서는 Play Mode 검증을 아예 못 한다.
+// (2026-09-11~12에 Claude 세션과 Codex 세션이 연달아 이 상태로 열려 QA가 세 번 막혔다)
+function checkUnityBridge() {
+    // 포트가 열려 있는지만 본다. 실제 MCP 핸드셰이크는 클라이언트가 하고,
+    // 여기서 무거운 요청을 보내면 세션 시작이 그만큼 늦어진다.
+    const probe = run(`powershell -NoProfile -Command "(Test-NetConnection -ComputerName 127.0.0.1 -Port 8080 -InformationLevel Quiet)"`);
+    const alive = (probe.ok === true && /true/i.test(probe.out) === true);
+
+    if (alive === true)
+        return { label: 'Unity MCP', level: 'ok', detail: '브릿지 응답 (8080)' };
+
+    return {
+        label: 'Unity MCP',
+        level: 'warn',
+        detail: '브릿지 없음 — 이 세션에서는 Play Mode 검증 불가',
+        action: 'Unity MCP 브릿지(127.0.0.1:8080)가 응답하지 않는다. **MCP는 세션 시작 때 한 번만 붙으므로 지금 에디터를 켜도 이 세션에는 안 붙는다.** 사용자에게 이 사실을 알리고, Play Mode 검증이 필요한 작업이면 Unity를 먼저 켠 뒤 세션을 새로 열어야 한다고 알려라(Codex 세션도 같은 제약을 받는다). 검증이 필요 없는 작업이면 그대로 진행한다.'
+    };
+}
+
 // Orca 저장소가 origin 대비 최신인지. 세션 시작마다 실제 fetch 한다(사용자 선택).
 function checkRepo() {
     const branchResult = run(`git -C "${WORKSPACE_ROOT}" rev-parse --abbrev-ref HEAD`);
@@ -167,6 +188,7 @@ function main() {
         checkHooks(),
         checkAgents(),
         checkUnityHub(),
+        checkUnityBridge(),
         checkRepo()
     ];
 

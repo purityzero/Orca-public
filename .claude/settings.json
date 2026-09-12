@@ -45,6 +45,18 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/codex-handoff-guard.js\"",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }

@@ -71,11 +71,13 @@ Codex 메인 세션은 Orca에 등록된 저장소의 Git 마무리 담당이다
 ## 3. Claude Code 에이전트가 우선 맡는 일
 
 - 기존 `.claude/agents/*.md`에 프로젝트 전용 노하우가 충분히 축적된 작업
-- Unity MCP를 통한 에디터 조작과 프리팹·씬 편집 (Play Mode 검증·QA는 구현자가 아닌 쪽 — 보통 Codex — 이 맡는다. `AGENT.MD` §실행자 선택)
+- `.cs`·CSV·md 파일 편집과 구현 — **Unity MCP 호출 전반(씬·프리팹 편집, Play Mode, 리임포트·재컴파일)은 2026-09-10 사용자 지시로 Codex가 맡는다**(`AGENT.MD` §실행자 선택 · §방침). 여기 남는 것은 MCP를 거치지 않는 텍스트 작업이다
 - `design-planner`/`design-issue-resolver`에 이미 정의된 기획·밸런스 절차
 - 사용자가 명시적으로 Claude Code 또는 특정 Claude 서브에이전트를 지정한 작업
 
-이 구분은 배타적이지 않다. Claude Code가 Unity 에디터 편집·구현을 맡고 Codex가 Play Mode 검증·QA를 맡는 식의 핸드오프가 가능하다(구현한 주체가 자기 구현을 검증하지 않는다). 다만 같은 파일을 동시에 수정하지 않으며, 소유 파일과 성공 조건은 `ParallelWorkContract.MD`에 따라 먼저 확정한다.
+이 구분은 배타적이지 않다. Claude Code가 `.cs`·CSV·md로 구현하고 Codex가 씬·프리팹 편집과 Play Mode 검증·QA를 맡는 식의 핸드오프가 기본이다(**구현한 주체가 자기 구현을 검증하지 않는다**). 다만 같은 파일을 동시에 수정하지 않으며, 소유 파일과 성공 조건은 `ParallelWorkContract.MD`에 따라 먼저 확정한다.
+
+(정정: 2026-09-12. 이 절이 "Unity MCP를 통한 에디터 조작과 프리팹·씬 편집"을 Claude Code 몫으로 적고 있어 `AGENT.MD`의 2026-09-10 방침과 정반대였다. 그때 `AGENT.MD`만 고치고 여기를 빠뜨린 것이다 — 두 문서를 읽는 주체가 반대 결론을 내게 된다)
 
 ## 4. 배정 원칙
 
@@ -100,6 +102,8 @@ Codex 메인 세션은 Orca에 등록된 저장소의 Git 마무리 담당이다
 Codex는 별도 실험 환경이 아니라 현재 Orca 작업 흐름 안에서 다음 순서로 일한다.
 
 1. 루트의 `README.md`, `CODEX.md`, `AGENT.MD`와 작업에 필요한 공통 규칙을 읽는다.
+   **그 주제의 `runbook/*.md`가 있으면 착수 전에 읽는다** — 런북은 값비싸게 알아낸 사실을 모아둔 곳이고,
+   자동 로드되지 않으므로 직접 열지 않으면 없는 것과 같다(2026-09-12에 이 단계를 건너뛴 사례가 있다).
 2. 특정 프로젝트 작업이면 `LocalPaths.json`으로 실제 경로를 확인하고, 그 프로젝트의 `UNFINISHED.md`와 관련 class/prefab/design 문서를 읽는다. Claude Code가 쌓아온 사실·교훈은 `~/.claude/projects/<프로젝트>/memory/MEMORY.md`(프로젝트 루트 기준 경로 유도)에 있다 — 관련 작업이면 이것도 확인한다.
 3. `AGENT.MD`로 Codex 단독 수행, Codex 프로필 위임, Claude Code 단독 수행, 비교 실행, 순차 핸드오프 중 하나를 정한다.
 4. 수정 전에 브랜치, 소유 파일, 성공 조건, Unity 배타 자원 사용 여부를 확정한다.

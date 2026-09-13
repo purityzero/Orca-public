@@ -20,6 +20,12 @@ const RETURN_PATTERNS = [
 
 const EXEMPT = '반환불필요';
 
+// heredoc 본문은 명령이 아니라 데이터다 — 파일에 쓰려는 문서 안에 전송 예시가 들어 있으면
+// 그것까지 전송으로 오판한다. 2026-09-13 에 런북에 예시 명령을 적으려다 실제로 막혔다.
+function StripHeredocs(_text) {
+    return _text.replace(/<<-?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1[\s\S]*?^\2$/gm, '');
+}
+
 function deny(reason) {
     process.stdout.write(JSON.stringify({
         hookSpecificOutput: {
@@ -44,7 +50,8 @@ process.stdin.on('end', () => {
     if (payload.tool_name !== 'Bash')
         process.exit(0);
 
-    const command = (payload.tool_input && payload.tool_input.command) || '';
+    const rawCommand = (payload.tool_input && payload.tool_input.command) || '';
+    const command = StripHeredocs(rawCommand);
     if (command.includes('orca terminal send') === false)
         process.exit(0);
 

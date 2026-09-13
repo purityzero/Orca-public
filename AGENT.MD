@@ -22,7 +22,24 @@ Codex로 배정한 뒤에는 `CODEX.md` §2의 프로필로 model/effort를 고�
 
 ## Claude Code가 Codex를 직접 호출하는 경우 (2026-08-30 확인)
 
-`codex` CLI가 로컬에 설치돼 있어 Claude Code가 `codex exec`로 비대화형 실행을 시킬 수 있다. 다만 **`ListAgents`에는 Codex가 안 잡힌다** — 돌고 있는 Codex 세션에 `SendMessage`로 지시하는 건 불가능하고, 새 프로세스를 띄우는 것만 된다.
+`codex` CLI가 로컬에 설치돼 있어 Claude Code가 `codex exec`로 비대화형 실행을 시킬 수 있다. 다만 **`ListAgents`에는 Codex가 안 잡힌다** — 돌고 있는 Codex 세션에 `SendMessage`로 지시하는 건 불가능하다.
+
+### ★ Codex 세션은 Claude Code가 직접 띄운다 (2026-09-13 사용자 지시)
+
+`SendMessage`는 막혀 있지만 **`orca terminal create`로 orca가 관리하는 Codex 세션을 만들 수 있다.**
+이것이 기본 경로다 — `codex exec`로 별도 프로세스를 띄우는 것은 사용자가 금지했고(2026-09-12 지적),
+이쪽은 orca 세션이라 `orca terminal send`로 지시하고 결과를 되받는 정상 흐름을 탄다.
+
+```
+orca terminal create --worktree active --title "<용도>" --command "codex" --json
+orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 60000 --json
+```
+
+`wait --for tui-idle`을 건너뛰면 TUI 부팅 중에 입력이 흘러버린다.
+
+**언제 새로 띄우는가** — 이미 열린 Codex 세션이 있으면 그쪽에 보내는 것이 우선이다.
+새로 띄우는 것은 **그 세션이 일을 못 하는 상태일 때**다. 대표 사례가 Unity MCP 브릿지 미연결이고,
+그건 세션 안에서 못 푼다(`runbook/unity-bridge.md`). 사용자를 기다리지 않는다.
 
 ### Codex의 Unity 접근 — 조작까지 된다 (2026-09-10 정정)
 

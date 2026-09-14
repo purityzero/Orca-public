@@ -8,9 +8,10 @@ Orca의 작업을 Codex 또는 Claude Code 서브에이전트에 배정하는 �
 |---|---|---|
 | 저장소 전체 분석, 대규모 리팩터링, 마이그레이션 | **Codex** | 여러 파일의 흐름을 추적하고 구현·테스트·문서를 한 작업으로 닫아야 함 |
 | CLI, PowerShell, 자동화, 검사기, 테스트 기반 수정 | **Codex** | 수동 규칙을 재현 가능한 명령과 종료 코드로 바꾸는 작업 |
+| Unity 프로젝트 전용 `CliCommand`·테스트 인프라 | **Codex** | 반복 검증을 부작용 없는 명령, 구조화 결과와 명확한 종료 코드로 전환 |
 | 문서-코드 정합성, 중복 규칙, 오래된 참조 감사 | **Codex** | 저장소 전역 검색과 실제 파일 수정이 함께 필요 |
-| Unity MCP 호출 전반 — 씬·프리팹 **편집**, 리임포트·재컴파일 | **Codex** | 2026-09-10 방침. `--approve-for-me`로 조작 도구가 통과한다(§Codex의 Unity 접근) |
-| Play Mode **검증·QA** | **Codex** | **구현한 주체가 자기 구현을 검증하지 않는다.** 구현=Claude Code / 검증=Codex로 가른다 |
+| Unity 에디터 조작 전반 — 씬·프리팹 **편집**, 리임포트·재컴파일 | **Codex** | Unity CLI를 우선 사용하고 필요한 기능이 없을 때만 MCP 사용 |
+| Play Mode **검증·QA** | 구현하지 않은 쪽 | **구현한 주체가 자기 구현을 검증하지 않는다.** Claude 구현은 Codex가, Codex 구현은 Claude Code가 검증 |
 | 프로젝트 전용 기획·밸런스 | `design-planner` / `design-issue-resolver` | 기존 에이전트 정의의 절차와 누적 노하우 사용 |
 | 사용자가 실행자를 지정 | **사용자 지정 우선** | 다른 기준보다 우선 |
 
@@ -24,11 +25,19 @@ Codex로 배정한 뒤에는 `CODEX.md` §2의 프로필로 model/effort를 고�
 
 `codex` CLI가 로컬에 설치돼 있어 Claude Code가 `codex exec`로 비대화형 실행을 시킬 수 있다. 다만 **`ListAgents`에는 Codex가 안 잡힌다** — 돌고 있는 Codex 세션에 `SendMessage`로 지시하는 건 불가능하다.
 
-### ★ Codex 세션은 Claude Code가 직접 띄운다 (2026-09-13 사용자 지시)
+### ★ 에이전트 세션은 Orca 터미널로 띄운다 (2026-09-14 사용자 범위 확정)
 
 `SendMessage`는 막혀 있지만 **`orca terminal create`로 orca가 관리하는 Codex 세션을 만들 수 있다.**
 이것이 기본 경로다 — `codex exec`로 별도 프로세스를 띄우는 것은 사용자가 금지했고(2026-09-12 지적),
-이쪽은 orca 세션이라 `orca terminal send`로 지시하고 결과를 되받는 정상 흐름을 탄다.
+이쪽은 orca 세션이라 `orca terminal send`로 지시하고 결과를 되받는 정상 흐름을 타며,
+**사용자가 자기 화면의 탭에서 에이전트가 무엇을 하는지 직접 볼 수 있다.**
+
+적용 범위는 둘이다 — 새 **에이전트 세션(Codex·Claude)**, 그리고 **Unity CLI 명령**.
+에디터는 사용자와 공유하는 자원이라, 무엇을 어떻게 건드렸는지가 화면에 남아야 한다.
+Unity CLI 쪽 절차(세션당 터미널 하나를 만들어 재사용한다)는 `runbook/unity-bridge.md`에 있다.
+
+Git, 파일 조회, 빌드 스크립트 같은 **일반 명령은 Claude Code가 자기 Bash에서 실행해도 된다.**
+공유 자원을 건드리지 않으므로 화면에 남길 이유가 없다.
 
 ```
 orca terminal create --worktree active --title "<용도>" --command "codex" --json
@@ -38,38 +47,27 @@ orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 60000 --json
 `wait --for tui-idle`을 건너뛰면 TUI 부팅 중에 입력이 흘러버린다.
 
 **언제 새로 띄우는가** — 이미 열린 Codex 세션이 있으면 그쪽에 보내는 것이 우선이다.
-새로 띄우는 것은 **그 세션이 일을 못 하는 상태일 때**다. 대표 사례가 Unity MCP 브릿지 미연결이고,
-그건 세션 안에서 못 푼다(`runbook/unity-bridge.md`). 사용자를 기다리지 않는다.
+새로 띄우는 것은 **그 세션이 일을 못 하는 상태일 때**다. Unity 에디터 접근은 먼저
+`runbook/unity-bridge.md`의 CLI→MCP 순서로 시도하고, 두 통로가 모두 없을 때만 새 세션을 띄운다.
+사용자를 기다리지 않는다.
 
-### Codex의 Unity 접근 — 조작까지 된다 (2026-09-10 정정)
-
-`~/.codex/config.toml`에 `[mcp_servers.unityMCP] url = "http://127.0.0.1:8080/mcp"`가 등록돼 있어 **Codex도 같은 Unity 에디터에 붙는다.**
-
-**`--approve-for-me`를 붙이면 조작 도구까지 호출된다.**
-
-```
-codex exec --approve-for-me --color never -C "<작업 루트>" -o "<보고서>" - < "<브리프 파일>"
-```
-
-`refresh_unity` 호출에서 `PermissionRequest` 훅이 자동 심사로 통과하는 것을 실측했다(codex-cli 0.150.1).
-Play Mode 진입·조작·종료까지 실제 QA 1회를 완주했다.
-
-> 2026-09-09에 이 절은 "읽기만 된다"였다. 그건 **`--approve-for-me` 없이** 시험한 결과였고,
-> 그때 본 `MCP tool call requires approval, but approval policy is never`는 옵션 부재가 원인이었다.
-
-### ★ 방침 — Unity MCP를 부르는 작업은 Codex가 맡는다 (2026-09-10 사용자 지시)
+### Unity 에디터 작업과 독립 QA 경계
 
 | 작업 | 담당 |
 |---|---|
-| **씬·프리팹 편집, Play Mode, 리임포트·재컴파일** (Unity MCP 호출 전반) | **Codex** |
-| `.cs` · CSV · md 파일 편집 | **Claude Code** |
+| **씬·프리팹 편집, Play Mode, 리임포트·재컴파일** (Unity CLI/MCP) | **Codex** |
+| 일반 게임 로직 `.cs` · CSV · 프로젝트 기록 md 편집 | **Claude Code** |
+| 검사기·테스트·자동화 코드 | **Codex** |
 | Git 마무리(stage·commit·merge·push) | Codex **메인 세션** |
 
 **경계의 목적은 파일 소유가 안 겹치게 하는 것이다.** Claude Code가 코드를 쓰는 동안 Codex는 씬·프리팹만 만진다. 둘이 같은 파일을 동시에 건드리면 `ParallelWorkContract.MD`의 계약이 깨진다.
 
-**검증은 만든 쪽이 하지 않는다**(계속 유효). 코드를 짠 주체가 자기 코드를 검증하면 같은 맹점을 두 번 지난다 — 실제로 하루에 세 번(콜백 직접 호출, 표시 문자열 미확인, 한 종족만 확인) 놓쳤다. 이제 Play Mode를 Codex가 돌릴 수 있으므로, **구현=Claude Code / 검증=Codex**로 자연스럽게 갈린다.
+**검증은 만든 쪽이 하지 않는다**(계속 유효). 코드를 짠 주체가 자기 코드를 검증하면 같은 맹점을
+두 번 지난다. Claude Code가 구현했으면 Codex가 검증하고, Codex가 구현했으면 Claude Code가 검증한다.
+도구가 늘어나도 이 경계는 바뀌지 않는다.
 
-트레이드오프: 위치를 이미 아는 **작은 편집은 왕복이 늘어난다.** 구현자의 맥락이 Codex엔 없어 브리프에 전부 실어야 하고 사용자 토큰도 쓴다. 그래도 조작과 검증을 한쪽에 모으는 이점이 더 크다는 판단이다.
+조작 통로의 선택과 연결·복구·버전 함정은 `runbook/unity-bridge.md`가 정본이다. 여기에는 실행자와
+독립 QA 경계만 둔다.
 
 ### Codex에 넘길 때 지킬 것
 

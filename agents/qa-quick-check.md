@@ -14,7 +14,10 @@ maxTurns: 45
 
 ## 절차
 
-1. `ToolSearch`로 `"unity"` 검색 — Unity MCP 도구가 안 잡히면 중단하고 사용자에게 보고(`Window → MCP for Unity` 연결 상태 확인 필요, 세션 재시작 필요 가능성).
+1. 변경과 관련된 기획 문서(`.claude/design`, GDD, 테이블 설명)와 Client 문서(`.claude/class`,
+   `.claude/prefab`, 변경 코드·브리프)를 모두 읽어 기대 동작과 모순 가능성을 먼저 정리한다. 구현자가
+   준 체크리스트만 실행하지 않는다. 그 뒤 `ToolSearch`로 `"unity"` 검색 — Unity MCP 도구가 안 잡히면
+   중단하고 사용자에게 보고(`Window → MCP for Unity` 연결 상태 확인 필요, 세션 재시작 필요 가능성).
 2. 확인할 항목 목록을 정리한다 — 여러 건이면(예: client-bugfixer가 방금 배치로 고친 이슈 목록) 전부 나열해두고, 이후 **Play Mode를 한 번만 진입**해서 순서대로 확인한다.
 3. **Play Mode 진입 전 Unity 에디터 창에 OS 포커스를 맞춘다** — `Get-Process`에서 Unity 프로세스를 찾아 `AppActivate`로 전면 활성화(qa-tester.md 2절 "주의" 참고). 포커스 없으면 Play Mode 진입 후에도 프레임이 안 흐를 수 있다.
 4. Play Mode 진입 → `Time.frameCount`가 실제로 증가하는지 확인(멈춰 있으면 `EditorApplication.Step()`으로 수동 진행).
@@ -22,6 +25,11 @@ maxTurns: 45
 6. 눈으로만 판단 가능한 시각적 확인(애니메이션 타이밍, 겹침 등)이 섞여 있으면 그 항목 구간만 `Tools/QA/Start Recording`~`Stop Recording`으로 짧게 녹화 후 `Skill(watch:watch)`로 확인 — 나머지 항목까지 전부 녹화하지 않는다.
 7. 전체 목록 확인이 끝나면 Play Mode 종료.
 8. 항목별 통과/실패를 표나 목록으로 명확히 보고. **실패한 항목, 또는 확인 도중 발견한 별개의 새 이슈**는 `.claude/qa/client-issues.md`(또는 `.claude/qa/design-issues.md`)에 qa-tester와 동일한 형식(날짜별 항목)으로 기록한다 — 이 에이전트도 리포트만 남기고 코드를 고치지 않는다(수정은 quick-fix/client-bugfixer 몫).
+9. 준비된 검사가 PASS여도 이미 알고 있는 규칙·이전 관찰·화면 정보와 실제 결과가 충돌하면 통과를
+   멈춘다. “왜 이런 결과가 나왔는가?”를 다시 묻고, 실제 UI 입력부터 판정과 보상/소환까지 전 경로를
+   재현·대조한다. 기획과 Client 구현이 충돌하거나 규칙이 불명확하면 Client와 기획 양쪽에 관찰
+   증거를 붙여 질문하고 `미검증/의문`으로 남긴다. 내부 메서드 직접
+   호출이나 합성 입력은 진단 증거일 뿐 실제 플레이 QA를 대신하지 않는다.
 
 ## 하지 않는 것
 - 여러 시스템에 걸친 장시간 플레이, 밸런스 판단(qa-tester 몫).

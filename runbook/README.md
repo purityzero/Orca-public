@@ -28,7 +28,8 @@
 
 | 런북 | 언제 읽나 |
 |---|---|
-| [codex-handoff.md](codex-handoff.md) | Codex에 작업을 넘기거나 결과를 회수할 때 |
+| [codex-handoff.md](codex-handoff.md) | Codex에 작업을 넘기거나 결과를 회수·직접 반환할 때 |
+| [subagents.md](subagents.md) | 서브에이전트 완료 알림·목록 누락 복구 전에 |
 | [unity-font.md](unity-font.md) | TMP 폰트·글리프·다국어 표시를 건드릴 때 |
 | [scene-prefab-edit.md](scene-prefab-edit.md) | 씬·프리팹 YAML이나 MCP로 구조를 바꿀 때 |
 | [verification-scripts.md](verification-scripts.md) | 검사 도구를 만들거나 그 결과를 믿기 전에 |

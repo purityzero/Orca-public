@@ -2,23 +2,27 @@
 
 마지막 적용: 2026-11-05
 
-## 되는 것
+## Claude Code가 Codex를 직접 호출하는 경우 (2026-08-30 확인)
 
-### Unity 조작까지 위임된다 — `--approve-for-me`
+`codex` CLI가 로컬에 설치돼 있어 Claude Code가 `codex exec`로 비대화형 실행을 시킬 수 있다. 다만 **`ListAgents`에는 Codex가 안 잡힌다** — 돌고 있는 Codex 세션에 `SendMessage`로 지시하는 건 불가능하고, 새 프로세스를 띄우는 것만 된다.
+
+### Codex의 Unity 접근 — 조작까지 된다 (2026-09-10 정정)
+
+`~/.codex/config.toml`에 `[mcp_servers.unityMCP] url = "http://127.0.0.1:8080/mcp"`가 등록돼 있어 **Codex도 같은 Unity 에디터에 붙는다.**
+
+**`--approve-for-me`를 붙이면 조작 도구까지 호출된다.**
 
 ```
-codex exec --approve-for-me --color never -C "<프로젝트 루트>" -o "<보고서>" - < "<브리프 파일>"
+codex exec --approve-for-me --color never -C "<작업 루트>" -o "<보고서>" - < "<브리프 파일>"
 ```
 
-`refresh_unity` 호출에서 `PermissionRequest` 훅이 자동 심사로 통과한다. Play Mode 진입·조작·종료까지 완주한다.
+`refresh_unity` 호출에서 `PermissionRequest` 훅이 자동 심사로 통과하는 것을 실측했다(codex-cli 0.150.1).
+Play Mode 진입·조작·종료까지 실제 QA 1회를 완주했다.
 
-> **2026-09-09에 "읽기만 된다"고 결론 냈던 것은 틀렸다.**
-> 그때 본 `MCP tool call requires approval, but approval policy is never`는
-> **`--approve-for-me`를 안 붙여서** 난 것이었다. 옵션 하나를 몰라 하루를 돌아갔다.
-> → **도구가 막혔다고 결론 내기 전에 `--help`를 끝까지 읽는다.**
+> 2026-09-09에 이 절은 "읽기만 된다"였다. 그건 **`--approve-for-me` 없이** 시험한 결과였고,
+> 그때 본 `MCP tool call requires approval, but approval policy is never`는 옵션 부재가 원인이었다.
 
-⚠️ 이 옵션은 **workspace-write 샌드박스**를 쓴다. 프롬프트에 반드시 명시할 것:
-**"프로젝트 파일 수정 금지, 산출물은 `Temp/` 아래에만"**
+> **도구가 막혔다고 결론 내기 전에 `--help`를 끝까지 읽는다.**
 
 ### 실행 중인 Codex 세션에 직접 인계 — `orca terminal`
 
@@ -39,16 +43,27 @@ orca terminal read --terminal <handle> --screen          # 결과 회수
 Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽 + `preview`에 내가 쓴 문장이
 보이는 쪽**이 자기 터미널이다. 인계문에 자기 핸들을 적어 보내면 Codex가 되묻지 않는다.
 
-## 안 되는 것 (Windows)
+### Codex에 넘길 때 지킬 것
 
-| 시도 | 결과 |
-|---|---|
-| `codex app-server daemon` | `only supported on Unix platforms` |
-| `codex agents` (세션 브라우징 TUI) | 위 데몬에 붙는 기능이라 **불가** |
-| `codex exec resume` | `~/.codex/sessions/`에 **rollout이 안 남는다**(session id는 찍히는데 파일이 없다). Orca 탭의 대화형 Codex는 `$CODEX_HOME/sessions/`에 남는다(2026-11-05, `AGENT.MD` 참고) |
-| 대화형 TUI를 Claude 셸에서 직접 띄우기 | 비대화형 셸이라 불가. **대신 Orca 탭으로 띄운다** — 아래 「Codex와 묻고 답하기」 |
+- **맥락은 브리프 파일로 넘긴다.** `.claude/briefs/{날짜}-{주제}.md`에 적고 그 파일을 stdin으로 준다.
+  세션을 이어붙이는 길이 Windows에선 막혀 있어서(아래) 브리프가 그 역할을 대신한다.
+  브리프와 Codex 산출물은 일회용이다 — **요약 보고 직후 지운다**(`.gitignore` 대상, 절차는 `runbook/codex-handoff.md` 7단계).
+- **진행 로그는 Orca 안에 남긴다** — `D:\Orca\보고서\{주제}-{날짜}.log`. 그래야 사용자가 다른 창에서 흐름을 본다.
+  `codex exec`의 stdout에는 세션 id·모델·승인 정책과 호출하는 MCP 도구가 한 줄씩 찍힌다.
+- **`--approve-for-me`는 workspace-write 샌드박스를 쓴다.** 파일 소유권을 지키려면
+  프롬프트에 **"프로젝트 파일 수정 금지, 산출물은 `Temp/` 아래에만"**을 명시한다.
+- 에디터를 쓰는 주체가 동시에 둘이 되지 않게 **한 번에 하나만** 돌린다.
+- 받은 보고서는 **핵심 주장을 원본에서 재확인한 뒤에만** 사용한다. Codex 출력도 「검증은 프로덕션 경로를 타야 한다」의 적용 대상이다.
+  긴 문서의 **앞뒤 모순 찾기**엔 쓸 만하지만 **단순 계수는 틀린 적이 있다**(줄 수를 158로 답했는데 실제 223).
+- **Codex가 낸 의견은 반드시 사용자에게 요약해 보여준다.** 보고서 경로만 남기고 넘어가지 않는다 — 사용자는 그 파일을 열어보지 않는다. ①무엇을 지적했나 ②내가 사실 확인한 것과 못 한 것 ③채택/미채택과 이유를 짧게. 길면 표로.
 
-→ **QA 한 건 = `codex exec` 한 번.** 맥락은 매번 **브리프 파일**로 싣는다.
+### Windows에서 막혀 있는 것 (2026-09-10 실측)
+
+- `codex app-server daemon`이 **`only supported on Unix platforms`** — 그래서 `codex agents`(세션 브라우징 TUI)와 `codex remote-control`을 쓸 수 없다.
+- `~/.codex/sessions/`에 **rollout이 안 남는다**(`codex exec`가 session id를 찍어도 파일이 없다) — `codex exec resume`으로 이어가거나 되짚을 수 없다.
+  - **단, Orca 탭의 대화형 Codex는 남는다**(2026-11-05 실측, codex-cli 0.166.0): `$CODEX_HOME`(Orca 계정 홈)`/sessions/YYYY/MM/DD/rollout-*.jsonl`과 제목 색인 `session_index.jsonl`이 쌓이고, `codex resume <ID>`로 다시 열 수 있다(같은 `CODEX_HOME`에서). 위 관측은 기본 홈의 `codex exec` 기준이다.
+- → **QA 한 건 = `codex exec` 한 번.** 맥락은 매번 브리프로 싣는다.
+- 대화형 TUI는 Claude Code의 비대화형 셸에서 직접 못 띄운다. **대신 Orca의 Codex 터미널 탭으로 묻고 답한다** — 브리프 파일 → `orca terminal send` → `orca terminal wait --for tui-idle` → 산출물 파일 읽기. 절차는 `runbook/codex-handoff.md` 「Codex와 묻고 답하기」(2026-11-05 실측).
 
 ### 사용자가 "새 세션 열었다"고 하면 **전송 직전에** 핸들을 다시 확인한다
 
@@ -95,7 +110,7 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
      표시가 없으면 미완료로 보고 다시 기다린다.
    - 재대기는 **총 10분까지.** 그때도 없으면 중단·오류 가능성을 사용자에게 알리고, 같은 질문을 자동으로 다시 보내지 않는다.
    - (근거: 2026-11-05 Codex와 묻고 답하기 테스트에서 Codex가 동의하고 상한 규칙을 보탰다)
-6. 핵심 주장은 원본에서 재확인하고 사용자에게 표로 요약한다(아래 「사용자에게 반드시 요약한다」).
+6. 핵심 주장은 원본에서 재확인하고 사용자에게 표로 요약한다(「Codex에 넘길 때 지킬 것」).
 7. **요약을 보고한 그 턴에 브리프·산출물을 지운다** — 묻지 않고 지운다. 빈 `.claude/briefs/`도 지운다.
    남길 결론은 요약 보고와, 반영할 경우 해당 md에 들어간다. 폴더는 `.gitignore` 대상이라 커밋되지 않는다.
    - 아직 답을 못 받았거나 2차 질문이 남은 인계의 파일은 지우지 않는다. 그 인계가 끝날 때 함께 지운다.
@@ -132,12 +147,8 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
 없었다. 규칙은 `CODEX.md`·`AGENT.MD`에 있었고 그걸 안 지킨 것이다. 그 사실을 알아야 다음에 엉뚱한
 곳을 고치지 않는다)
 
-## 받은 결과는 재확인한다
+## 계수 검증 보충
 
-Codex 출력도 「검증은 프로덕션 경로를 타야 한다」의 적용 대상이다.
-
-- 긴 문서·코드의 **앞뒤 모순 찾기**엔 잘 맞는다
-- **단순 계수는 틀린 적이 있다** — 줄 수를 158로 답했는데 실제 223이었다
 - 좌표·개수 같은 수치는 **원본에서 직접 다시 센다**
 
 다만 **반대 방향도 있다** — 2026-09-10에 Codex 보고가 맞고 **내 검사 스크립트가 틀린** 적이 있다.
@@ -151,7 +162,23 @@ Codex 출력도 「검증은 프로덕션 경로를 타야 한다」의 적용 �
 → **긴 작업을 넘기기 전에 남은 한도를 확인**하거나, **중간 커밋을 지시**한다.
 → 멈췄으면 워킹트리 상태부터 확인한다. 되돌리지 말고 이어받을 수 있는지 먼저 본다.
 
-## 사용자에게 반드시 요약한다
 
-보고서 파일 경로만 남기고 넘어가지 않는다 — 사용자는 그 파일을 열어보지 않는다.
-①무엇을 지적했나 ②내가 사실 확인한 것과 못 한 것 ③채택/미채택과 이유. 길면 표로.
+### Codex 작업 완료 후 원래 Claude Code 세션으로 직접 반환
+
+Claude Code가 Codex에 넘긴 작업은 Codex의 사용자 보고만으로 끝내지 않는다. 작업 완료 후 **인계한 원래 Claude Code 세션에 결과를 직접 전송**해야 한다.
+
+1. `orca worktree ps --json`과 `orca terminal list --json`으로 같은 워크트리의 기존 Claude 터미널을 찾는다.
+2. 프롬프트·최근 출력·터미널 identity를 대조해 인계한 세션을 특정한다. 애매하면 임의 전송하지 말고 사용자에게 확인한다.
+3. `orca terminal send --terminal <handle> --text "<인계 요약>" --enter --json`으로 결과를 직접 보낸다.
+4. 응답의 `accepted: true`를 확인한다. 실패하면 한 번 재조회·재시도하고, 그래도 실패할 때만 사용자에게 전달 불가 사실과 복사용 인계문을 보고한다.
+
+인계 요약에는 결과, 변경 파일 또는 커밋 해시, 검증 상태, 남은 위험과 다음 작업을 넣는다. **사용자에게 인계문만 보여주고 복사해 달라고 하거나, 새 Claude 프로세스를 띄우는 것은 직접 반환이 아니다.** 원래 세션이 이미 종료됐거나 찾을 수 없을 때만 사용자에게 대체 전달 방법을 요청한다.
+
+**금지**
+- `--dangerously-bypass-approvals-and-sandbox`로 호출하지 않는다. 승인이 필요하면 `--approve-for-me`를 쓴다.
+- Git 마무리(stage·commit·merge·push)를 `codex exec`로 대신하지 않는다. 그건 Codex **메인 세션**의 몫이고, 여기서 띄우는 건 별도 프로세스라 같은 저장소를 두 주체가 동시에 건드리게 된다.
+
+> **Claude Code 자신도 Git 마무리를 하지 않는다.** `CODEX.md`의 전담 조항 그대로다. 사용자가 특정 건에 대해 "네가 처리해라"라고 하면 **그 건에 한해** 수행하고, 다음 작업부터는 다시 인계로 돌아간다 — 한 번의 허락을 상시 권한으로 확대하지 않는다. (근거: 2026-08-30, 한 건에 받은 허락을 세션 내내 이어가 8회 커밋한 사례)
+- 사용자 계정의 토큰이 소모되므로, 가벼운 조회가 아니면 호출 전에 알린다.
+
+트레이드오프: 위치를 이미 아는 **작은 편집은 왕복이 늘어난다.** 구현자의 맥락이 Codex엔 없어 브리프에 전부 실어야 하고 사용자 토큰도 쓴다. 그래도 조작과 검증을 한쪽에 모으는 이점이 더 크다는 판단이다.

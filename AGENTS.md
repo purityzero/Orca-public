@@ -12,6 +12,7 @@
 
 ## 작업 대상이 정해졌을 때 추가로 읽을 문서
 
+- Claude에서 넘겨받은 작업이면 `runbook/codex-handoff.md`를 읽는다.
 - Orca 운용, 병렬 작업, 에이전트 조율: `ParallelWorkContract.MD`
 - Unity 프로젝트의 동작을 바꾸는 수정: `WorkBranchFlow.MD`
 - Unity 프로젝트 또는 프로젝트 문서 작업: `Unity/README.md`, `LocalPaths.json`, 해당 프로젝트의 `Unity/{프로젝트명}/.claude/UNFINISHED.md`

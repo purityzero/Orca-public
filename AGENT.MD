@@ -58,6 +58,7 @@ Play Mode 진입·조작·종료까지 실제 QA 1회를 완주했다.
 
 - **맥락은 브리프 파일로 넘긴다.** `.claude/briefs/{날짜}-{주제}.md`에 적고 그 파일을 stdin으로 준다.
   세션을 이어붙이는 길이 Windows에선 막혀 있어서(아래) 브리프가 그 역할을 대신한다.
+  브리프와 Codex 산출물은 일회용이다 — **요약 보고 직후 지운다**(`.gitignore` 대상, 절차는 `runbook/codex-handoff.md` 7단계).
 - **진행 로그는 Orca 안에 남긴다** — `D:\Orca\보고서\{주제}-{날짜}.log`. 그래야 사용자가 다른 창에서 흐름을 본다.
   `codex exec`의 stdout에는 세션 id·모델·승인 정책과 호출하는 MCP 도구가 한 줄씩 찍힌다.
 - **`--approve-for-me`는 workspace-write 샌드박스를 쓴다.** 파일 소유권을 지키려면

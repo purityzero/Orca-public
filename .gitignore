@@ -14,3 +14,6 @@ output/
 
 # Codex/Claude QA 진행 로그 및 요약 산출물
 reports/
+
+# Codex 인계 브리프·산출물 (요약 보고 직후 삭제하는 일회용 — runbook/codex-handoff.md)
+.claude/briefs/

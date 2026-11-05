@@ -37,4 +37,10 @@
 
 ## 주의
 - **Git Bash로 `/clear`·`/new`·`/exit`를 보내면 경로로 바뀐다** — `C:/Program Files/Git/clear`로 전송된다. `MSYS_NO_PATHCONV=1 orca terminal send ...`로 보내거나 PowerShell로 보낸다.
+- **인계 감시 훅(`.claude/hooks/codex-handoff-guard.js`)은 `orca terminal send`의 `--text` 값만 본다.** 반환 요구나 `반환불필요`는 `--text` 안에 써야 인정된다(명령 주석·`grep` 문구는 무시).
+  단독 슬래시 명령(`/new`, `/clear`, `/exit`)과 `--help`, 빈 Enter(`--text ""`)는 통과한다. Bash 도구만 대상이고 PowerShell 도구는 검사하지 않는다.
+  (2026-11-05 수정 전에는 명령 전체에서 문구를 찾아, 같은 명령의 `grep '"accepted"'`만으로 통과하고 `--help`는 막혔다)
+- **Codex `/new`는 바로 새 대화가 아니라 메뉴를 띄운다**(0.166.0 실측): "Where should the new conversation run? › 1. Use current Git worktree / 2. Create new Git worktree". 메뉴가 떠 있는 동안 보낸 입력은 메뉴 조작으로 소비될 수 있다.
+  → `/new` 전송 → 화면에서 메뉴와 **선택 표시가 1번(`›`)인지** 확인 → `--text "" --enter`로 선택 → 입력창(`› Ask Codex`)과 cwd 확인 → 그다음에 보낸다. 수신 확인은 `codex-handoff.md` 3단계 기준(user 레코드 일치).
+  (2026-11-05: `/new` 직후 보낸 브리프의 user 레코드가 어느 rollout에도 없고, 이후 cwd가 분리 worktree인 대화가 생겼다. 메뉴 때문인지, 누가 2번을 골랐는지는 기록으로 특정하지 못했다)
 - **`.claude/agents/`는 모든 세션이 같이 쓴다.** 한 세션이 종료되면 다른 세션이 쓰던 사본까지 지워진다(시험 탭 `/exit` 직후 0개). 리셋은 지운 뒤 바로 다시 깐다. 안 보이면 `node .claude/hooks/session-agents.js sync`. 근본 수정은 `UNFINISHED.md` 항목.

@@ -78,6 +78,16 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
 2. **탭을 연다** — `orca agent launch --agent codex --surface terminal` (옵션은 `--help` 확인).
    이미 열린 탭이 있으면 `orca terminal list --json`에서 `agentIdentity == "codex"`를 찾아 재사용한다.
 3. **보낸다** — `orca terminal send --terminal <handle> --text "<브리프 절대경로> 를 읽고 요청대로 검토해줘" --enter`
+   - **보내기 전에 탭 상태와 작업 폴더를 확인한다.** `orca terminal list --json`에 그 handle이 없으면 그 탭에 보내지 않는다
+     (보내면 `terminal_not_writable`). `terminal list`의 `worktreePath`는 Orca가 관리하는 경로라 실제 Codex cwd와 다를 수 있다 —
+     **화면 아랫줄 또는 최신 rollout 첫 줄 `session_meta.cwd`**로 확인한다. 2026-11-05에 Codex 탭의 cwd가
+     `$CODEX_HOME/worktrees/433e/Orca`(커밋 기준 분리 worktree)였다. 다르면 그 탭을 쓰지 말고 새로 열되, 새 탭도 cwd를 다시 확인한다.
+   - **보낸 뒤 수신을 확인한다.** `accepted: true`와 `tui-idle`은 Codex가 입력을 처리했다는 증거가 아니다.
+     rollout 파일이 생기거나 갱신되는 것도 부족하다(지침·메타데이터·응답도 파일을 갱신한다).
+     **해당 rollout에 전송 시각 이후 `role: user` 레코드가 생기고 그 `input_text`가 보낸 내용과 일치해야** 받은 것이다.
+     30초는 첫 점검 시점일 뿐 보장 시간이 아니다. 못 찾으면 '미확인'으로 두고 화면·세션 상태부터 본다.
+     **다시 보내는 것은 제출되지 않았음이 확인됐을 때만** 한다(중복 작업 위험). 전송 오류로 `--retry-request` ID를 받았으면 그 ID로 재시도한다.
+     (근거: 2026-11-05 `/new` 직후 보낸 브리프가 `accepted: true`·`tui-idle`인데 어느 rollout에도 user 레코드가 없었다. Codex 검토로 판정 기준을 좁혔다)
 4. **끝날 때까지 기다린다** — `orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 540000`
    (Bash timeout 600000). 실측 2~6분.
 5. **결과는 화면이 아니라 산출물 파일로 읽는다.** 화면 읽기는 TUI repaint 때문에 불완전하다.

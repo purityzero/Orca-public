@@ -20,6 +20,45 @@ const RETURN_PATTERNS = [
 
 const EXEMPT = '반환불필요';
 
+// Bash의 리터럴 인수만 읽는다. 셸 확장/명령 치환을 실행하지 않는다.
+function readCommands(command) {
+    const commands = [[]];
+    let word = '', quote = '', started = false;
+    const flush = () => {
+        if (started) commands[commands.length - 1].push(word);
+        word = ''; started = false;
+    };
+    for (let index = 0; index < command.length; index++) {
+        const character = command[index];
+        if (character === '\\' && quote !== "'") {
+            const next = command[index + 1];
+            if (next !== undefined && (quote === '' || /["\\$`\n]/.test(next))) {
+                if (next !== '\n') word += next;
+                started = true; index++; continue;
+            }
+        }
+        if (quote) {
+            if (character === quote) quote = '';
+            else word += character;
+            continue;
+        }
+        if (character === '"' || character === "'") {
+            quote = character; started = true;
+        } else if (/\s/.test(character) && character !== '\n') {
+            flush();
+        } else if (/[;|&\n()]/.test(character)) {
+            flush(); commands.push([]);
+        } else if (character === '#' && started === false) {
+            while (index < command.length && command[index] !== '\n') index++;
+            flush(); commands.push([]);
+        } else {
+            word += character; started = true;
+        }
+    }
+    flush();
+    return commands;
+}
+
 function deny(reason) {
     process.stdout.write(JSON.stringify({
         hookSpecificOutput: {
@@ -45,14 +84,26 @@ process.stdin.on('end', () => {
         process.exit(0);
 
     const command = (payload.tool_input && payload.tool_input.command) || '';
-    if (command.includes('orca terminal send') === false)
-        process.exit(0);
-
-    if (command.includes(EXEMPT) === true)
-        process.exit(0);
-
-    const hasReturnRequest = RETURN_PATTERNS.some(p => command.includes(p));
-    if (hasReturnRequest === true)
+    const sends = readCommands(command).filter(words => {
+        const index = words.indexOf('orca');
+        return index >= 0 && words[index + 1] === 'terminal' && words[index + 2] === 'send';
+    });
+    const allAllowed = sends.every(words => {
+        const options = words.slice(words.indexOf('orca') + 3);
+        let text;
+        let help = false;
+        for (let index = 0; index < options.length; index++) {
+            if (options[index] === '--text') text = options[++index];
+            else if (options[index].startsWith('--text=')) text = options[index].slice(7);
+            else if (options[index] === '--help') help = true;
+        }
+        if (help) return true;
+        if (text === undefined) return false;
+        if (text === '') return true;
+        if (/^\/[A-Za-z][A-Za-z0-9_-]*$/.test(text)) return true;
+        return text.includes(EXEMPT) || RETURN_PATTERNS.some(pattern => text.includes(pattern));
+    });
+    if (allAllowed)
         process.exit(0);
 
     deny(

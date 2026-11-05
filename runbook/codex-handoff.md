@@ -1,6 +1,6 @@
 # Runbook — Codex 인계
 
-마지막 적용: 2026-09-10
+마지막 적용: 2026-11-05
 
 ## 되는 것
 
@@ -46,7 +46,7 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
 | `codex app-server daemon` | `only supported on Unix platforms` |
 | `codex agents` (세션 브라우징 TUI) | 위 데몬에 붙는 기능이라 **불가** |
 | `codex exec resume` | `~/.codex/sessions/`에 **rollout이 안 남는다**(session id는 찍히는데 파일이 없다) |
-| 대화형 TUI를 Claude가 띄우기 | 비대화형 셸이라 불가. 사용자가 `! codex`로 직접 여는 건 가능 |
+| 대화형 TUI를 Claude 셸에서 직접 띄우기 | 비대화형 셸이라 불가. **대신 Orca 탭으로 띄운다** — 아래 「Codex와 묻고 답하기」 |
 
 → **QA 한 건 = `codex exec` 한 번.** 맥락은 매번 **브리프 파일**로 싣는다.
 
@@ -66,6 +66,25 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
   막 출력했으므로 그게 가장 최근이다
 - 새 세션을 열었다는 말을 들은 직후라면 **한 번 더 목록을 확인한다.** 목록에 아직 안 올라올 수 있다
 - `orca terminal read`로 도착을 확인하려 하지 마라 — 이 환경에서는 빈 화면을 주는 경우가 많다
+
+## Codex와 묻고 답하기 — Orca 탭 (2026-11-05 실측)
+
+사용자가 "Codex랑 논의해줘, 생각도 보이게"라고 하면 `codex exec`가 아니라 **Orca의 Codex 터미널 탭**을 쓴다.
+탭이라서 Codex가 생각하는 과정이 사용자 화면에 그대로 보인다.
+
+1. **질문은 브리프 파일로 쓴다** — `.claude/briefs/{날짜}-{주제}.md`. 전제·확인된 사실·내 안·묻는 것·범위 제한,
+   그리고 **산출물 경로 하나**(`…-codex.md`)를 적는다. 2차 질문은 `-r2.md`처럼 이어 붙인다.
+2. **탭을 연다** — `orca agent launch --agent codex --surface terminal` (옵션은 `--help` 확인).
+   이미 열린 탭이 있으면 `orca terminal list --json`에서 `agentIdentity == "codex"`를 찾아 재사용한다.
+3. **보낸다** — `orca terminal send --terminal <handle> --text "<브리프 절대경로> 를 읽고 요청대로 검토해줘" --enter`
+4. **끝날 때까지 기다린다** — `orca terminal wait --terminal <handle> --for tui-idle --timeout-ms 540000`
+   (Bash timeout 600000). 실측 2~6분.
+5. **결과는 화면이 아니라 산출물 파일로 읽는다.** 화면 읽기는 TUI repaint 때문에 불완전하다.
+6. 핵심 주장은 원본에서 재확인하고 사용자에게 표로 요약한다(아래 「사용자에게 반드시 요약한다」).
+
+- 2026-11-05에 2단계·3단계를 Claude가 직접 하려다 **안전 필터에 막힌 적이 있다.** 그때는 사용자가 탭을 열고
+  붙여 넣었고, 4~6단계(대기·파일 읽기·요약)는 Claude가 했다. 막히면 같은 명령을 바꿔 재시도하지 말고
+  사용자에게 알려 위 방식으로 진행한다.
 
 ## 인계할 때 꼭 넣을 것
 

@@ -19,11 +19,9 @@
 ├── UnityLauncher.MD/.ps1/.cmd, OrcaStart.cmd     ← 프로젝트 실행 체인
 └── Unity\
     ├── README.md                                 ← 이 문서
-    ├── GeometryDefender\.claude\                  ← 정본 (프로젝트 고유 문서)
-    └── HouseRulez\.claude\                        ← 정본 (프로젝트 고유 문서)
+    └── {프로젝트명}\.claude\                      ← 정본 (프로젝트 고유 문서, 2026-11-05 현재 없음)
 
-<원본:GeometryDefender>\.claude\                  ← 실제 Unity 에디터가 런타임에 읽는 곳 (원본)
-<원본:HouseRulez>\.claude\                        ← 실제 Unity 에디터가 런타임에 읽는 곳 (원본)
+<원본:{프로젝트명}>\.claude\                      ← 실제 Unity 에디터가 런타임에 읽는 곳 (원본)
 ```
 
 ## 2. 정본(source of truth) 규칙

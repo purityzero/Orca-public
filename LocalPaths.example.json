@@ -7,7 +7,7 @@
     "이 PC에 없는 프로젝트는 null 로 둔다."
   ],
   "projects": {
-    "GeometryDefender": "C:\\Unity\\GeometryDefender",
-    "HouseRulez": null
+    "MyGame": "C:\\Unity\\MyGame",
+    "OtherGame": null
   }
 }

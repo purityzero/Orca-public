@@ -70,23 +70,6 @@
 `work/2026-09-11-doc-slim`(`9eeff52`, 자동 주입 문서 다이어트)을 **main에 병합할 수 있다.**
 Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 
-## 2026-09-04 — memory-kit Windows 락 패치, 오늘은 여기서 중단
-
-**대상 파일**: `C:\Users\ryoun\OneDrive\Desktop\memory\memory-kit\MEMORY-KIT.md` — **Orca 저장소 밖**, git 추적 안 됨(사용자 개인 다운로드본, 김빛나 작 memory-kit). 방금 한 변경은 커밋 대상이 아니라 그 파일 자체에 직접 반영돼 있음.
-
-**한 것(완료·검증됨)**: `fcntl`(POSIX 전용) 기반 락 3곳을 Windows(`msvcrt`)까지 되게 패치 — `ledger_lock`·`memory_lock`(둘 다 `hooks/memkit_paths.py` 안, 공용 헬퍼 `_flock_exclusive`/`_flock_release` 신설) · `hooks/hook-wrap-log.py`(원래 모듈 최상단 무조건 `import fcntl`라 Windows에서 즉시 크래시하던 것 — 지연 임포트로 교체). 전부 `[W1·로컬 Windows 패치·비공식]` 주석으로 표시해 원작과 구분해둠.
-- **검증**: `unpack.py`로 실제로 풀어서 Windows python 3.14로 `py_compile` + `--selftest` 실행. 그리고 **부모/자식 두 프로세스를 실제로 띄워** `memory_lock` 상호배제를 실측(부모가 잡은 동안 자식은 `CHILD_TIMEOUT`, 부모가 풀자 자식이 `CHILD_GOT_LOCK`) — 잠금 없이 진행되던 기존 상태와 다르다는 것 확인.
-- 자체 검토 중 잡은 버그 1개: `_flock_exclusive`의 blocking 모드에 임의 30초 타임아웃을 넣었다가, 원본 POSIX `flock(LOCK_EX)`는 무제한 대기라는 걸 깨닫고 제거(플랫폼 간 동작 불일치를 스스로 만들 뻔함).
-
-**검증하다 발견했지만 손 안 댄 것(범위 밖 — 오늘은 여기까지)**: 락과 무관한 별개의 Windows 버그 3종을 `--selftest`로 확인만 하고 안 고쳤다.
-1. `hooks/memory-rank-index.py` `--selftest` 크래시 — `print("✗ ...")`가 Windows 콘솔 기본 코드페이지(cp949)로 인코딩 안 됨
-2. `tools/memory-archive.py`, `tools/memory-migrate.py` `--selftest` 크래시 — `open(path).read()`에 `encoding="utf-8"` 미지정 → cp949로 읽다 한글 바이트에서 디코드 실패
-3. `hooks/posttooluse-memuse-log.py` `--selftest` FAIL(크래시는 아님) — 파일 경로에서 `/memory/` 같은 POSIX 구분자를 문자열로 찾는 로직이 Windows `\` 경로를 못 잡음
-
-(`memory-recall-hook.py`·`stop-capture-prompt.py`는 `--selftest` 정상 통과)
-
-**다음에 이어가려면**: 사용자가 "인코딩/경로 버그까지 마저 고칠지" 결정 필요 — 위 1~3을 고치기 전엔 이 kit의 `memory-rank-index`·`memory-archive`·`memory-migrate`·`posttooluse-memuse-log`는 Windows에서 못 쓴다고 봐야 함. **참고**: 이 버그들을 다 고쳐도 Orca 저장소 자체에 이 kit을 도입하는 건 별개 판단(2026-09-04 검토 결과 "memory 개수 문턱 미달로 보류" — CODEX.md에 Codex용 memory 참조 한 줄만 반영해둔 상태, 그 결정은 안 바뀜).
-
 ## 2026-09-11 — 자동 주입 문서 다이어트 (브랜치 `work/2026-09-11-doc-slim`)
 
 세션이 첫 응답 전에 지침 문서만 55,256자를 싣고 있었다(사용자 지적). **36,069자로 35% 줄였다.**
@@ -113,3 +96,7 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 `CLAUDE.md` 승격 사다리 절, `CODE.MD` bool 반환 메서드 규칙, `AGENT.MD` Codex 방침, env-check 훅.
 막혀 있는 이유는 위 2026-09-04 항목의 훅 검증 2·4가 안 끝나서다.
 `work/2026-09-11-doc-slim`은 그 브랜치 위에 쌓았으므로 **함께 병합되거나 함께 막힌다.**
+
+## 2026-11-05 — 브랜치 확인 필요
+
+위 env-check·doc-slim 항목의 브랜치(`work/2026-09-04-env-check-hook`, `work/2026-09-11-doc-slim`)는 원격에 없다(원격엔 `main`, `work/2026-09-13-codex-handoff-unity-bridge`만). 이미 main에 병합됐는지 확인하고, 됐으면 두 항목을 닫는다.

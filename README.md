@@ -1,8 +1,10 @@
 # Orca 워크스페이스
 
-**이게 뭔가:** 이 저장소는 Unity 게임 프로젝트(GeometryDefender, HouseRulez)를 Claude Code·Codex + Orca 앱으로 관리하기 위한 **메타 작업공간**이다. 게임 코드 자체는 여기 없다(각 Unity 프로젝트 폴더에 따로 있음) — 여긴 코딩 규칙, 에이전트 역할 계약, 프로젝트 문서(class/prefab/design/qa), 실행 스크립트, 운용 원칙 문서를 모아둔 곳이다.
+**이게 뭔가:** 이 저장소는 Unity 게임 프로젝트를 Claude Code·Codex + Orca 앱으로 관리하기 위한 **메타 작업공간**이다. 게임 코드 자체는 여기 없다(각 Unity 프로젝트 폴더에 따로 있음) — 여긴 코딩 규칙, 에이전트 역할 계약, 프로젝트 문서(class/prefab/design/qa), 실행 스크립트, 운용 원칙 문서를 모아둔 곳이다.
 
 **작성일:** 2026-08-22
+
+> **2026-11-05 정리:** 기존 프로젝트(GeometryDefender, HouseRulez, SplashRush)의 기록 문서를 모두 삭제하고 새 Unity 프로젝트를 준비 중이다. 이 저장소 문서에 날짜와 함께 나오는 두 이름은 당시 실측 근거로 남겨둔 것이고, 지금은 `Unity\` 아래에 없다.
 **GitHub:** https://github.com/purityzero/Orca (private) — 여러 PC에서 이 폴더를 clone해서 같은 상태로 이어 쓸 수 있다.
 
 ### 경로 표기 규칙 — 이 문서들에 절대경로는 없다
@@ -20,8 +22,6 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 ---
 
 ## 1. 빠른 시작
-
-처음 사용하는 사람은 브라우저용 [`Orca_사용설명서.html`](Orca_사용설명서.html)부터 열면 된다. 평소 실행, 작업 요청법, Codex·Claude Code 역할 구분, 병렬 작업, Git 마무리와 문제 해결을 한 문서에 정리했다. 저장소를 clone한 뒤 파일을 더블클릭하면 오프라인에서도 볼 수 있고, 브라우저에서 PDF로 인쇄할 수도 있다.
 
 ### 새 PC에서 처음 셋업할 때
 1. 원하는 위치에 clone한다(경로는 자유 — 문서의 `<ORCA>`가 이 폴더를 뜻한다).
@@ -42,7 +42,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 
 ### 새 세션에서 이어서 작업할 때
 1. 이 워크스페이스 자체의 미완료 항목은 §5 "알려진 이슈"부터 확인
-2. 작업 대상이 특정 프로젝트(GeometryDefender/HouseRulez)면 `Unity\{프로젝트명}\.claude\UNFINISHED.md`도 확인
+2. 작업 대상이 특정 프로젝트면 `Unity\{프로젝트명}\.claude\UNFINISHED.md`도 확인
 3. `ParallelWorkContract.MD` §0~§2에서 Orca 모델·Unity 제약 전체 맥락 파악
 
 ---
@@ -52,7 +52,6 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 ```
 <ORCA>\
 ├── README.md                    ← 이 문서 (전체 사용법)
-├── Orca_사용설명서.html         ← 처음 사용자를 위한 브라우저용 실전 안내서
 ├── AGENTS.md                    ← Codex가 세션 시작·대상 확정 후 읽을 문서를 지정하는 진입 지침
 ├── CLAUDE.md                    ← 행동 지침 (같이 읽을 파일: CODEX/CODE/AGENT)
 ├── CODEX.md                     ← Codex가 우선 소유하는 작업과 완료 조건
@@ -91,27 +90,20 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 │
 └── Unity\                       ← 프로젝트별 문서 사본 (정본은 여기)
     ├── README.md                ← 이 폴더 전용 상세 설명(마스터-사본 규칙, 동기화 함정)
-    ├── GeometryDefender\.claude\
-    │   ├── agents\                ← 마스터 + 이 프로젝트 전용 노하우 병합본
-    │   ├── class\ (100+)         ← 클래스별 기록
-    │   ├── prefab\ (20+)         ← 프리팹별 기록
-    │   ├── design\ (5)           ← 기획 스펙
-    │   ├── qa\ (2)               ← client-issues.md / design-issues.md
-    │   ├── rules\glory.md
-    │   ├── UNFINISHED.md         ← 이 프로젝트(GeometryDefender)의 미완료 작업
-    │   └── settings.local.json
-    └── HouseRulez\.claude\
-        ├── agents\
-        ├── class\ (5)
+    └── {프로젝트명}\.claude\       ← 프로젝트마다 하나 (2026-11-05 현재 없음)
+        ├── agents\                ← 마스터 + 이 프로젝트 전용 노하우 병합본
+        ├── class\                ← 클래스별 기록
+        ├── prefab\               ← 프리팹별 기록
+        ├── design\               ← 기획 스펙
+        ├── qa\                   ← client-issues.md / design-issues.md
         ├── rules\glory.md
-        ├── UNFINISHED.md         ← 이 프로젝트(HouseRulez)의 미완료 작업
+        ├── UNFINISHED.md         ← 이 프로젝트의 미완료 작업
         └── settings.local.json
 
-<원본:GeometryDefender>\.claude\   ← 실제 Unity 에디터가 읽는 원본 (게임 코드도 여기)
-<원본:HouseRulez>\.claude\         ← 실제 Unity 에디터가 읽는 원본 (게임 코드도 여기)
+<원본:{프로젝트명}>\.claude\       ← 실제 Unity 에디터가 읽는 원본 (게임 코드도 여기)
 ```
 
-> 위 두 경로의 실제 값은 `LocalPaths.json`에 있다. 프로젝트 원본을 건드리기 전엔 **항상 그 파일을 먼저 읽어 경로를 확인한다** — 같은 프로젝트의 오래된 클론이 PC에 같이 있을 수 있어서 폴더명만 보고 짐작하면 틀린다. 값이 `null`이면 그 프로젝트는 이 PC에 없는 것이므로, 원본 동기화 작업은 건너뛰고 그 사실을 사용자에게 알린다.
+> 원본 경로의 실제 값은 `LocalPaths.json`에 있다. 프로젝트 원본을 건드리기 전엔 **항상 그 파일을 먼저 읽어 경로를 확인한다** — 같은 프로젝트의 오래된 클론이 PC에 같이 있을 수 있어서 폴더명만 보고 짐작하면 틀린다. 값이 `null`이면 그 프로젝트는 이 PC에 없는 것이므로, 원본 동기화 작업은 건너뛰고 그 사실을 사용자에게 알린다.
 
 > `Unity\` 폴더 자체의 정본 규칙·동기화 함정·마스터 관계는 **`Unity\README.md`에 훨씬 상세히** 정리돼 있다 — 프로젝트 문서를 실제로 갱신하기 전엔 그 문서부터 읽을 것.
 
@@ -121,7 +113,6 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 
 | 문서 | 언제 읽나 |
 |---|---|
-| `Orca_사용설명서.html` | 처음 Orca를 쓰거나 전체 작업 흐름을 빠르게 훑을 때 — 브라우저에서 바로 열기 |
 | `AGENTS.md` | Codex 세션 시작 시 자동 적용되는 진입 지침 — 필수 공통 문서와 작업 대상별 추가 문서의 로드 순서를 정의 |
 | `CLAUDE.md`/`CODEX.md`/`CODE.MD`/`AGENT.MD` | 작업 에이전트에 맞춰 읽는 행동·코딩·라우팅 규칙 |
 | `runbook/prefab-ui.md` | 프리팹·UI를 만들거나 고칠 때만 읽는 컴포넌트·편집 규칙 |
@@ -140,7 +131,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 ## 4. 핵심 원칙 요약 (각 문서에 상세 근거 있음)
 
 1. **정본 위치가 종류별로 다르다** — 코딩 규칙은 루트 1부, 에이전트 정의는 `agents\`가 마스터(단 실제 실행엔 프로젝트 로컬 사본이 필요), 프로젝트 문서는 `Unity\{P}\.claude\`가 정본이고 `<원본:{P}>\.claude\`는 그 시점 스냅샷. (`Unity\README.md` 참고)
-2. **에이전트를 실행하기 전엔 이름에 프로젝트명을 붙인다** — `{ProjectName}_{ClassName}_class` 형식. GeometryDefender/HouseRulez가 같은 "Glory" 라이브러리를 써서 클래스명이 겹치기 때문. 스폰 전 `ListAgents`로 같은 이름이 이미 실행 중이면 대기한다. (`ParallelWorkContract.MD` §8)
+2. **에이전트를 실행하기 전엔 이름에 프로젝트명을 붙인다** — `{ProjectName}_{ClassName}_class` 형식. 여러 프로젝트가 같은 "Glory" 라이브러리를 쓰면 클래스명이 겹치기 때문. 스폰 전 `ListAgents`로 같은 이름이 이미 실행 중이면 대기한다. (`ParallelWorkContract.MD` §8)
 3. **Unity 에디터·MCP 브릿지는 공유 자원, 한 번에 하나만** — Play Mode 검증이나 프리팹 편집은 병렬 불가. 코드/문서 편집만 병렬 가능. (`ParallelWorkContract.MD` §2)
 4. **MCP for Unity는 전역 자동연결 켜둠** — `MCPForUnity.AutoStartOnLoad`가 레지스트리(모든 프로젝트 공유)에 `true`로 설정돼 있어, 이 런처로 여는 어떤 프로젝트든 자동으로 서버가 뜬다. (`UnityLauncher.MD` §6)
 5. **검증 전 변경은 기본 브랜치에 올리지 않는다** — Unity 프로젝트의 동작을 바꾸는 수정은 `work/{날짜}-{주제}` 브랜치에서 하고, Play Mode 확인까지 끝난 뒤 `--no-ff`로 합류한다. (`WorkBranchFlow.MD`)
@@ -218,8 +209,8 @@ Unity CLI(`unity install/doctor/pipeline`)는 이미 실행 중인 에디터를 
 HouseRulez의 프로젝트 전용 명령도 구현 완료했다. 둘 다 성공 시 종료 코드 0, 의도적 오류를 넣은 실패 검증에서 종료 코드 6을 반환했다. `verify-compile`은 컴파일을 새로 요청하는 명령이 아니라 **Unity가 변경을 import/compile해 idle이 된 뒤 최신 컴파일 결과를 판정**하는 명령이다.
 
 ```powershell
-unity command verify-compile --project-path "<원본:HouseRulez>" --format json
-unity command verify-tables --project-path "<원본:HouseRulez>" --format json
+unity command verify-compile --project-path "<원본:{P}>" --format json
+unity command verify-tables --project-path "<원본:{P}>" --format json
 ```
 
 주의: `eval`은 임의 C# 실행이라 신뢰할 수 없는 입력에 노출 금지, experimental이라 의존하는 자동화는 얇게 유지.
@@ -240,7 +231,7 @@ unity command verify-tables --project-path "<원본:HouseRulez>" --format json
   - [ ] `unity install <프로젝트 버전>` / `unity pipeline install`
   - [ ] `unity doctor`로 CLI/PATH/에디터 설치 환경 확인
   - [ ] `unity status`와 `unity pipeline list`로 실행 중인 에디터 및 Pipeline 서버 연결 확인 ← 갈림길, 안 붙으면 에디터 재시작 후 재확인하고 그래도 실패하면 EditMode 테스트 + CI 사본 경로로 우회
-  - [ ] 위 검증 2개를 `CliCommand`로 노출 (HouseRulez는 2026-08-28 완료, 신규 프로젝트마다 별도 구현 필요)
+  - [ ] 위 검증 2개를 `CliCommand`로 노출 (2026-08-28 첫 실측 완료, 신규 프로젝트마다 별도 구현 필요)
 - [ ] **4. MCP 브릿지**
   - [ ] `mcpforunity://instances`로 멀티 인스턴스 지원 여부 확정 (`ParallelWorkContract.MD` §2)
   - [ ] 단일 인스턴스뿐이면 "한 번에 Unity 하나" 규칙을 문서·훅에 명시

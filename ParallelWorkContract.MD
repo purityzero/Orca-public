@@ -339,7 +339,7 @@ MemoryPoolFactory<T, string>
 §5~6의 "소유 파일 계약"은 워크트리 레인 단위의 무거운 사전 협의다. 아래는 개별 `Agent` 스폰 단위로 즉석에서 충돌을 막는 가벼운 보조 장치 — 정식 레인이 아닌 fork/서브에이전트 산발 호출에도 쓴다.
 
 ### 마스터-사본 관계 (에이전트 정의 파일)
-GeometryDefender/HouseRulez의 `.claude`를 Orca가 통합 관리하게 되면서(구조 설명은 `Unity\README.md` 참고), 에이전트 정의(`.claude/agents/*.md`)도 `<ORCA>\agents\`가 마스터다. Claude Code는 subagent_type을 프로젝트 로컬 `.claude/agents/`에서 찾으므로(Orca 루트에 있는 것만으론 인식 안 됨), **해당 프로젝트에서 Agent를 실행하기 전에 `<ORCA>\agents\*.md`를 그 프로젝트의 `.claude\agents\`로 맞춰둔다.** 그 프로젝트의 실제 위치는 `<ORCA>\LocalPaths.json`의 `projects.{프로젝트명}`에서 읽는다(경로 토큰 `<ORCA>`/`<원본:{P}>` 설명은 루트 `README.md`).
+각 Unity 프로젝트의 `.claude`를 Orca가 통합 관리하게 되면서(구조 설명은 `Unity\README.md` 참고), 에이전트 정의(`.claude/agents/*.md`)도 `<ORCA>\agents\`가 마스터다. Claude Code는 subagent_type을 프로젝트 로컬 `.claude/agents/`에서 찾으므로(Orca 루트에 있는 것만으론 인식 안 됨), **해당 프로젝트에서 Agent를 실행하기 전에 `<ORCA>\agents\*.md`를 그 프로젝트의 `.claude\agents\`로 맞춰둔다.** 그 프로젝트의 실제 위치는 `<ORCA>\LocalPaths.json`의 `projects.{프로젝트명}`에서 읽는다(경로 토큰 `<ORCA>`/`<원본:{P}>` 설명은 루트 `README.md`).
 
 **⚠️ 무조건 덮어쓰기 금지 (2026-08-21 발견):** GeometryDefender의 `qa-tester.md`/`design-issue-resolver.md`엔 그 프로젝트만의 튜닝(WaveTable 페이즈 타이밍, `isAutoMode` 플래그 절차, Text Animator 핫리로드 우회법, `08_balance.html` 기준선 등)이 body에 녹아있었다 — 마스터로 그냥 덮어썼다면 이 노하우가 통째로 사라질 뻔했다. 실제 절차:
 1. **프로젝트에 그 이름의 파일이 아예 없으면** → 마스터를 그대로 복사.
@@ -363,7 +363,7 @@ GeometryDefender/HouseRulez의 `.claude`를 Orca가 통합 관리하게 되면�
 - 프로젝트 원본(`<원본:{P}>\.claude\agents\`)에 맞춰두는 위 절차는 그대로 유효하다. 둘은 대체 관계가 아니다 — 원본 동기화는 "그 프로젝트에서 연 세션"용, 이 훅은 "루트에서 연 세션"용이다.
 
 ### 에이전트 설정 폴더(.claude) 자체를 어떻게 다룰지 — git 추적 vs junction
-`.claude/`를 gitignore하면 worktree엔 그게 **통째로 없다** — 잃는 것: 프로젝트 지침, 서브에이전트 정의, 누적 작업 기록, 권한 설정. 신규 프로젝트라면 시작 시점에 아래 중 하나를 정할 것(GeometryDefender/HouseRulez는 **git 추적**으로 이미 결정됨, `Unity\README.md` §2 참고):
+`.claude/`를 gitignore하면 worktree엔 그게 **통째로 없다** — 잃는 것: 프로젝트 지침, 서브에이전트 정의, 누적 작업 기록, 권한 설정. 신규 프로젝트라면 시작 시점에 아래 중 하나를 정할 것(이전 프로젝트들은 **git 추적**을 택했다, `Unity\README.md` §2 참고):
 
 | 방식 | 장점 | 단점 |
 |---|---|---|
@@ -383,10 +383,10 @@ mklink /J "<worktree경로>\.claude" "<원본경로>\.claude"
 
 ### 명명 규칙
 Agent를 스폰할 때 `name`을 대상 식별자로 짓는다 — 기존 `.claude/class/{ClassName}.md` / `.claude/prefab/{PrefabName}.md` 문서 관례와 짝을 맞추되, **프로젝트명을 맨 앞에 붙인다.**
-- 클래스 작업 → `{ProjectName}_{ClassName}_class` (예: `HouseRulez_TableManager_class`)
-- 프리팹 작업 → `{ProjectName}_{PrefabName}_prefab` (예: `GeometryDefender_UICardDraft_prefab`)
+- 클래스 작업 → `{ProjectName}_{ClassName}_class` (예: `MyGame_TableManager_class`)
+- 프리팹 작업 → `{ProjectName}_{PrefabName}_prefab` (예: `MyGame_UICardDraft_prefab`)
 
-**프로젝트명이 필수인 이유:** GeometryDefender와 HouseRulez가 같은 "Glory" 공용 라이브러리를 쓰고 있어 클래스명이 겹친다(`TableManager`, `UIAssetBox`, `UIToastMessage`, `GlobalEnum` 등). 프로젝트명 없이 `{ClassName}_class`만 쓰면 서로 무관한 두 프로젝트의 동명 클래스 작업이 같은 이름으로 충돌 판정되어 불필요하게 대기하게 된다(2026-08-21 발견).
+**프로젝트명이 필수인 이유:** 여러 프로젝트가 같은 "Glory" 공용 라이브러리를 쓰면 클래스명이 겹친다(`TableManager`, `UIAssetBox`, `UIToastMessage`, `GlobalEnum` 등). 프로젝트명 없이 `{ClassName}_class`만 쓰면 서로 무관한 두 프로젝트의 동명 클래스 작업이 같은 이름으로 충돌 판정되어 불필요하게 대기하게 된다(2026-08-21 발견).
 
 ### 대기 프로토콜
 새 Agent를 스폰하기 전에 `ListAgents`로 동일 이름이 이미 떠 있는지 확인한다. 있으면 **그 작업이 끝날 때까지 대기한 뒤 시작한다** — 같은 프로젝트의 같은 클래스/프리팹을 두 레인이 동시에 건드리는 걸 막는다.
@@ -410,7 +410,7 @@ Agent를 스폰할 때 `name`을 대상 식별자로 짓는다 — 기존 `.clau
 - 레인 diff의 소유 목록 부분집합 검사를 자동화할 방법 (현재는 수동 `git diff --name-only`)
 - 병합 후 1회 검증이 레인별 검증을 실제로 대체 가능한지 (레인 간 상호작용 버그를 놓칠 가능성)
 - HouseRulez에서 Unity CLI `1.0.0-beta.6` + Pipeline `0.5.0-exp.1` 연결과 `verify-compile`/`verify-tables` 성공·실패 종료 코드 검증 완료(2026-08-28). `unity doctor`는 연결 판정 명령이 아니라 환경 진단 명령임을 실측으로 정정
-- GeometryDefender에서도 같은 CLI/Pipeline 연결 절차가 동작하는지
+- 신규 프로젝트에서도 같은 CLI/Pipeline 연결 절차가 동작하는지
 - MCP 브릿지 멀티 인스턴스 지원 여부 (§2 참고, `README.md` §5에 기록됨)
 
 ---

@@ -72,7 +72,7 @@ Play Mode 진입·조작·종료까지 실제 QA 1회를 완주했다.
 - `codex app-server daemon`이 **`only supported on Unix platforms`** — 그래서 `codex agents`(세션 브라우징 TUI)와 `codex remote-control`을 쓸 수 없다.
 - `~/.codex/sessions/`에 **rollout이 안 남는다**(`codex exec`가 session id를 찍어도 파일이 없다) — `codex exec resume`으로 이어가거나 되짚을 수 없다.
 - → **QA 한 건 = `codex exec` 한 번.** 맥락은 매번 브리프로 싣는다.
-- 대화형 TUI는 Claude Code의 비대화형 셸에서 못 띄운다. 사용자가 직접 `! codex`로 여는 것은 가능하나, 그 결과는 세션으로 돌아오지 않는다.
+- 대화형 TUI는 Claude Code의 비대화형 셸에서 직접 못 띄운다. **대신 Orca의 Codex 터미널 탭으로 묻고 답한다** — 브리프 파일 → `orca terminal send` → `orca terminal wait --for tui-idle` → 산출물 파일 읽기. 절차는 `runbook/codex-handoff.md` 「Codex와 묻고 답하기」(2026-11-05 실측).
 
 ### Codex 작업 완료 후 원래 Claude Code 세션으로 직접 반환
 

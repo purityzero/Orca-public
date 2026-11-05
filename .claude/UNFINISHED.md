@@ -100,3 +100,11 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 ## 2026-11-05 — 브랜치 확인 필요
 
 위 env-check·doc-slim 항목의 브랜치(`work/2026-09-04-env-check-hook`, `work/2026-09-11-doc-slim`)는 원격에 없다(원격엔 `main`, `work/2026-09-13-codex-handoff-unity-bridge`만). 이미 main에 병합됐는지 확인하고, 됐으면 두 항목을 닫는다.
+
+## 2026-11-05 — 세션 공용 에이전트 사본 폴더 삭제 문제 (별도 작업)
+
+**증상**: `.claude/agents/`를 모든 Claude 세션이 같이 쓴다. 한 세션이 종료되면 SessionEnd `cleanup`이 폴더째 지워 다른 세션의 사본이 사라진다.
+**실측**: 시험 탭 `/exit` 직후 0개 → `node .claude/hooks/session-agents.js sync`로 10개 복구.
+**관련 파일**: `.claude/hooks/session-agents.js:20`(SESSION_DIR 하나), `:46`(rmSync 폴더 전체)
+**남은 작업**: 다른 세션이 살아 있으면 지우지 않는 방안(참조 카운트·세션별 마커 등) 설계·구현·검증. 브랜치 미생성.
+**임시 대응**: 에이전트가 안 보이면 위 sync 명령. 이미 떠 있는 세션의 목록이 사본 삭제 후에도 호출 가능한지는 미확인.

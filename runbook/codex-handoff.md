@@ -45,7 +45,7 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
 |---|---|
 | `codex app-server daemon` | `only supported on Unix platforms` |
 | `codex agents` (세션 브라우징 TUI) | 위 데몬에 붙는 기능이라 **불가** |
-| `codex exec resume` | `~/.codex/sessions/`에 **rollout이 안 남는다**(session id는 찍히는데 파일이 없다) |
+| `codex exec resume` | `~/.codex/sessions/`에 **rollout이 안 남는다**(session id는 찍히는데 파일이 없다). Orca 탭의 대화형 Codex는 `$CODEX_HOME/sessions/`에 남는다(2026-11-05, `AGENT.MD` 참고) |
 | 대화형 TUI를 Claude 셸에서 직접 띄우기 | 비대화형 셸이라 불가. **대신 Orca 탭으로 띄운다** — 아래 「Codex와 묻고 답하기」 |
 
 → **QA 한 건 = `codex exec` 한 번.** 맥락은 매번 **브리프 파일**로 싣는다.

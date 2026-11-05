@@ -17,3 +17,6 @@ reports/
 
 # Codex 인계 브리프·산출물 (요약 보고 직후 삭제하는 일회용 — runbook/codex-handoff.md)
 .claude/briefs/
+
+# 세션 내역 안내판 등 PC 로컬 전용 기록 (CLAUDE.md 「작업 경계와 세션 리셋」)
+.local/

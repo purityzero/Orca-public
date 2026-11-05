@@ -114,7 +114,8 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 | 문서 | 언제 읽나 |
 |---|---|
 | `AGENTS.md` | Codex 세션 시작 시 자동 적용되는 진입 지침 — 필수 공통 문서와 작업 대상별 추가 문서의 로드 순서를 정의 |
-| `CLAUDE.md`/`CODEX.md`/`CODE.MD`/`AGENT.MD` | 작업 에이전트에 맞춰 읽는 행동·코딩·라우팅 규칙 |
+| `CLAUDE.md`/`CODEX.md`/`AGENT.MD` | 작업 에이전트에 맞춰 읽는 행동·역할·라우팅 규칙 |
+| `CODE.MD`/`runbook/coding-principles.md` | Claude는 C# 수정 전 두 파일을 Read로 읽는다(세션별 훅 강제). Codex는 AGENTS.md의 필수 읽기 유지 |
 | `runbook/prefab-ui.md` | 프리팹·UI를 만들거나 고칠 때만 읽는 컴포넌트·편집 규칙 |
 | `CODEX.md` | Codex 작업 배정, 내부 역할별 model/effort 선택, 완료 조건을 확인할 때 |
 | 이 문서 §5 "알려진 이슈" | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |

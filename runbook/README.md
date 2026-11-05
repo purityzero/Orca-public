@@ -28,6 +28,7 @@
 
 | 런북 | 언제 읽나 |
 |---|---|
+| [coding-principles.md](coding-principles.md) | C# 수정 전 CODE.MD와 함께 Read로 읽는다. UI·프리팹·동작 변경도 해당 절을 확인한다. |
 | [codex-handoff.md](codex-handoff.md) | Codex에 작업을 넘기거나 결과를 회수·직접 반환할 때 |
 | [subagents.md](subagents.md) | 서브에이전트 완료 알림·목록 누락 복구 전에 |
 | [unity-font.md](unity-font.md) | TMP 폰트·글리프·다국어 표시를 건드릴 때 |

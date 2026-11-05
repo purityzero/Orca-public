@@ -20,3 +20,6 @@ reports/
 
 # 세션 내역 안내판 등 PC 로컬 전용 기록 (CLAUDE.md 「작업 경계와 세션 리셋」)
 .local/
+
+# C# 규칙 Read 확인 상태 (세션별 로컬 표시)
+.claude/session-state/

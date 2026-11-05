@@ -34,6 +34,12 @@
 | [verification-scripts.md](verification-scripts.md) | 검사 도구를 만들거나 그 결과를 믿기 전에 |
 | [prefab-ui.md](prefab-ui.md) | UI 컴포넌트를 고르거나 프리팹을 만들 때 (표준 타입·MCP/YAML 선택·스크롤·풀링 레시피) |
 | [recurring-bugs.md](recurring-bugs.md) | 데이터 파일·CSV·로컬라이제이션 키·바이너리 자산을 건드리기 전에 |
+| [session-reset.md](session-reset.md) | 대화를 리셋(`/clear`·`/new`)하거나 다른 탭에 보낼 때, 작업 내역을 남길 때 |
+| [session-environment.md](session-environment.md) | 환경 점검 결과 처리 전에 읽는다. 사용자 조치 항목은 첫 응답에서 질문하고 임의 설치·pull은 하지 않는다. |
+| [document-records.md](document-records.md) | 클래스·프리팹 수정 및 기록 md 생성·갱신 전에 읽는다. 대응 md를 먼저 확인·읽고 수정 후 기록과 기획/설계 문서를 실제 상태로 갱신한다. |
+| [feedback.md](feedback.md) | 실수를 알아차리면 런북·메모리를 먼저 검색한다. 피드백·정정·재발 처리 또는 공용 규칙 저장 전에 읽는다. |
+| [task-execution.md](task-execution.md) | 성공 기준을 먼저 정의하고 검증에 통과할 때까지 반복한다. 검증 가능한 목표·단계별 계획 수립 전에 읽는다. 같은 계열 시도가 2~3회 연속 실패하면 멈추고 결과를 해석한다. 반복 실패 진단 전에 읽는다. |
+| [verification-paths.md](verification-paths.md) | 검증 설계·실행·결과 해석 전에 읽는다. 사용자의 실제 프로덕션 진입 경로와 결과물을 검증한다. |
 
 ## 승격 사다리
 

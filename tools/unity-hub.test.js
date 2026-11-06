@@ -84,6 +84,17 @@ test('JSON·SQLite·WAL 목록과 실제 picker·환경 행·PowerShell 버전 �
         assert.equal(result.status, 1, result.stderr);
         assert.match(result.stdout, /버전 찾음: 6000.3.7f1 \(ProjectVersion.txt\)/);
         assert.ok(result.stdout.includes(secondary));
+        // PowerShell 5.1 Out-File -Encoding utf8와 같은 BOM·CRLF를 포함해 검증한다.
+        for (const bom of ['', '\ufeff']) {
+            for (const newline of ['\n', '\r\n']) {
+                write(path.join(fallbackProject, 'ProjectSettings/ProjectVersion.txt'),
+                    `${bom}m_EditorVersion: ${version}${newline}m_EditorVersionWithRevision: ${version} (abc)${newline}`);
+                result = open(fallbackProject);
+                assert.equal(result.status, 1, result.stderr);
+                assert.match(result.stdout, /버전 찾음: 6000.3.7f1 \(ProjectVersion.txt\)/);
+                assert.match(result.stdout, /에디터가 설치돼 있지 않습니다/);
+            }
+        }
         // 대체 조회를 제거한 변이는 실제 PowerShell 출력 검증에서 실패해야 한다.
         const readerPath = path.join(workspace, 'tools/unity-hub.js');
         const original = fs.readFileSync(readerPath, 'utf8');

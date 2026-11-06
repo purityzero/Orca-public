@@ -24,7 +24,7 @@ function validVersion(value) {
 }
 function projectVersion(projectPath) {
     try {
-        const text = fs.readFileSync(path.join(projectPath, 'ProjectSettings', 'ProjectVersion.txt'), 'utf8');
+        const text = fs.readFileSync(path.join(projectPath, 'ProjectSettings', 'ProjectVersion.txt'), 'utf8').replace(/^\uFEFF/, '');
         return validVersion(text.match(/^m_EditorVersion:\s*(\S+)/m)?.[1]);
     } catch { return ''; }
 }
@@ -65,7 +65,7 @@ function readHub(env = process.env) {
             } catch (error) { errors.push(`${database}: ${error.message}`); }
             finally { if (db) db.close(); }
         }
-        // DBが正常なら0行でもその状態を採用し、古いJSONから削除済み項目を復活させない。
+        // 정상 DB는 0행도 그대로 채택해 오래된 JSON의 삭제 항목을 되살리지 않는다.
         if (entries === undefined) {
             const filename = path.join(directory, 'projects-v1.json');
             if (fs.existsSync(filename)) {

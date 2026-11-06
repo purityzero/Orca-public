@@ -28,6 +28,8 @@
 
 | 런북 | 언제 읽나 |
 |---|---|
+| [orca-cli.md](orca-cli.md) | Orca CLI 명령·setup 훅·Unity CLI 실측을 확인할 때 |
+| [new-project-onboarding.md](new-project-onboarding.md) | 신규 Unity 프로젝트를 편입할 때 (Day-1 체크리스트) |
 | [coding-principles.md](coding-principles.md) | C# 수정 전 CODE.MD와 함께 Read로 읽는다. UI·프리팹·동작 변경도 해당 절을 확인한다. |
 | [codex-handoff.md](codex-handoff.md) | Codex에 작업을 넘기거나 결과를 회수·직접 반환할 때 |
 | [subagents.md](subagents.md) | 서브에이전트 완료 알림·목록 누락 복구 전에 |

@@ -4,12 +4,12 @@
 
 **작성일:** 2026-08-22
 
-> **2026-11-05 정리:** 기존 프로젝트(GeometryDefender, HouseRulez, SplashRush)의 기록 문서를 모두 삭제하고 새 Unity 프로젝트를 준비 중이다. 이 저장소 문서에 날짜와 함께 나오는 두 이름은 당시 실측 근거로 남겨둔 것이고, 지금은 `Unity\` 아래에 없다.
+> **2026-11-05 정리:** 기존 프로젝트(GeometryDefender, HouseRulez, SplashRush)의 기록 문서를 모두 삭제하고 새 Unity 프로젝트를 준비 중이다. 이 저장소 문서에 날짜와 함께 나오는 이전 프로젝트 이름은 당시 실측 근거로 남겨둔 것이고, 지금은 `Unity\` 아래에 없다.
 **GitHub:** https://github.com/purityzero/Orca (private) — 여러 PC에서 이 폴더를 clone해서 같은 상태로 이어 쓸 수 있다.
 
-### 경로 표기 규칙 — 이 문서들에 절대경로는 없다
+### 경로 표기 규칙 — 공용 경로는 토큰으로 쓴다
 
-clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모든 문서는 다음 두 토큰으로만 쓴다.
+clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 공용 경로는 다음 두 토큰으로 쓴다. 날짜가 붙은 실측 기록과 도구 설치 경로에는 당시 절대경로가 남을 수 있다.
 
 | 토큰 | 뜻 | 어디서 알아내나 |
 |---|---|---|
@@ -28,7 +28,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
    ```bash
    git clone https://github.com/purityzero/Orca.git <원하는 경로>
    ```
-2. **`SetupLocalPaths.cmd` 실행** — Unity Hub 등록 목록에서 각 프로젝트의 실제 위치 후보를 뽑아 보여준다. 골라주면 `LocalPaths.json`이 만들어진다. (Hub에 없거나 이름이 다르면 `d`로 직접 입력, 이 PC에 없는 프로젝트는 `n`)
+2. 관리할 Unity 프로젝트를 `Unity/` 아래 편입한 뒤 `SetupLocalPaths.cmd`를 실행한다. 아직 없으면 건너뛴다. Unity Hub 등록 목록에서 실제 위치 후보를 골라 `LocalPaths.json`을 만든다(Hub에 없거나 이름이 다르면 `d`로 직접 입력, 이 PC에 없는 프로젝트는 `n`).
 3. `UnityLauncher.MD` §3(설치 절차)을 따라 `.ps1` 인코딩만 확인하면 끝.
 
 > 프로젝트를 다른 폴더로 옮기거나 새 프로젝트를 `Unity\` 아래에 추가했다면 `SetupLocalPaths.cmd`를 다시 실행하면 된다(기존 값은 엔터로 유지).
@@ -41,7 +41,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 상세 메커니즘은 `UnityLauncher.MD` 참고.
 
 ### 새 세션에서 이어서 작업할 때
-1. 이 워크스페이스 자체의 미완료 항목은 §5 "알려진 이슈"부터 확인
+1. 이 워크스페이스 자체의 미완료 항목은 `.claude/UNFINISHED.md`부터 확인
 2. 작업 대상이 특정 프로젝트면 `Unity\{프로젝트명}\.claude\UNFINISHED.md`도 확인
 3. `ParallelWorkContract.MD` §0~§2에서 Orca 모델·Unity 제약 전체 맥락 파악
 
@@ -53,7 +53,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 <ORCA>\
 ├── README.md                    ← 이 문서 (전체 사용법)
 ├── AGENTS.md                    ← Codex가 세션 시작·대상 확정 후 읽을 문서를 지정하는 진입 지침
-├── CLAUDE.md                    ← 행동 지침 (같이 읽을 파일: CODEX/CODE/AGENT)
+├── CLAUDE.md                    ← 행동 지침 (AGENT.MD 자동 import, Codex 필수 읽기는 AGENTS.md)
 ├── CODEX.md                     ← Codex가 우선 소유하는 작업과 완료 조건
 ├── CODE.MD                      ← C#/Unity 코딩 규칙 (네이밍, 스타일 등)
 ├── AGENT.MD                     ← Codex/Claude 실행자 선택 + Claude 서브에이전트 라우팅
@@ -62,6 +62,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 │
 ├── UnityLauncher.MD             ← 런처 동작 원리·검증 기록
 ├── UnityLauncher.ps1            ← 런처 스크립트 본체
+├── OpenUnityProject.ps1         ← 원본 Unity 프로젝트 에디터 실행
 ├── UnityLauncher.cmd            ← 런처 실행 진입점
 ├── OrcaStart.cmd                ← "Unity 실행 → Orca 실행" 묶음 시퀀스
 │
@@ -74,19 +75,16 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 ├── WorkBranch.ps1               ← 브랜치 시작/병합 스크립트 본체
 ├── WorkBranch.cmd               ← 브랜치 스크립트 진입점
 │
-├── agents\                      ← Claude 서브에이전트 정의 9개 + 진단용 test-echo, **마스터**
-│   ├── code-architect.md        (설계, opus/high)
-│   ├── code-writer.md           (구현, sonnet/low)
-│   ├── client-bugfixer.md       (버그 수정-큰 범위, sonnet/medium)
-│   ├── quick-fix.md             (버그 수정-작은 범위, haiku/low)
-│   ├── qa-tester.md             (QA-큰 범위, opus/high, maxTurns 80)
-│   ├── qa-quick-check.md        (QA-작은 범위, sonnet/medium, maxTurns 45)
-│   ├── design-planner.md        (기획, opus/high)
-│   └── design-issue-resolver.md (밸런스 반영, sonnet/medium)
+├── agents\                      ← 정의 10개, 역할·모델은 AGENT.MD
 │
 ├── rules\
 │   └── glory.md                 ← Glory 공용 라이브러리 사용 지침, **마스터 보관용**
 │                                    (frontmatter의 paths가 Assets/Scripts 전용이라 여기선 발동 안 함)
+│
+├── runbook\                     ← 주제별 운용 절차 (진입점: runbook/README.md)
+├── .claude\                     ← settings·hooks·UNFINISHED.md
+├── tools\                       ← 검사·자동화 도구
+├── .local\                      ← PC·세션 로컬 기록 (git 제외)
 │
 └── Unity\                       ← 프로젝트별 문서 사본 (정본은 여기)
     ├── README.md                ← 이 폴더 전용 상세 설명(마스터-사본 규칙, 동기화 함정)
@@ -117,8 +115,9 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 | `CLAUDE.md`/`CODEX.md`/`AGENT.MD` | 작업 에이전트에 맞춰 읽는 행동·역할·라우팅 규칙 |
 | `CODE.MD`/`runbook/coding-principles.md` | Claude는 C# 수정 전 두 파일을 Read로 읽는다(세션별 훅 강제). Codex는 AGENTS.md의 필수 읽기 유지 |
 | `runbook/prefab-ui.md` | 프리팹·UI를 만들거나 고칠 때만 읽는 컴포넌트·편집 규칙 |
-| `CODEX.md` | Codex 작업 배정, 내부 역할별 model/effort 선택, 완료 조건을 확인할 때 |
-| 이 문서 §5 "알려진 이슈" | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |
+| `CODEX.md` | Codex 작업 배정·완료 조건을 확인할 때. 모델·effort는 `CODEX.md` §2에서 고른다. |
+| `runbook/README.md` | 주제별 운용 절차를 찾는 진입점 |
+| `.claude/UNFINISHED.md` | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |
 | `Unity\{P}\.claude\UNFINISHED.md` | 특정 프로젝트 작업 시작 시 |
 | `ParallelWorkContract.MD` | 레인 2개 이상으로 병렬 작업을 짤 때, 또는 Orca/Unity CLI 모델 자체를 다시 확인할 때 (특히 §11 이름 기반 소프트 락) |
 | `LocalPaths.json` | **프로젝트 원본(`<원본:{P}>`)을 읽거나 쓰기 직전 항상** — 실제 경로가 여기에만 있다 |
@@ -132,117 +131,20 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 모�
 ## 4. 핵심 원칙 요약 (각 문서에 상세 근거 있음)
 
 1. **정본 위치가 종류별로 다르다** — 코딩 규칙은 루트 1부, 에이전트 정의는 `agents\`가 마스터(단 실제 실행엔 프로젝트 로컬 사본이 필요), 프로젝트 문서는 `Unity\{P}\.claude\`가 정본이고 `<원본:{P}>\.claude\`는 그 시점 스냅샷. (`Unity\README.md` 참고)
-2. **에이전트를 실행하기 전엔 이름에 프로젝트명을 붙인다** — `{ProjectName}_{ClassName}_class` 형식. 여러 프로젝트가 같은 "Glory" 라이브러리를 쓰면 클래스명이 겹치기 때문. 스폰 전 `ListAgents`로 같은 이름이 이미 실행 중이면 대기한다. (`ParallelWorkContract.MD` §8)
+2. **에이전트를 실행하기 전엔 이름에 프로젝트명을 붙인다** — `{ProjectName}_{ClassName}_class` 형식. 여러 프로젝트가 같은 "Glory" 라이브러리를 쓰면 클래스명이 겹치기 때문. 스폰 전 `ListAgents`로 같은 이름이 이미 실행 중이면 대기한다. (`ParallelWorkContract.MD` §11)
 3. **Unity 에디터·MCP 브릿지는 공유 자원, 한 번에 하나만** — Play Mode 검증이나 프리팹 편집은 병렬 불가. 코드/문서 편집만 병렬 가능. (`ParallelWorkContract.MD` §2)
-4. **MCP for Unity는 전역 자동연결 켜둠** — `MCPForUnity.AutoStartOnLoad`가 레지스트리(모든 프로젝트 공유)에 `true`로 설정돼 있어, 이 런처로 여는 어떤 프로젝트든 자동으로 서버가 뜬다. (`UnityLauncher.MD` §6)
+4. **MCP for Unity 전역 자동연결은 과거 PC 실측이다** — 당시 PC에서 `MCPForUnity.AutoStartOnLoad`가 레지스트리(모든 프로젝트 공유)에 `true`였고, 런처로 연 프로젝트에서 자동으로 서버가 떴다. 새 PC의 설정은 별도로 확인한다. (`UnityLauncher.MD` §6)
 5. **검증 전 변경은 기본 브랜치에 올리지 않는다** — Unity 프로젝트의 동작을 바꾸는 수정은 `work/{날짜}-{주제}` 브랜치에서 하고, Play Mode 확인까지 끝난 뒤 `--no-ff`로 합류한다. (`WorkBranchFlow.MD`)
-6. **기록용 md 파일은 그 프로젝트가 없는 한 만들지 않는다** — 특정 프로젝트 얘기(클래스명, 파일명)를 이 루트의 공용 문서에 직접 섞지 않는다. `runbook/feedback.md`의 "피드백 반영 프로세스" 참고.
+6. **프로젝트 고유 기록은 프로젝트 문서에만 남긴다** — 공용 문서에는 일반화한 규칙만 적는다. `runbook/feedback.md`의 "피드백 반영 프로세스" 참고.
 7. **Codex는 후속 처리 전용이 아니다** — 저장소 전체 분석·자동화·테스트·리팩터링·문서 정합성은 처음부터 Codex에 배정한다. Unity 에디터 전용 검증과 프로젝트별 Claude 노하우는 필요할 때 명시적으로 핸드오프한다. (`CODEX.md` 참고)
-8. **Codex model/effort는 작업 난도로 고른다** — 설계·감사는 Sol/high, 일반 구현·문서는 Terra/medium, 국소 수정은 Luna/low를 기본값으로 쓰되, 무조건 최고 effort를 선택하지 않는다. (`CODEX.md` §2 참고)
+8. 모델·effort는 `CODEX.md` §2에서 고른다.
 
 ---
 
 ## 5. 알려진 이슈 / 다음에 볼 것
 
-Orca 워크스페이스 자체의 미완료 작업은 프로젝트별 `UNFINISHED.md`가 아니라 여기 적는다(어느 프로젝트 소속도 아니므로):
+미완료 정본은 `.claude/UNFINISHED.md`, 프로젝트별은 `Unity/{P}/.claude/UNFINISHED.md`.
 
-- **MCP 멀티 인스턴스 (a)/(b) 미확정** — Unity 에디터를 켠 상태에서 이 세션에 MCP for Unity 도구를 붙여 `mcpforunity://instances`를 한 번 읽으면 닫을 수 있다. `ParallelWorkContract.MD` §2 참고.
-- **Orca 바탕화면 바로가기가 실제로 `OrcaStart.cmd`를 가리키는지 미확인.**
+막히면 `orca skills get orca-cli` / `orca skills get orchestration`, 상세는 [Orca CLI 런북](runbook/orca-cli.md)을 확인한다.
 
-프로젝트별 미완료 작업은 `Unity\{프로젝트명}\.claude\UNFINISHED.md` 참고(위 §2 폴더 구조).
-
----
-
-## 부록 A. Orca CLI 명령어 레퍼런스
-
-Orca에는 CLI가 번들돼 있으나 **PATH에 자동 등록되지 않는다** — 위치는 `%LOCALAPPDATA%\Programs\orca\resources\bin\orca.exe`. **Settings → Experimental → CLI**에서 등록하면 `orca`로 바로 쓸 수 있다(이 PC엔 이미 등록됨).
-
-### 프로젝트는 "실행 시 선택"이 아니라 "등록 후 전환"이다
-
-`orca open`은 프로젝트 인자를 받지 않는다(옵션이 `--json`뿐). **repo를 여러 개 등록해두고 사이드바에서 전환**하는 모델이다.
-
-```bash
-orca repo add --path "<프로젝트 경로>"   # 등록 (GUI: 사이드바 Add Repo)
-orca repo list                           # 등록 목록
-orca repo set-base-ref ...               # worktree가 뻗어나갈 기준 브랜치
-```
-
-작업 단위인 worktree를 만들 때 `--repo`로 프로젝트를 고른다:
-
-```bash
-orca worktree create --repo name:NextProject --name task-a --agent claude --prompt "..."
-```
-
-셀렉터 형식: `name:`, `id:`, `path:` / worktree 쪽은 `branch:`, `path:`, `active` 등.
-
-### `repo`와 `project`는 다른 개념
-
-- **repo** — 로컬 파일시스템 경로 단위. 로컬만 쓸 거면 이것으로 충분. git이 아니어도 `kind: "folder"`로 등록 가능(단 worktree 불가) — `<ORCA>` 자체가 그 예시였으나 지금은 git 저장소가 됐다.
-- **project** — durable, 원격 저장소 연결 단위 (`project setup-clone`, `project setup-existing-folder`)
-
-### 주요 명령군
-
-| 명령군 | 용도 |
-|---|---|
-| `repo` | 프로젝트 등록·조회·기준 ref |
-| `worktree` | 생성·조회·삭제, `ps`로 전체 요약 |
-| `terminal` | 워크트리 안 터미널 생성/입력/대기/종료 |
-| `orchestration` | 에이전트 간 메시징, task dispatch, 워커 감독 |
-| `automations` | 스케줄 자동화 (주의: 전부 스케줄 기반, "앱 시작"·"프로젝트 선택" 같은 이벤트 트리거는 없음 — 그래서 `OrcaStart.cmd` 래퍼를 씀) |
-| `skills list / get` | **번들된 공식 가이드** (`orca-cli`, `orchestration` 등) ← 막히면 여기부터 |
-
-### setup 훅 — worktree 생성 시 실행됨, "앱 시작"이 아님
-
-`orca repo show --repo name:<이름> --json`의 `hookSettings.scripts.setup`에 명령을 넣으면 **워크트리를 만들 때마다** 자동 실행된다(정책은 이미 `run-by-default`). 여기에 Unity 실행을 무심코 걸면 워크트리마다 Unity가 뜨고 `Library`가 N개 생긴다 — 반드시 원본 체크아웃인지 가드할 것:
-
-```bash
-# 원본 체크아웃일 때만 Unity 실행, 워크트리면 즉시 종료
-[ "$PWD" = "<원본 프로젝트 경로>" ] || exit 0
-unity "$PWD"
-```
-
-### Unity CLI — `verify-compile`/`verify-tables` 구현 메커니즘
-
-Unity CLI(`unity install/doctor/pipeline`)는 이미 실행 중인 에디터를 셸에서 제어할 수 있어(Pipeline), Unity 에디터 락과 경쟁하지 않고 검증이 가능하다. **`CliCommand` 속성**(C# 정적 메서드에 부착)으로 프로젝트 전용 검증 명령을 노출하면, `ParallelWorkContract.MD` §5/§10의 `<verify-compile>`/`<verify-tables>`를 실제 종료 코드로 판정하는 CLI 명령으로 만들 수 있다.
-
-**2026-08-28 HouseRulez 실측:** Windows `winget install Unity.CLI`로 CLI `1.0.0-beta.6`을 설치했고, 프로젝트에는 `com.unity.pipeline` `0.5.0-exp.1`을 추가했다. 패키지 추가 직후 실행 중이던 에디터에는 서버가 뜨지 않아 에디터를 한 번 재시작해야 했다. 재시작 뒤 `unity status --format json`이 `state: ready`, `unity command editor_status --project-path <원본:HouseRulez> --format json`이 성공했고 Pipeline 서버는 `127.0.0.1:7800`에서 응답했다. `unity doctor`는 CLI/PATH/에디터 설치 환경 진단용이며, 실행 중인 Pipeline 연결 판정은 `unity status` 또는 `unity pipeline list`로 해야 한다.
-
-HouseRulez의 프로젝트 전용 명령도 구현 완료했다. 둘 다 성공 시 종료 코드 0, 의도적 오류를 넣은 실패 검증에서 종료 코드 6을 반환했다. `verify-compile`은 컴파일을 새로 요청하는 명령이 아니라 **Unity가 변경을 import/compile해 idle이 된 뒤 최신 컴파일 결과를 판정**하는 명령이다.
-
-```powershell
-unity command verify-compile --project-path "<원본:{P}>" --format json
-unity command verify-tables --project-path "<원본:{P}>" --format json
-```
-
-주의: `eval`은 임의 C# 실행이라 신뢰할 수 없는 입력에 노출 금지, experimental이라 의존하는 자동화는 얇게 유지.
-
----
-
-## 부록 B. 신규 Unity 프로젝트를 이 워크스페이스에 편입시킬 때 (Day-1 체크리스트)
-
-- [ ] **1. Git 기준점**
-  - [ ] 프로젝트 `.gitignore`에 Unity 표준 항목을 **직접** 넣는다 (전역 `core.excludesFile`에 의존하지 말 것)
-  - [ ] `.claude` 폴더 추적 여부를 **지금** 결정 (`ParallelWorkContract.MD` §11 — git 추적 vs junction)
-  - [ ] 기준 브랜치·remote 확정, detached HEAD 상태 아닌지 확인
-- [ ] **2. 검증 수단 확보** ← Orca 병렬 작업을 켜기 전에 반드시
-  - [ ] 테스트 asmdef 생성 (`com.unity.test-framework`)
-  - [ ] `verify-compile` — 컴파일 에러 0건 (종료 코드로 성공/실패)
-  - [ ] `verify-tables` — 데이터 파일 헤더 ↔ 코드 필드명 대조 (존재하지 않는 컬럼도 에러 없이 기본값을 반환하는 파서가 많아 자동 검증 1순위)
-- [ ] **3. Unity CLI** (부록 A 참고)
-  - [ ] `unity install <프로젝트 버전>` / `unity pipeline install`
-  - [ ] `unity doctor`로 CLI/PATH/에디터 설치 환경 확인
-  - [ ] `unity status`와 `unity pipeline list`로 실행 중인 에디터 및 Pipeline 서버 연결 확인 ← 갈림길, 안 붙으면 에디터 재시작 후 재확인하고 그래도 실패하면 EditMode 테스트 + CI 사본 경로로 우회
-  - [ ] 위 검증 2개를 `CliCommand`로 노출 (2026-08-28 첫 실측 완료, 신규 프로젝트마다 별도 구현 필요)
-- [ ] **4. MCP 브릿지**
-  - [ ] `mcpforunity://instances`로 멀티 인스턴스 지원 여부 확정 (`ParallelWorkContract.MD` §2)
-  - [ ] 단일 인스턴스뿐이면 "한 번에 Unity 하나" 규칙을 문서·훅에 명시
-- [ ] **5. Orca 설정**
-  - [ ] `orca repo add --path <프로젝트 경로>`
-  - [ ] **Agent Permissions = Manual** (기본값이 권한 우회 인자를 미리 채운다 — 에이전트가 씬·프리팹을 직접 고치므로 자동 승인은 위험)
-  - [ ] `hookSettings.scripts.setup`에 가드 포함 Unity 실행 스크립트 작성(부록 A)
-  - [ ] `DO_NOT_TRACK=1`, `ORCA_TELEMETRY_DISABLED=1`
-  - [ ] 이 README의 `Unity\` 폴더 구조에 맞춰 `.claude` 사본 편입 (`Unity\README.md` 절차)
-- [ ] **6. 첫 실험**
-  - [ ] 원인 가설이 둘로 갈리는 버그 하나를 고른다
-  - [ ] **에이전트 2개만** (늘리면 선택지보다 검토 비용이 먼저 늘어난다)
-  - [ ] `ParallelWorkContract.MD` §10의 평가 계약 템플릿을 그대로 준다
+신규 프로젝트 편입은 [Day-1 체크리스트](runbook/new-project-onboarding.md)를 따른다.

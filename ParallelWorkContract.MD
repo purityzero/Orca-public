@@ -35,7 +35,7 @@ Git 저장소 + 기준 브랜치
 Orca의 경쟁 모델이 모든 작업을 무조건 여러 에이전트에게 복제하라는 뜻은 아니다. 먼저 `AGENT.MD`와 `CODEX.md`로 작업에 맞는 실행자를 고른다.
 
 - 저장소 전역 분석, 자동화, 테스트, 리팩터링, 문서 정합성은 Codex가 우선 소유한다.
-- Unity MCP, Play Mode, 씬·프리팹 시각 검증과 프로젝트 전용 누적 노하우는 Claude Code 에이전트를 우선한다.
+- Unity MCP, Play Mode, 씬·프리팹 시각 검증은 `AGENT.MD`의 2026-09-10 방침에 따라 Codex가 맡는다. 프로젝트 전용 누적 노하우는 Claude Code 에이전트를 우선한다.
 - 어느 쪽이 나은지 불명확하고 기계 판정 기준이 있을 때만 같은 평가 계약으로 경쟁시킨다.
 - 협업할 때는 “Codex 분석 / Claude 구현”처럼 단계만 기계적으로 가르지 않는다. 각 실행자가 독립적으로 닫을 수 있는 수직 범위나 파일 소유권으로 나눈다.
 
@@ -79,7 +79,7 @@ Codex 레인을 만들 때는 `CODEX.md` §2의 프로필에 따라 model/effort
 Orca 문서의 경고 *"worktree는 포트·자격증명·DB를 격리하지 않는다"* 에서
 Unity 프로젝트가 정확히 해당하는 항목이 **에디터 인스턴스와 MCP 브릿지**다.
 → **Unity를 만지는 레인은 항상 하나만.** Play Mode QA·프리팹 편집은 병렬 불가.
-→ MCP 브릿지는 고정 포트(`http://127.0.0.1:8080/mcp`)를 쓰므로, 프로젝트 2개를 동시에 열면 포트가 충돌한다. 멀티 인스턴스 브로커 지원 여부(`mcpforunity://instances` 리소스로 확인)는 아직 미검증 — `README.md` §5 참고.
+→ MCP 브릿지는 고정 포트(`http://127.0.0.1:8080/mcp`)를 쓰므로, 프로젝트 2개를 동시에 열면 포트가 충돌한다. 멀티 인스턴스 브로커 지원 여부(`mcpforunity://instances` 리소스로 확인)는 아직 미검증 — `.claude/UNFINISHED.md` 참고.
 
 ### ③ 다른 레인이 `.cs`를 저장하면 에디터가 재컴파일된다
 
@@ -411,7 +411,7 @@ Agent를 스폰할 때 `name`을 대상 식별자로 짓는다 — 기존 `.clau
 - 병합 후 1회 검증이 레인별 검증을 실제로 대체 가능한지 (레인 간 상호작용 버그를 놓칠 가능성)
 - HouseRulez에서 Unity CLI `1.0.0-beta.6` + Pipeline `0.5.0-exp.1` 연결과 `verify-compile`/`verify-tables` 성공·실패 종료 코드 검증 완료(2026-08-28). `unity doctor`는 연결 판정 명령이 아니라 환경 진단 명령임을 실측으로 정정
 - 신규 프로젝트에서도 같은 CLI/Pipeline 연결 절차가 동작하는지
-- MCP 브릿지 멀티 인스턴스 지원 여부 (§2 참고, `README.md` §5에 기록됨)
+- MCP 브릿지 멀티 인스턴스 지원 여부 (§2 참고, `.claude/UNFINISHED.md`에 기록됨)
 
 ---
 
@@ -419,7 +419,8 @@ Agent를 스폰할 때 `name`을 대상 식별자로 짓는다 — 기존 `.clau
 
 - `UnityLauncher.MD` — 프로젝트 선택 · Unity 실행 · MCP 연결 체인
 - `Unity\README.md` — 프로젝트별 문서(.claude) 마스터-사본 구조
-- `README.md` 부록 — Orca CLI 명령어 레퍼런스, 신규 프로젝트 Day-1 체크리스트
+- `runbook/orca-cli.md` — Orca CLI 명령어 레퍼런스
+- `runbook/new-project-onboarding.md` — 신규 프로젝트 Day-1 체크리스트
 - [Orca 사용법 — 여러 CLI 에이전트를 워크트리로 병렬 실행하는 방법](https://dop3n.tistory.com/entry/Orca-%EC%82%AC%EC%9A%A9%EB%B2%95-%EC%97%AC%EB%9F%AC-CLI-%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8%EB%A5%BC-%EC%9B%8C%ED%81%AC%ED%8A%B8%EB%A6%AC%EB%A1%9C-%EB%B3%91%EB%A0%AC-%EC%8B%A4%ED%96%89%ED%95%98%EB%8A%94-%EB%B0%A9%EB%B2%95)
 - [Unity CLI](https://javaexpert.tistory.com/1794)
 - `orca skills list` / `orca skills get <name>` — 설치본에 번들된 공식 가이드

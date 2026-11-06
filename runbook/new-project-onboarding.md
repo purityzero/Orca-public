@@ -1,0 +1,28 @@
+## 부록 B. 신규 Unity 프로젝트를 이 워크스페이스에 편입시킬 때 (Day-1 체크리스트)
+
+- [ ] **1. Git 기준점**
+  - [ ] 프로젝트 `.gitignore`에 Unity 표준 항목을 **직접** 넣는다 (전역 `core.excludesFile`에 의존하지 말 것)
+  - [ ] `.claude` 폴더 추적 여부를 **지금** 결정 (`ParallelWorkContract.MD` §11 — git 추적 vs junction)
+  - [ ] 기준 브랜치·remote 확정, detached HEAD 상태 아닌지 확인
+- [ ] **2. 검증 수단 확보** ← Orca 병렬 작업을 켜기 전에 반드시
+  - [ ] 테스트 asmdef 생성 (`com.unity.test-framework`)
+  - [ ] `verify-compile` — 컴파일 에러 0건 (종료 코드로 성공/실패)
+  - [ ] `verify-tables` — 데이터 파일 헤더 ↔ 코드 필드명 대조 (존재하지 않는 컬럼도 에러 없이 기본값을 반환하는 파서가 많아 자동 검증 1순위)
+- [ ] **3. Unity CLI** (`runbook/orca-cli.md` 참고)
+  - [ ] `unity install <프로젝트 버전>` / `unity pipeline install`
+  - [ ] `unity doctor`로 CLI/PATH/에디터 설치 환경 확인
+  - [ ] `unity status`와 `unity pipeline list`로 실행 중인 에디터 및 Pipeline 서버 연결 확인 ← 갈림길, 안 붙으면 에디터 재시작 후 재확인하고 그래도 실패하면 EditMode 테스트 + CI 사본 경로로 우회
+  - [ ] 위 검증 2개를 `CliCommand`로 노출 (2026-08-28 첫 실측 완료, 신규 프로젝트마다 별도 구현 필요)
+- [ ] **4. MCP 브릿지**
+  - [ ] `mcpforunity://instances`로 멀티 인스턴스 지원 여부 확정 (`ParallelWorkContract.MD` §2)
+  - [ ] 단일 인스턴스뿐이면 "한 번에 Unity 하나" 규칙을 문서·훅에 명시
+- [ ] **5. Orca 설정**
+  - [ ] `orca repo add --path <프로젝트 경로>`
+  - [ ] **Agent Permissions = Manual** (기본값이 권한 우회 인자를 미리 채운다 — 에이전트가 씬·프리팹을 직접 고치므로 자동 승인은 위험)
+  - [ ] (선택) `hookSettings.scripts.setup`에 필요한 초기화 스크립트 작성(`runbook/orca-cli.md` 참고). Unity 자동 실행은 걸지 않는다.
+  - [ ] `DO_NOT_TRACK=1`, `ORCA_TELEMETRY_DISABLED=1`
+  - [ ] `README.md`의 `Unity\` 폴더 구조에 맞춰 `.claude` 사본 편입 (`Unity\README.md` 절차)
+- [ ] **6. 첫 실험**
+  - [ ] 원인 가설이 둘로 갈리는 버그 하나를 고른다
+  - [ ] **에이전트 2개만** (늘리면 선택지보다 검토 비용이 먼저 늘어난다)
+  - [ ] `ParallelWorkContract.MD` §10의 평가 계약 템플릿을 그대로 준다

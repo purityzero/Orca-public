@@ -56,7 +56,7 @@ Codex 메인 세션이 `WorkBranch.cmd` → `2` 또는 동등한 Git 명령을 �
 
 | 항목 | 언제 | 판정 |
 |---|---|---|
-| 재컴파일 에러 0건 | 항상 | 에디터 콘솔 (기계 판정 수단은 아직 없음 — `README.md` §5) |
+| 재컴파일 에러 0건 | 항상 | 에디터 콘솔 또는 프로젝트에 구현된 `verify-compile` 명령 (`runbook/orca-cli.md`의 Unity CLI 절 참고) |
 | Play Mode 실제 동작 확인 | 동작이 바뀐 모든 수정 | **사람** |
 | 테이블-Record 컬럼 일치 | `Table\*.csv`를 고쳤을 때 | 로드 시 파싱 에러 없는지 |
 | `.claude\class`/`prefab` md 기록 갱신 | 클래스·프리팹을 고쳤을 때 | `CLAUDE.md` 규칙 |

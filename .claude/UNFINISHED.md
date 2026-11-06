@@ -108,3 +108,8 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 **관련 파일**: `.claude/hooks/session-agents.js:20`(SESSION_DIR 하나), `:46`(rmSync 폴더 전체)
 **남은 작업**: 다른 세션이 살아 있으면 지우지 않는 방안(참조 카운트·세션별 마커 등) 설계·구현·검증. 브랜치 미생성.
 **임시 대응**: 에이전트가 안 보이면 위 sync 명령. 이미 떠 있는 세션의 목록이 사본 삭제 후에도 호출 가능한지는 미확인.
+
+## 2026-11-06 — README에서 이관한 미완료 항목
+
+- **MCP 멀티 인스턴스 (a)/(b) 미확정** — Unity 에디터를 켠 상태에서 이 세션에 MCP for Unity 도구를 붙여 `mcpforunity://instances`를 한 번 읽으면 닫을 수 있다. `ParallelWorkContract.MD` §2 참고.
+- **Orca 바탕화면 바로가기가 실제로 `OrcaStart.cmd`를 가리키는지 미확인.**

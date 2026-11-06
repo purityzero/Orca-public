@@ -216,7 +216,7 @@ exit /b 0
 
 ## 8. 알려진 제약 / 나중에 붙일 것
 
-- **선택한 프로젝트가 Orca에 자동 등록되지는 않는다.** `orca repo add`는 git 저장소만 받으므로 지금은 범위 밖으로 뒀다. 필요해지면 런처 뒤에 한 줄 붙이면 된다.
+- **선택한 프로젝트가 Orca에 자동 등록되지는 않는다.** 현재 `orca repo add --path <경로> --kind git|folder`는 git 저장소와 일반 폴더를 등록할 수 있지만, 런처의 자동 등록은 구현하지 않았다. 필요해지면 런처 뒤에 한 줄 붙이면 된다.
 - **여러 프로젝트 동시 실행 시 MCP 포트 충돌 가능성.** 클라이언트 설정의 URL이 고정값(`http://127.0.0.1:8080/mcp`)이라, 두 번째 프로젝트가 다른 포트로 뜨면 클라이언트가 못 찾는다. 멀티 인스턴스 지원 여부는 `mcpforunity://instances` 리소스로 확인 필요(미검증).
 - 목록은 **실행 시점에 매번 새로 읽으므로** Hub에서 프로젝트를 추가/삭제해도 자동 반영된다.
 - **`AutoStartOnLoad`를 스크립트로 자동 세팅하려는 시도는 Hot Reload가 켜진 프로젝트에서 조용히 실패한다(2026-08-21 확인).** `[InitializeOnLoad]` 정적 생성자로 `EditorPrefs.SetBool("MCPForUnity.AutoStartOnLoad", true)`를 실행시키는 임시 스크립트를 `Assets/Editor/`에 넣고 에디터 포커스를 강제로 줘서 컴파일까지는 성공시켰으나(로그에 `new=1, changed=1` 확인), Unity 6의 **Hot Reload**(`Scripting: domain reloads=0 ... Hotreload: 14.966ms`)가 켜져 있으면 **완전한 도메인 리로드 자체가 스킵**되어 새로 추가된 타입의 `[InitializeOnLoad]` cctor가 전혀 실행되지 않는다 — 컴파일 에러도 없고 어떤 로그도 안 남아서 겉보기엔 "성공"처럼 보이지만 레지스트리엔 반영되지 않는다(재확인 완료, 키 자체가 안 생김).

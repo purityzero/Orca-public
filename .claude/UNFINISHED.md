@@ -120,3 +120,11 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 **확인됨**: 2026-11-06 새 채팅에서 `/시작` 인식·실행, 환경 표·"프로젝트가 없습니다." 표시까지.
 **미검증**: 프로젝트를 골라 에디터를 실제로 띄우는 단계 — 이 PC는 Unity 에디터·Hub 목록이 없어 확인 불가.
 **한계**: `OpenUnityProject.ps1`은 Hub 목록에서만 에디터 버전을 찾는다 — Hub에 없는 경로를 주면 실패한다(`ProjectSettings/ProjectVersion.txt` 대체 조회는 미구현, 스크립트 수정은 Codex 담당).
+
+## 2026-11-06 — codex exec Git 마무리 차단 훅 (커밋 c1803f8, main 미병합·미push)
+
+**브랜치**: `work/2026-11-06-codex-exec-git-guard`
+**파일**: `.claude/hooks/codex-exec-git-guard.js`(+`.test.js`), `.claude/settings.json`, `runbook/codex-handoff.md`
+**확인됨**: 실제 세션에서 Bash `codex exec - < 브리프(push 요청)`·PowerShell `Get-Content … | codex exec -` 차단, Git 아닌 위임(QA)은 통과. 단위 테스트 통과(Codex 실행).
+**2차 수정**: 블록 경계와 Bash 명령 치환을 검사하고 heredoc·PowerShell here-string 본문은 데이터로 처리한다. stdin 브리프를 읽을 수 없으면 차단하며, 파일을 먼저 만든 뒤 별도 명령으로 실행하도록 안내한다. 실측 형태를 포함한 자동 회귀 테스트 통과.
+**남은 것**: Claude 실제 세션에서 2차 수정의 블록·파일 읽기 실패 차단 및 heredoc 작성 통과를 재확인한 뒤, Codex 탭으로 main 병합·origin/public push를 별도 요청. 셸 전체 문법·동적 변수/래퍼·복잡한 중첩 치환은 완전 해석하지 않으므로 누락·오탐 가능성은 남는다.

@@ -45,17 +45,48 @@ test('실제 훅 진입점에서 Git 위임 차단과 통과 경로 검증', () 
             'codex exec "commit history review"', 'codex exec --help "push"', 'codex exec -h',
             'codex --help', 'git push origin main', 'echo codex exec push',
             'echo "codex exec push"', 'codex exec "QA"; git push origin main',
-            'codex exec "QA" # push', 'codex exec - < missing.md',
+            'codex exec "QA" # push',
             'codex exec - < "qa brief.md"', 'codex exec -C "push" -o "commit" "QA"',
         ]) assert.equal(call(command), null, command);
         assert.equal(call('Get-Content -Raw "qa brief.md" | codex exec -', 'PowerShell'), null);
+        fs.writeFileSync(path.join(root, '.claude/briefs/guard-probe.md'), 'git push 해줘');
+        const probe = '.claude/briefs/guard-probe.md';
+        deny('if ($false) { Get-Content -Raw -LiteralPath .claude\\briefs\\guard-probe.md | codex exec --approve-for-me - }; "끝"', 'PowerShell');
+        for (const command of [
+            `{ cat ${probe} | codex exec --approve-for-me -; }`,
+            `echo $(codex exec - < ${probe})`,
+            `echo \`codex exec - < ${probe}\``,
+            `echo "$(codex exec - < ${probe})"`,
+            `echo "\`codex exec - < ${probe}\`"`,
+        ]) deny(command);
+        const missing = 'codex exec --approve-for-me - < .claude/briefs/x.md';
+        deny(missing);
+        assert.match(call(missing).permissionDecisionReason, /브리프 파일을 먼저 만든 뒤 별도 명령으로 실행하라/);
+        deny(`printf 'git push 해줘' > .claude/briefs/x.md; false && ${missing}`);
+        deny('Get-Content -Raw -LiteralPath missing.md | codex exec -', 'PowerShell');
+        for (const command of [
+            `mkdir -p .claude/briefs; cat > .claude/briefs/example.md <<'EOF'\ncodex exec --approve-for-me - < ${probe}\ngit push\nEOF\nsed -n '1p' .claude/briefs/example.md; orca terminal list --json`,
+            'cat <<EOF\ncodex exec "git push"\nEOF\necho 끝',
+            'cat <<-EOF\n\tcodex exec "git push"\n\tEOF\n',
+            'cat <<EOF # 설명\ncodex exec "git push"\nEOF\necho 끝',
+            'echo "codex exec push"', "echo 'codex exec push'",
+        ]) assert.equal(call(command), null, command);
+        for (const quote of ["'", '"']) {
+            const data = `$brief = @${quote}\ncodex exec - < ${probe}\ngit push\n${quote}@\nSet-Content example.md $brief`;
+            assert.equal(call(data, 'PowerShell'), null, data);
+            deny(data + '\ncodex exec "push changes"', 'PowerShell');
+        }
+        assert.equal(call('{ codex exec - < "qa brief.md"; }'), null);
+        assert.equal(call('if ($false) { Get-Content -Raw "qa brief.md" | codex exec - }', 'PowerShell'), null);
+        assert.equal(call('codex exec --help - < missing.md'), null);
+        deny(`cat <<'EOF'\ncodex exec "QA"\nEOF\ncodex exec - < ${probe}`);
         assert.equal(call(actual, 'Read'), null);
         deny('codex exec "QA"; codex exec "커밋해줘"');
         const settings = JSON.parse(fs.readFileSync(path.join(__dirname, '../settings.json'), 'utf8'));
         assert.ok(settings.hooks.PreToolUse.some(entry => entry.matcher === 'Bash|PowerShell' &&
             entry.hooks.some(hook => hook.command.includes('codex-exec-git-guard.js'))));
         const mutant = path.join(root, 'mutant.js');
-        fs.writeFileSync(mutant, fs.readFileSync(script, 'utf8').replace('if (!blocked(payload)) return;', 'return;'));
+        fs.writeFileSync(mutant, fs.readFileSync(script, 'utf8').replace('if (!decision) return;', 'return;'));
         assert.throws(() => deny(actual, 'Bash', mutant), assert.AssertionError);
     } finally {
         assert.equal(path.dirname(root), os.tmpdir());

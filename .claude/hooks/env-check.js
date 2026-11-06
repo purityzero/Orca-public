@@ -14,7 +14,7 @@ const WORKSPACE_ROOT = path.resolve(__dirname, '..', '..');
 const SETTINGS_PATH = path.join(WORKSPACE_ROOT, '.claude', 'settings.json');
 const AGENTS_MASTER = path.join(WORKSPACE_ROOT, 'agents');
 const OPEN_PROJECT_SCRIPT = path.join(WORKSPACE_ROOT, 'OpenUnityProject.ps1');
-const HUB_PROJECTS = path.join(process.env.APPDATA || '', 'UnityHub', 'projects-v1.json');
+const { readHub } = require('../../tools/unity-hub.js');
 const REQUIRED_HOOKS = ['session-agents.js', 'session-start-project-picker.js', 'user-prompt-project-guard.js'];
 
 const CODEX_INSTALL_HINT = 'npm install -g @openai/codex';
@@ -156,12 +156,9 @@ function checkAgents() {
 }
 
 function checkUnityHub() {
-    try {
-        JSON.parse(fs.readFileSync(HUB_PROJECTS, 'utf8').replace(/^﻿/, ''));
-        return { label: 'Unity Hub', level: 'ok', detail: 'projects-v1.json' };
-    } catch (error) {
-        return { label: 'Unity Hub', level: 'warn', detail: 'projects-v1.json 못 읽음 (프로젝트 목록 비어 보일 수 있음)' };
-    }
+    const hub = readHub();
+    return { label: 'Unity Hub', level: hub.sources.length && !hub.errors.length ? 'ok' : 'warn',
+        detail: hub.sources.length ? `${hub.sources.map(filename => path.basename(filename)).join(', ')} · 프로젝트 ${hub.projects.length}개${hub.errors.length ? ' (일부 읽기 실패)' : ''}` : 'JSON/SQLite 목록 못 읽음 (프로젝트 목록 비어 보일 수 있음)' };
 }
 
 // Unity MCP 브릿지가 살아 있는지. **세션이 열리는 이 순간**이 중요하다 —
@@ -286,4 +283,5 @@ function main() {
     process.stdout.write(JSON.stringify(output));
 }
 
-main();
+module.exports = { checkUnityHub };
+if (require.main === module) main();

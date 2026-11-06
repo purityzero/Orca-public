@@ -8,6 +8,7 @@
 
 `.claude/hooks/env-check.js`가 매 세션 필수 도구·배선(node / git / codex CLI / 훅 3종 / 서브에이전트 마스터 /
 PowerShell·OpenUnityProject.ps1 / Unity Hub 목록 / Orca 저장소의 원격 최신 여부)을 훑어 표로 출력한다.
+Hub 목록은 `tools/unity-hub.js`로 일반 APPDATA와 스토어판 MSIX 가상화 폴더의 JSON/SQLite를 공통 조회한다. `hub.db · 프로젝트 0개`는 정상적인 빈 목록이며, `/시작`에서는 "프로젝트가 없습니다."로 표시한다. 데이터·에디터 경로와 Node 요건은 `UnityLauncher.MD` §2를 참고한다. 별도의 「Unity 에디터」 행에서 Hub 실행 파일을 탐지하는 방식은 이번 목록 지원 변경에 포함되지 않았다.
 사용자 조치가 필요한 항목(미설치 도구, 원격보다 뒤처짐)은 `additionalContext`로 넘어온다 —
 **첫 응답에서 `AskUserQuestion`으로 물어 처리한다. 임의로 설치하거나 pull 하지 않는다.**
 훅은 프롬프트를 못 띄우므로 "빠졌으면 묻는다"가 훅의 감지 + 세션의 질문 2단계로 실현된다.

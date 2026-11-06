@@ -16,7 +16,7 @@
          → (에디터 로드 후) MCP for Unity 자동 연결
 ```
 
-**Unity Hub는 실행하지 않아도 된다.** 목록은 Hub 프로세스가 아니라 JSON 파일에 있고, 실행도 `Unity.exe`를 직접 호출한다. Hub GUI를 띄우는 단계는 하는 일이 없어서 뺐다.
+**Unity Hub는 실행하지 않아도 된다.** 공용 `tools/unity-hub.js`가 JSON 또는 SQLite에 저장된 목록을 읽고, 실행은 `Unity.exe`를 직접 호출한다. Hub가 실행 중이면 SQLite의 WAL에 반영된 목록도 읽기 전용 연결로 조회한다.
 
 **git과 무관하다.** Hub에 등록된 프로젝트를 전부 보여준다. (Orca 워크트리를 쓰려면 git이 필요하지만, 그건 이 런처의 범위가 아니다.)
 
@@ -28,7 +28,13 @@
 
 ```
 %APPDATA%\UnityHub\projects-v1.json
+%APPDATA%\UnityHub\hub.db
+%LOCALAPPDATA%\Packages\UnityTechnologies.UnityHub_<패키지ID>\LocalCache\Roaming\UnityHub\hub.db
 ```
+
+스토어판 패키지 데이터 폴더와 일반 APPDATA 폴더를 검색한다. 각 폴더에서 `hub.db`를 먼저 읽고 실패하면 `projects-v1.json`으로 대체한다. 정상 DB가 0행이면 같은 폴더의 오래된 JSON 목록을 되살리지 않는다. 여러 폴더의 목록은 경로로 중복을 제거하며 스토어판 항목이 우선이다. 읽기 실패는 공용 도우미의 `errors`와 환경 표에 표시한다.
+
+SQLite에는 `node:sqlite`를 지원하는 Node(22.13 이상 권장)가 필요하다. 모듈이 없거나 DB가 잠기거나 손상되면 JSON 대체 조회를 시도한다. `projects(path, data, updated_at)`의 `data`는 프로젝트 객체 JSON이다. 손상되거나 모르는 형식이면 DB의 `path`만이라도 유지한다. 근거는 이 PC의 Hub 3.22.5 `app.asar` 안 `ProjectSqliteStorage`와 `getProjectData` 구현(2026-11-06 확인)이다.
 
 구조 (`data` 아래에 경로를 키로 하는 객체):
 
@@ -59,7 +65,9 @@
 C:\Program Files\Unity\Hub\Editor\<version>\Editor\Unity.exe
 ```
 
-`version`을 그대로 끼워 넣으면 된다. 여러 버전이 섞여 있어도(예: `2021.3.38f1`, `6000.0.38f1`, `6000.3.7f1`, `6000.3.16f1`) 프로젝트별로 알아서 맞춰 실행된다.
+기본 루트는 `%ProgramFiles%\Unity\Hub\Editor`이며 스토어판 Hub 3.22.5 앱 코드에서도 같은 기본값을 사용한다. 각 Hub 데이터 폴더의 `secondaryInstallPath.json`에 문자열로 저장된 보조 설치 루트도 검색한다(스토어판은 위 가상화 폴더). 현재 PC에는 보조 설정과 설치된 에디터가 없다.
+
+`OpenUnityProject.ps1`과 런처는 같은 공용 도우미로 버전·에디터 경로를 결정한다. Hub 목록에 버전이 없으면 `<프로젝트>\ProjectSettings\ProjectVersion.txt`의 `m_EditorVersion`을 읽는다. 해당 버전의 실행 파일이 없으면 버전 출처와 검색 경로를 알리고 종료하며 설치하거나 다른 버전을 임의로 실행하지 않는다.
 
 ### 실행 명령
 
@@ -71,7 +79,7 @@ Unity.exe -projectPath "<프로젝트 경로>"
 
 ## 3. 설치 절차
 
-1. `UnityLauncher.ps1` 과 `UnityLauncher.cmd` 를 같은 폴더에 둔다 (4절 소스)
+1. `UnityLauncher.ps1`, `UnityLauncher.cmd`, `OpenUnityProject.ps1`, `tools/unity-hub.js`, `tools/UnityHub.ps1`을 저장소 구조대로 둔다. Node가 필요하다.
 2. **`.ps1`을 UTF-8 **with BOM**으로 저장한다** ← 아래 주의사항
 3. `UnityLauncher.cmd` 더블클릭
 
@@ -100,14 +108,15 @@ $text = [IO.File]::ReadAllText($p, [Text.Encoding]::UTF8)
 | 파일 | 역할 |
 |---|---|
 | `UnityLauncher.cmd` | `UnityLauncher.ps1`을 `-NoProfile -ExecutionPolicy Bypass`로 실행하는 진입점 |
-| `UnityLauncher.ps1` | Hub의 `projects-v1.json`을 읽어 목록을 띄우고, 프로젝트에 기록된 버전의 에디터로 실행 |
+| `UnityLauncher.ps1` | 공용 도우미의 JSON/SQLite 목록을 표시하고 `OpenUnityProject.ps1`로 실행 |
 | `OpenUnityProject.ps1` | 경로를 인자로 받아 곧장 실행(이미 그 프로젝트가 떠 있으면 건너뜀) |
+| `tools/unity-hub.js`, `tools/UnityHub.ps1` | 프로젝트 목록·버전·기본/보조 에디터 경로를 읽는 공용 Node 도우미와 PowerShell 연결 함수 |
 
 **전문을 이 문서에 옮겨 적지 않는다.** 예전에는 여기에 두 스크립트를 통째로 복사해 뒀는데, 코드가 바뀔 때마다 손으로 맞춰야 하고 어긋나면 어느 쪽이 맞는지 알 수 없다. 읽을 일이 있으면 저장소 루트의 실제 파일을 연다.
 
 ## 5. 동작 확인 결과
 
-> ⚠️ **이 절의 프로젝트 이름·개수·경로는 검증에 쓰인 노트북 한 대의 스냅샷일 뿐이다.** 스크립트 자체(§4)는 어느 PC의 `projects-v1.json`이든 그 자리에서 동적으로 읽으므로 이 예시를 그대로 따라 할 필요가 없다 — "이렇게 동작한다"는 증거로만 볼 것. 다른 PC(등록된 프로젝트 구성이 다른)에서 그대로 실행해도 스크립트는 동일하게 동작해야 한다.
+> ⚠️ **이 절의 프로젝트 이름·개수·경로는 검증에 쓰인 노트북 한 대의 스냅샷일 뿐이다.** 현재 스크립트(§4)는 각 PC의 JSON/SQLite 목록을 동적으로 읽는다. 아래는 당시 검증 기록이며 현재 PC 구성과 구분한다.
 
 **2026-08-21, 이 노트북에서의 재실행 로그(Hub 등록 4개, 전부 C: 드라이브):**
 ```

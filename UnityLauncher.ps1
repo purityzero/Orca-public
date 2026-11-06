@@ -1,38 +1,23 @@
 ﻿# Unity Hub에 등록된 프로젝트 목록을 읽어 선택 실행한다.
-# Hub를 띄우지 않고 projects-v1.json만 읽으며, 프로젝트에 기록된 버전의 에디터로 실행한다.
+# Hub를 띄우지 않고 JSON/SQLite 목록을 공용 도우미로 읽는다.
 
 $ErrorActionPreference = 'Stop'
 
-$hubFile    = Join-Path $env:APPDATA 'UnityHub\projects-v1.json'
-$editorRoot = 'C:\Program Files\Unity\Hub\Editor'
-
-if (-not (Test-Path -LiteralPath $hubFile)) {
-    Write-Host "Unity Hub 프로젝트 목록을 찾을 수 없습니다:" -ForegroundColor Red
-    Write-Host "  $hubFile"
-    Read-Host "`n엔터를 누르면 종료합니다"
-    exit 1
-}
-
-$raw  = Get-Content -LiteralPath $hubFile -Raw -Encoding UTF8 | ConvertFrom-Json
-$node = $raw
-if ($raw.PSObject.Properties.Name -contains 'data') { $node = $raw.data }
-
-$projects = @()
-foreach ($prop in $node.PSObject.Properties) {
-    $entry = $prop.Value
-    if ($null -eq $entry.path) { continue }
-
-    $projects += [PSCustomObject]@{
-        Title      = $entry.title
-        Path       = $entry.path
-        Version    = $entry.version
-        Modified   = [DateTimeOffset]::FromUnixTimeMilliseconds([int64]$entry.lastModified).LocalDateTime
-        Exists     = (Test-Path -LiteralPath $entry.path)
-        EditorPath = Join-Path $editorRoot (Join-Path $entry.version 'Editor\Unity.exe')
+. (Join-Path $PSScriptRoot 'tools\UnityHub.ps1')
+$hub = Get-OrcaUnityHub
+$projects = @($hub.projects | ForEach-Object {
+    $resolved = Get-OrcaUnityHub -ProjectPath $_.path
+    [PSCustomObject]@{
+        Title = $_.title
+        Path = $_.path
+        Version = $(if ($resolved.version) { $resolved.version } else { '?' })
+        Modified = [DateTimeOffset]::FromUnixTimeMilliseconds([int64]$_.lastModified).LocalDateTime
+        Exists = (Test-Path -LiteralPath $_.path)
+        EditorPath = $resolved.editorPath
     }
-}
+})
 
-$projects = $projects | Sort-Object Modified -Descending
+$projects = @($projects | Sort-Object Modified -Descending)
 
 if ($projects.Count -le 0) {
     Write-Host "등록된 프로젝트가 없습니다." -ForegroundColor Yellow
@@ -63,7 +48,7 @@ for ($i = 0; $i -lt $projects.Count; $i++) {
         $note  = '  [폴더 없음]'
         $color = 'DarkGray'
     }
-    elseif (-not (Test-Path -LiteralPath $item.EditorPath)) {
+    elseif (-not ($item.EditorPath -and (Test-Path -LiteralPath $item.EditorPath))) {
         $note  = "  [에디터 $($item.Version) 미설치]"
         $color = 'DarkYellow'
     }
@@ -100,20 +85,5 @@ if (-not $target.Exists) {
     exit 1
 }
 
-if (-not (Test-Path -LiteralPath $target.EditorPath)) {
-    Write-Host "  에디터가 설치돼 있지 않습니다: $($target.EditorPath)" -ForegroundColor Red
-    Read-Host "`n엔터를 누르면 종료합니다"
-    exit 1
-}
-
-Write-Host ""
-Write-Host "  실행: $($target.Title)  ($($target.Version))" -ForegroundColor Green
-Write-Host "  경로: $($target.Path)"
-
-Start-Process -FilePath $target.EditorPath -ArgumentList @('-projectPath', $target.Path)
-
-Write-Host ""
-Write-Host "  Unity를 실행했습니다. MCP는 에디터 로드 후 자동 연결됩니다." -ForegroundColor Green
-Write-Host "  (자동 연결이 안 되면 MCP for Unity 창 > Advanced >"
-Write-Host "   'Auto-Start Server on Editor Load' 가 켜져 있는지 확인하세요.)"
-Start-Sleep -Seconds 3
+& (Join-Path $PSScriptRoot 'OpenUnityProject.ps1') -ProjectPath $target.Path
+exit $LASTEXITCODE

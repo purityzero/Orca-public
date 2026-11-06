@@ -119,4 +119,11 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 **파일**: `.claude/commands/시작.md`, `OpenUnityProject.ps1`
 **확인됨**: 2026-11-06 새 채팅에서 `/시작` 인식·실행, 환경 표·"프로젝트가 없습니다." 표시까지.
 **미검증**: 프로젝트를 골라 에디터를 실제로 띄우는 단계 — 이 PC는 Unity 에디터·Hub 목록이 없어 확인 불가.
-**한계**: `OpenUnityProject.ps1`은 Hub 목록에서만 에디터 버전을 찾는다 — Hub에 없는 경로를 주면 실패한다(`ProjectSettings/ProjectVersion.txt` 대체 조회는 미구현, 스크립트 수정은 Codex 담당).
+**보완**: `work/2026-11-06-hub-db-projects`에서 Hub JSON/SQLite 공용 조회와 `ProjectSettings/ProjectVersion.txt` 대체 버전 조회, 기본/보조 에디터 경로 검색을 구현했다. 임시 fixture에서 버전 조회 후 에디터 미설치 안내까지 확인했다. 실제 에디터 실행은 여전히 미검증이다.
+
+## 2026-11-06 — Hub SQLite 목록 지원 (실제 /시작 확인 대기)
+
+**브랜치**: `work/2026-11-06-hub-db-projects` (main 미병합·미push)
+**파일**: `tools/unity-hub.js`, `tools/UnityHub.ps1`, `tools/unity-hub.test.js`, 목록 picker·env-check, `OpenUnityProject.ps1`, `SetupLocalPaths.ps1`, `UnityLauncher.ps1`
+**확인됨**: 임시 JSON·SQLite/WAL fixture에서 picker·환경 표의 Hub 행·PowerShell 버전 조회 검증. 실제 스토어판 Hub DB(0행)를 읽기 전용 조회하고 picker의 "프로젝트가 없습니다." 확인.
+**남은 것**: Claude가 실제 `/시작` 경로로 목록·환경 표 확인 후 병합·push 요청. 이 PC에는 등록 프로젝트·설치된 에디터가 없어 실제 에디터 실행은 확인 불가. env-check 「Unity 에디터」 행의 스토어 Hub 실행 파일 탐지는 범위 밖으로 유지했다.

@@ -23,3 +23,6 @@ reports/
 
 # C# 규칙 Read 확인 상태 (세션별 로컬 표시)
 .claude/session-state/
+
+# Codex 샌드박스에서 orca CLI 실행 시 Orca(Electron) crashpad가 남기는 오류 기록
+debug.log

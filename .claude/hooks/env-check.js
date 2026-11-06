@@ -67,6 +67,55 @@ function checkCodex() {
     };
 }
 
+function checkVersion(label, commandLine, installHint) {
+    const result = run(commandLine);
+    if (result.ok === true)
+        return { label, level: 'ok', detail: result.out.split(/\r?\n/)[0] };
+    return { label, level: 'missing', detail: `미설치 (${installHint})` };
+}
+
+// Windows의 python은 Microsoft Store 안내용 가짜 실행 파일(WindowsApps)일 수 있다 — "Python 3.x" 형태가 나와야 설치로 본다.
+function checkPython() {
+    for (const commandLine of ['py --version', 'python --version']) {
+        const result = run(commandLine);
+        if (result.ok === true && /^Python \d/.test(result.out) === true)
+            return { label: 'Python', level: 'ok', detail: result.out.replace(/^Python /, '') };
+    }
+    return { label: 'Python', level: 'missing', detail: '미설치 (winget install Python.Python.3.13)' };
+}
+
+// Unity 에디터 설치 여부. Hub 기본 경로와 Hub가 기록한 보조 설치 경로의 Editor 폴더를 훑는다.
+function checkUnityEditor() {
+    const programFiles = process.env.ProgramFiles || 'C:\\Program Files';
+    const hubExe = path.join(programFiles, 'Unity Hub', 'Unity Hub.exe');
+    const editorRoots = [path.join(programFiles, 'Unity', 'Hub', 'Editor')];
+    const secondary = path.join(process.env.APPDATA || '', 'UnityHub', 'secondaryInstallPath.json');
+    try {
+        const extra = JSON.parse(fs.readFileSync(secondary, 'utf8').replace(/^\uFEFF/, ''));
+        if (typeof extra === 'string' && extra.length > 0)
+            editorRoots.push(extra);
+    } catch (error) {
+        // 보조 경로를 설정하지 않았으면 파일이 없다.
+    }
+
+    const versions = [];
+    for (const root of editorRoots) {
+        try {
+            for (const name of fs.readdirSync(root)) {
+                if (fs.existsSync(path.join(root, name, 'Editor', 'Unity.exe')))
+                    versions.push(name);
+            }
+        } catch (error) {
+            // 폴더가 없으면 그 경로엔 설치가 없다.
+        }
+    }
+
+    const hubNote = fs.existsSync(hubExe) ? 'Hub 있음' : 'Hub 없음';
+    if (versions.length > 0)
+        return { label: 'Unity 에디터', level: 'ok', detail: `${versions.join(', ')} (${hubNote})` };
+    return { label: 'Unity 에디터', level: 'missing', detail: `미설치 (${hubNote})` };
+}
+
 function checkPowerShell() {
     const hasScript = fs.existsSync(OPEN_PROJECT_SCRIPT);
     const hasShell = run('powershell.exe -NoProfile -Command "exit 0"').ok;
@@ -137,38 +186,44 @@ function checkUnityBridge() {
 }
 
 // Orca 저장소가 origin 대비 최신인지. 세션 시작마다 실제 fetch 한다(사용자 선택).
+// 워크트리 작업 브랜치는 원격에 짝이 없는 경우가 많아, 그럴 땐 origin/main과 비교한다.
+// 표기: -N = 원격보다 N커밋 뒤, +N = 로컬이 N커밋 앞.
 function checkRepo() {
     const branchResult = run(`git -C "${WORKSPACE_ROOT}" rev-parse --abbrev-ref HEAD`);
     if (branchResult.ok === false)
         return { label: 'Orca 저장소', level: 'warn', detail: 'git 저장소 아님' };
 
     const branch = branchResult.out.trim();
-    const fetchResult = run(`git -C "${WORKSPACE_ROOT}" fetch --quiet origin ${branch}`);
+    const fetchResult = run(`git -C "${WORKSPACE_ROOT}" fetch --quiet origin`);
     if (fetchResult.ok === false)
         return { label: 'Orca 저장소', level: 'warn', detail: '원격 확인 실패 (오프라인?)' };
 
-    const countResult = run(`git -C "${WORKSPACE_ROOT}" rev-list --left-right --count HEAD...origin/${branch}`);
+    const hasTwin = run(`git -C "${WORKSPACE_ROOT}" rev-parse --verify --quiet origin/${branch}`).ok;
+    const upstream = (hasTwin === true) ? `origin/${branch}` : 'origin/main';
+
+    const countResult = run(`git -C "${WORKSPACE_ROOT}" rev-list --left-right --count HEAD...${upstream}`);
     if (countResult.ok === false)
-        return { label: 'Orca 저장소', level: 'warn', detail: `origin/${branch} 비교 실패` };
+        return { label: 'Orca 저장소', level: 'warn', detail: `${upstream} 비교 실패` };
 
     const parts = countResult.out.split(/\s+/);
     const ahead = parseInt(parts[0], 10) || 0;
     const behind = parseInt(parts[1], 10) || 0;
+    const where = `${branch} → ${upstream}`;
 
     if (behind > 0) {
-        const aheadNote = (ahead > 0) ? ` (로컬도 ${ahead}커밋 앞 — 충돌 가능, pull 전 확인)` : '';
+        const aheadNote = (ahead > 0) ? ` / +${ahead} (로컬 커밋 있음 — 충돌 가능)` : '';
         return {
             label: 'Orca 저장소',
             level: 'warn',
-            detail: `origin/${branch}보다 ${behind}커밋 뒤${aheadNote}`,
+            detail: `-${behind}${aheadNote}  (${where})`,
             action: (ahead > 0)
-                ? `Orca 저장소가 origin/${branch}보다 ${behind}커밋 뒤이면서 로컬도 ${ahead}커밋 앞이다. 자동 pull은 위험하니, 사용자에게 상태를 보이고 어떻게 할지(rebase pull / 그냥 두기 / 직접 확인) AskUserQuestion으로 물어라.`
-                : `Orca 저장소가 origin/${branch}보다 ${behind}커밋 뒤이고 로컬 변경은 없다. 사용자에게 지금 \`git -C "${WORKSPACE_ROOT}" pull --ff-only\`로 받을지 AskUserQuestion으로 물어라. 워킹트리에 미커밋 변경이 있으면 pull 전에 알릴 것.`
+                ? `Orca 저장소가 ${upstream}보다 ${behind}커밋 뒤이면서 로컬도 ${ahead}커밋 앞이다. 자동 pull은 위험하니, 사용자에게 상태를 보이고 어떻게 할지(rebase pull / 그냥 두기 / 직접 확인) AskUserQuestion으로 물어라.`
+                : `Orca 저장소가 ${upstream}보다 ${behind}커밋 뒤이고 로컬 커밋은 없다. 사용자에게 지금 \`git -C "${WORKSPACE_ROOT}" merge --ff-only ${upstream}\`로 받을지 AskUserQuestion으로 물어라. 워킹트리에 미커밋 변경이 있으면 받기 전에 알릴 것.`
         };
     }
     if (ahead > 0)
-        return { label: 'Orca 저장소', level: 'ok', detail: `최신 (로컬이 ${ahead}커밋 앞)` };
-    return { label: 'Orca 저장소', level: 'ok', detail: '최신' };
+        return { label: 'Orca 저장소', level: 'ok', detail: `최신 / +${ahead}  (${where})` };
+    return { label: 'Orca 저장소', level: 'ok', detail: `최신  (${where})` };
 }
 
 function iconFor(level) {
@@ -182,8 +237,13 @@ function iconFor(level) {
 function main() {
     const checks = [
         checkNode(),
+        checkVersion('npm', 'npm --version', 'node.js와 함께 설치'),
         checkGit(),
+        checkPython(),
+        checkVersion('Claude Code', 'claude --version', 'npm install -g @anthropic-ai/claude-code'),
         checkCodex(),
+        checkVersion('Orca CLI', 'orca --version', 'Orca 앱 설치'),
+        checkUnityEditor(),
         checkPowerShell(),
         checkHooks(),
         checkAgents(),
@@ -200,16 +260,28 @@ function main() {
 
     const actions = checks.filter((check) => check.action !== undefined).map((check) => check.action);
     const output = { systemMessage: lines.join('\n') };
+    const context = [];
+
+    // Orca 채팅은 훅의 systemMessage를 화면에 띄우지 않는다(2026-11-06 실측) — 세션이 첫 응답에서 대신 보여준다.
+    if (process.env.ORCA_CHAT_SCRATCH_DIR) {
+        context.push('[환경 체크 표 — 이 화면엔 자동 표시되지 않는다]');
+        context.push('첫 응답 맨 앞에 아래 표를 코드 블록으로 그대로 보여준다.');
+        context.push('```', ...lines, '```', '');
+    }
 
     if (actions.length > 0) {
+        context.push(
+            '[환경 체크 — 사용자 확인 필요]',
+            '아래 항목은 첫 응답에서 사용자에게 물어 처리한다. 임의로 설치하거나 pull 하지 않는다.',
+            '',
+            ...actions.map((action, index) => `${index + 1}. ${action}`)
+        );
+    }
+
+    if (context.length > 0) {
         output.hookSpecificOutput = {
             hookEventName: 'SessionStart',
-            additionalContext: [
-                '[환경 체크 — 사용자 확인 필요]',
-                '아래 항목은 첫 응답에서 사용자에게 물어 처리한다. 임의로 설치하거나 pull 하지 않는다.',
-                '',
-                ...actions.map((action, index) => `${index + 1}. ${action}`)
-            ].join('\n')
+            additionalContext: context.join('\n')
         };
     }
 

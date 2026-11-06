@@ -108,8 +108,8 @@ function collectRows() {
 // 세션이 열리자마자 사용자 화면에 그대로 뜨는 목록(훅 JSON의 systemMessage).
 // 세션은 사용자가 말을 걸기 전엔 응답을 못 하므로, "목록 보여주기"를 이 통로가 대신한다.
 function buildScreenMessage(rows) {
-    if (rows === null)
-        return `Unity Hub 목록을 읽지 못했습니다: ${HUB_PROJECTS}`;
+    if (rows === null || rows.length <= 0)
+        return '프로젝트가 없습니다.';
 
     const lines = [];
     lines.push('작업할 Unity 프로젝트를 고르세요 — 번호나 이름을 입력하면 됩니다.');
@@ -130,7 +130,10 @@ function buildContext(sessionId, rows) {
 
     const lines = [];
     lines.push('작업 디렉토리가 여러 Unity 프로젝트를 품은 워크스페이스 루트다.');
-    lines.push('아래 번호 매긴 목록은 세션이 열릴 때 **이미 사용자 화면에 출력됐다**. 같은 목록을 다시 나열하지 않는다.');
+    if (process.env.ORCA_CHAT_SCRATCH_DIR)
+        lines.push('이 화면엔 훅 출력이 안 보인다. 첫 응답 맨 앞에 아래 목록을 번호 그대로 보여주고 고르게 한다.');
+    else
+        lines.push('아래 번호 매긴 목록은 세션이 열릴 때 **이미 사용자 화면에 출력됐다**. 같은 목록을 다시 나열하지 않는다.');
     lines.push('사용자가 번호나 프로젝트명을 말하면 그 프로젝트로 확정하고 바로 작업에 들어간다.');
     lines.push('사용자가 지정하기 전에 임의로 한 프로젝트를 골라 작업을 시작하지 않는다.');
     lines.push('아직 안 골랐는데 다른 얘기를 먼저 꺼내면, 그 얘기에 답하면서 어느 프로젝트인지 한 줄로 되묻는다.');
@@ -143,8 +146,9 @@ function buildContext(sessionId, rows) {
     lines.push('     (안 만들면 매 턴 미확정 알림이 계속 뜬다)');
     lines.push('');
 
-    if (rows === null) {
-        lines.push(`(Unity Hub 목록을 읽지 못했다: ${HUB_PROJECTS})`);
+    if (rows === null || rows.length <= 0) {
+        lines.push(`(프로젝트가 없습니다. — Unity Hub 목록 없음 또는 등록 프로젝트 0개: ${HUB_PROJECTS})`);
+        lines.push('화면 메시지가 안 보이는 환경이 있으므로, 첫 응답에서 "프로젝트가 없습니다."라고 알리고 작업할 프로젝트 경로를 묻는다.');
         return lines.join('\n');
     }
 

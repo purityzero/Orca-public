@@ -1,13 +1,13 @@
 ﻿# 이 PC에서의 Unity 프로젝트 '원본' 경로를 찾아 LocalPaths.json 으로 저장한다.
 # 프로젝트 원본 위치는 PC마다 다르므로 git에 커밋하지 않고 여기서 매번 만든다.
-# Unity Hub에 등록된 목록(projects-v1.json)에서 후보를 뽑아 보여주고, 고른 것을 기록한다.
+# Unity Hub에 등록된 목록(JSON/SQLite)에서 후보를 뽑아 보여주고, 고른 것을 기록한다.
 
 $ErrorActionPreference = 'Stop'
 
 $orcaRoot   = $PSScriptRoot
 $configFile = Join-Path $orcaRoot 'LocalPaths.json'
 $unityDir   = Join-Path $orcaRoot 'Unity'
-$hubFile    = Join-Path $env:APPDATA 'UnityHub\projects-v1.json'
+. (Join-Path $PSScriptRoot 'tools\UnityHub.ps1')
 
 # ---------------------------------------------------------------------------
 # 1. Orca가 관리하는 프로젝트 목록 = Unity\ 아래 폴더명
@@ -29,29 +29,19 @@ if ($projectNames.Count -le 0) {
 # ---------------------------------------------------------------------------
 # 2. Unity Hub 등록 목록 읽기 (없어도 직접 입력으로 진행 가능)
 # ---------------------------------------------------------------------------
-$hubEntries = @()
-
-if (Test-Path -LiteralPath $hubFile) {
-    $raw  = Get-Content -LiteralPath $hubFile -Raw -Encoding UTF8 | ConvertFrom-Json
-    $node = $raw
-    if ($raw.PSObject.Properties.Name -contains 'data') { $node = $raw.data }
-
-    foreach ($prop in $node.PSObject.Properties) {
-        $entry = $prop.Value
-        if ($null -eq $entry.path) { continue }
-
-        $hubEntries += [PSCustomObject]@{
-            Title       = $entry.title
-            ProjectName = $entry.projectName
-            Path        = $entry.path
-            Version     = $entry.version
-            Modified    = [DateTimeOffset]::FromUnixTimeMilliseconds([int64]$entry.lastModified).LocalDateTime
-            Exists      = (Test-Path -LiteralPath $entry.path)
-        }
+$hub = Get-OrcaUnityHub
+$hubEntries = @($hub.projects | ForEach-Object {
+    [PSCustomObject]@{
+        Title = $_.title
+        ProjectName = $_.projectName
+        Path = $_.path
+        Version = $(if ($_.version) { $_.version } else { '?' })
+        Modified = [DateTimeOffset]::FromUnixTimeMilliseconds([int64]$_.lastModified).LocalDateTime
+        Exists = (Test-Path -LiteralPath $_.path)
     }
-}
-else {
-    Write-Host "Unity Hub 목록이 없습니다($hubFile) — 경로를 직접 입력해야 합니다." -ForegroundColor DarkYellow
+})
+if ($hub.sources.Count -le 0) {
+    Write-Host 'Unity Hub 목록(JSON/SQLite)을 읽지 못했습니다 — 경로를 직접 입력해야 합니다.' -ForegroundColor DarkYellow
 }
 
 # ---------------------------------------------------------------------------

@@ -10,8 +10,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$hubFile    = Join-Path $env:APPDATA 'UnityHub\projects-v1.json'
-$editorRoot = 'C:\Program Files\Unity\Hub\Editor'
+. (Join-Path $PSScriptRoot 'tools\UnityHub.ps1')
 
 if (-not (Test-Path -LiteralPath $ProjectPath)) {
     Write-Host "프로젝트 폴더가 없습니다: $ProjectPath" -ForegroundColor Red
@@ -29,35 +28,23 @@ if ($running.Count -gt 0) {
     exit 0
 }
 
-# Hub 목록에서 이 프로젝트에 기록된 에디터 버전을 찾는다.
-$version = $null
-if (Test-Path -LiteralPath $hubFile) {
-    $raw  = Get-Content -LiteralPath $hubFile -Raw -Encoding UTF8 | ConvertFrom-Json
-    $node = $raw
-    if ($raw.PSObject.Properties.Name -contains 'data') { $node = $raw.data }
-
-    foreach ($prop in $node.PSObject.Properties) {
-        $entry = $prop.Value
-        if ($null -eq $entry.path) { continue }
-        if ($entry.path.ToLower().TrimEnd('\', '/') -eq $resolvedPath.ToLower().TrimEnd('\', '/')) {
-            $version = $entry.version
-            break
-        }
-    }
-}
+# 목록 버전이 없으면 ProjectVersion.txt로 대체 조회한다.
+$project = Get-OrcaUnityHub -ProjectPath $resolvedPath
+$version = $project.version
 
 if ([string]::IsNullOrWhiteSpace($version)) {
-    Write-Host "Unity Hub 목록에서 에디터 버전을 찾지 못했습니다: $resolvedPath" -ForegroundColor Red
+    Write-Host "Unity Hub 목록과 ProjectVersion.txt에서 에디터 버전을 찾지 못했습니다: $resolvedPath" -ForegroundColor Red
     exit 1
 }
 
-$editorPath = Join-Path $editorRoot (Join-Path $version 'Editor\Unity.exe')
-if (-not (Test-Path -LiteralPath $editorPath)) {
-    Write-Host "에디터가 설치돼 있지 않습니다: $editorPath" -ForegroundColor Red
+$editorPath = $project.editorPath
+if ([string]::IsNullOrWhiteSpace($editorPath)) {
+    Write-Host "버전 찾음: $version ($($project.versionSource))" -ForegroundColor Yellow
+    Write-Host "에디터가 설치돼 있지 않습니다: $($project.editorCandidates -join ', ')" -ForegroundColor Red
     exit 1
 }
 
-Start-Process -FilePath $editorPath -ArgumentList @('-projectPath', $resolvedPath)
+Start-Process -FilePath $editorPath -ArgumentList @('-projectPath', "`"$resolvedPath`"")
 Write-Host "실행: $resolvedPath (Unity $version)" -ForegroundColor Green
 Write-Host "MCP는 에디터 로드 후 자동 연결됩니다."
 exit 0

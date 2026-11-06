@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 
 const WORKSPACE_ROOT = path.resolve(__dirname, '..', '..');
-const HUB_PROJECTS = path.join(process.env.APPDATA || '', 'UnityHub', 'projects-v1.json');
+const { readHub } = require('../../tools/unity-hub.js');
 const LOCAL_PATHS = path.join(WORKSPACE_ROOT, 'LocalPaths.json');
 const SESSION_PROJECT_DIR = path.join(WORKSPACE_ROOT, '.claude', 'session-project');
 const OPEN_PROJECT_SCRIPT = path.join(WORKSPACE_ROOT, 'OpenUnityProject.ps1');
@@ -80,19 +80,17 @@ function pruneOldMarkers() {
 
 // Hub 목록을 최근 수정순으로 뽑고, 워크스페이스 등록 여부/미완료 요약을 붙인다.
 function collectRows() {
-    const hub = readJson(HUB_PROJECTS);
-    if (hub === null || hub.data === undefined)
-        return null;
+    const hub = readHub();
 
     const localPaths = readJson(LOCAL_PATHS);
     const registered = (localPaths && localPaths.projects) ? localPaths.projects : {};
 
     const registeredPaths = new Set();
     for (const name of Object.keys(registered)) {
-        registeredPaths.add(path.resolve(registered[name]).toLowerCase());
+        if (typeof registered[name] === 'string') registeredPaths.add(path.resolve(registered[name]).toLowerCase());
     }
 
-    return Object.values(hub.data)
+    return hub.projects
         .filter((entry) => entry && entry.path)
         .sort((left, right) => (right.lastModified || 0) - (left.lastModified || 0))
         .slice(0, MAX_ROWS)
@@ -150,7 +148,7 @@ function buildContext(sessionId, rows) {
     lines.push('');
 
     if (rows === null || rows.length <= 0) {
-        lines.push(`(프로젝트가 없습니다. — Unity Hub 목록 없음 또는 등록 프로젝트 0개: ${HUB_PROJECTS})`);
+        lines.push('(프로젝트가 없습니다. — Unity Hub JSON/SQLite 목록 없음 또는 등록 프로젝트 0개)');
         if (process.env.ORCA_CHAT_SCRATCH_DIR)
             lines.push('목록이 비어 있다. 사용자가 /시작 또는 /Start를 보내면 "프로젝트가 없습니다."라고 알리고 경로를 묻는다.');
         else

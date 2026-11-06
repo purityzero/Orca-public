@@ -50,6 +50,7 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 
 - 작업 중에 프로젝트를 바꿀 때도 `/시작`을 다시 보낸다.
 - Unity MCP는 세션이 시작될 때만 붙는다. Play Mode 검증이 필요하면 **에디터를 먼저 켜고 새 채팅을 연다.**
+- Hub 프로젝트 목록은 공용 `tools/unity-hub.js`가 일반 설치판의 `projects-v1.json`과 스토어판의 `hub.db`를 읽는다. SQLite 조회에는 `node:sqlite`를 지원하는 Node가 필요하다. 자세한 데이터·에디터 경로는 `UnityLauncher.MD` §2를 참고한다.
 - 명령 정의는 `.claude/commands/시작.md`, 채팅에서 훅이 보이는 방식은 [Orca CLI 런북](runbook/orca-cli.md) 「Orca 채팅에서 훅이 보이는 방식」을 참고한다.
 
 ### 새 세션에서 이어서 작업할 때

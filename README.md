@@ -5,7 +5,7 @@
 **작성일:** 2026-08-22
 
 > **2026-11-05 정리:** 기존 프로젝트(GeometryDefender, HouseRulez, SplashRush)의 기록 문서를 모두 삭제하고 새 Unity 프로젝트를 준비 중이다. 이 저장소 문서에 날짜와 함께 나오는 이전 프로젝트 이름은 당시 실측 근거로 남겨둔 것이고, 지금은 `Unity\` 아래에 없다.
-**GitHub:** https://github.com/purityzero/Orca (private) — 여러 PC에서 이 폴더를 clone해서 같은 상태로 이어 쓸 수 있다.
+**GitHub:** https://github.com/purityzero/Orca (private, 원격 `origin`) — 여러 PC에서 이 폴더를 clone해서 같은 상태로 이어 쓸 수 있다. 공개 미러는 https://github.com/purityzero/Orca-public (원격 `public`)이고, main을 push할 때 함께 올린다.
 
 ### 경로 표기 규칙 — 공용 경로는 토큰으로 쓴다
 
@@ -94,7 +94,7 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 │                                    (frontmatter의 paths가 Assets/Scripts 전용이라 여기선 발동 안 함)
 │
 ├── runbook\                     ← 주제별 운용 절차 (진입점: runbook/README.md)
-├── .claude\                     ← settings·hooks·UNFINISHED.md
+├── .claude\                     ← settings·hooks·commands(`/시작`)·UNFINISHED.md
 ├── tools\                       ← 검사·자동화 도구
 ├── .local\                      ← PC·세션 로컬 기록 (git 제외)
 │
@@ -149,6 +149,7 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 5. **검증 전 변경은 기본 브랜치에 올리지 않는다** — Unity 프로젝트의 동작을 바꾸는 수정은 `work/{날짜}-{주제}` 브랜치에서 하고, Play Mode 확인까지 끝난 뒤 `--no-ff`로 합류한다. (`WorkBranchFlow.MD`)
 6. **프로젝트 고유 기록은 프로젝트 문서에만 남긴다** — 공용 문서에는 일반화한 규칙만 적는다. `runbook/feedback.md`의 "피드백 반영 프로세스" 참고.
 7. **Codex는 후속 처리 전용이 아니다** — 저장소 전체 분석·자동화·테스트·리팩터링·문서 정합성은 처음부터 Codex에 배정한다. Unity 에디터 전용 검증과 프로젝트별 Claude 노하우는 필요할 때 명시적으로 핸드오프한다. (`CODEX.md` 참고)
+   - **저장소 Git 일(commit·merge·push)은 Codex 메인 세션, 즉 Orca의 Codex 터미널 탭이 한다.** Claude가 `codex exec`로 대신 넘기면 `.claude/hooks/codex-exec-git-guard.js`가 막는다. (`runbook/codex-handoff.md` 「금지」)
 8. 모델·effort는 `CODEX.md` §2에서 고른다.
 
 ---

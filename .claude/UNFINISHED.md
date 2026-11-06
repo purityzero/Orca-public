@@ -2,7 +2,7 @@
 
 ## 2026-09-04 — env-check 훅(SessionStart) 실물 검증
 
-**브랜치**: `work/2026-09-04-env-check-hook` (main엔 아직 미병합 — 지금 워킹트리가 이 브랜치로 체크아웃돼 있음. 다른 브랜치로 옮기면 훅 파일 자체가 사라지니 검증 전엔 유지할 것)
+**브랜치**: `work/2026-11-06-hook-chat-display`(커밋 e39f35a, main 미병합·미push)
 **관련 파일**: `.claude/hooks/env-check.js`(신규), `.claude/settings.json`(SessionStart 세 번째 훅으로 등록), `CLAUDE.md`("세션 시작 시 환경 체크" 절)
 
 **지금까지 확인한 것**: 훅을 직접 호출(stdin에 JSON 파이핑)해서 출력 포맷·타이밍(~1.8초)·JSON 유효성만 봤다.
@@ -113,3 +113,19 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 
 - **MCP 멀티 인스턴스 (a)/(b) 미확정** — Unity 에디터를 켠 상태에서 이 세션에 MCP for Unity 도구를 붙여 `mcpforunity://instances`를 한 번 읽으면 닫을 수 있다. `ParallelWorkContract.MD` §2 참고.
 - **Orca 바탕화면 바로가기가 실제로 `OrcaStart.cmd`를 가리키는지 미확인.**
+
+## 2026-11-06 — 훅 채팅 표시 복구 (커밋 e39f35a, 실물 확인됨 · main 병합 대기)
+
+**작업**: pinniped 채팅 작업 폴더와 함께 사라진 훅 수정 2건(빈 목록 문구·환경 체크 확장) 복구 + 문구 "프로젝트가 없습니다." + 채팅 모드에서 프로젝트가 있을 때도 첫 응답에 목록 표시.
+**담당**: Codex 작업자 `ctx_13967127d7db` 완료 — 파이프 검증 통과, Claude가 출력 재확인
+**브랜치**: `work/2026-11-06-hook-chat-display`(커밋 e39f35a, main 미병합·미push)
+**파일**: `.claude/hooks/session-start-project-picker.js`, `.claude/hooks/env-check.js`, `runbook/orca-cli.md`(Claude 추가분)
+**확인됨**: 2026-11-06 12:0x 새 세션 시작 때 세션 컨텍스트에 환경 체크 표와 "프로젝트가 없습니다." 안내가 들어왔고 첫 응답에 표시했다. 남은 것: Codex 메인의 main 병합·push.
+
+## 2026-11-06 — /시작 · /Start 커스텀 명령 (미커밋)
+
+**파일**: `.claude/commands/시작.md`, `.claude/commands/Start.md`(시작.md를 따르게 함)
+**브랜치**: `work/2026-11-06-hook-chat-display`(미커밋 — Codex 메인이 커밋)
+**동작**: 환경 체크·목록 훅을 다시 실행해 표·목록을 보여주고, 고른 프로젝트를 `OpenUnityProject.ps1`로 추가로 띄운 뒤(기존 에디터 유지) 세션 확정 기록을 덮어쓴다.
+**미검증**: Orca 채팅 입력창이 저장소 커스텀 명령을 인식하는지 — 명령 목록은 세션 시작 때 읽히므로 새 채팅에서 `/시작`을 보내 확인해야 한다. 이 PC는 Unity 에디터·Hub 목록이 없어 실제 에디터 실행은 확인 불가.
+**한계**: `OpenUnityProject.ps1`은 Hub 목록에서만 에디터 버전을 찾는다 — Hub에 없는 경로를 주면 실패한다(`ProjectSettings/ProjectVersion.txt` 대체 조회는 미구현, 스크립트 수정은 Codex 담당).

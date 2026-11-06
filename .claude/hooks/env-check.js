@@ -262,11 +262,9 @@ function main() {
     const output = { systemMessage: lines.join('\n') };
     const context = [];
 
-    // Orca 채팅은 훅의 systemMessage를 화면에 띄우지 않는다(2026-11-06 실측) — 세션이 첫 응답에서 대신 보여준다.
+    // Orca 채팅은 /시작 또는 /Start 명령으로 표를 요청할 때 보여준다.
     if (process.env.ORCA_CHAT_SCRATCH_DIR) {
-        context.push('[환경 체크 표 — 이 화면엔 자동 표시되지 않는다]');
-        context.push('첫 응답 맨 앞에 아래 표를 코드 블록으로 그대로 보여준다.');
-        context.push('```', ...lines, '```', '');
+        context.push('환경 체크 표는 사용자가 /시작 또는 /Start를 보내면 보여준다. 첫 응답에 자동으로 보여주지 않는다.');
     }
 
     if (actions.length > 0) {

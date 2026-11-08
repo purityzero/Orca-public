@@ -3,4 +3,4 @@ description: /시작과 같다 — 환경 체크 표와 Unity 프로젝트 목�
 argument-hint: "[번호 | 프로젝트 이름 | 프로젝트 절대경로]"
 ---
 
-`C:\AI\Orca\.claude\commands\시작.md`를 Read로 읽고 그 절차를 그대로 따른다. 인자: $ARGUMENTS
+저장소 루트(`git rev-parse --show-toplevel`)의 `.claude/commands/시작.md`를 Read로 읽고 그 절차를 그대로 따른다. 인자: $ARGUMENTS

@@ -128,3 +128,12 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 **확인됨**: 임시 JSON·SQLite/WAL fixture에서 picker·환경 표의 Hub 행·PowerShell 버전 조회 검증. Claude가 실제 `/시작`에서 「Unity Hub OK hub.db · 프로젝트 0개」와 "프로젝트가 없습니다." 확인. 실제 `OpenUnityProject.ps1`과 임시 프로젝트의 BOM 없음·있음+CRLF `ProjectVersion.txt`에서 버전 `6000.0.30f1` 조회 후 에디터 미설치 안내·종료 코드 1 확인.
 **남은 것**: 프로젝트가 실제 등록된 hub.db 실물 확인과 실제 에디터 실행. 현재 PC에는 등록 프로젝트·설치된 에디터가 없어 확인 불가.
 - **별도 미완료**: env-check 「Unity 에디터」 행이 스토어판 Hub를 "Hub 없음"으로 표시한다(`.claude/hooks/env-check.js:90`·`:113`). `hubInfo.json`의 실행 경로 존재 여부로 판정하는 보완이 필요하다.
+
+## 2026-11-09 — Orca 터미널 Claude CLI → 채팅 유도 훅 (사람의 UI 진입 확인 대기)
+
+**작업 브랜치**: `work/2026-11-09-orca-chat-default`에서 구현·검증 완료. 남은 UI 확인은 아래 재현으로 진행한다.
+**파일**: `.claude/hooks/orca-chat-default.js`·`orca-chat-session.js`·`orca-chat-processes.ps1`·`orca-chat-default.test.js`, `.claude/settings.json`, `runbook/session-environment.md`, `runbook/codex-handoff.md`.
+**확인됨**: 훅 테스트 17개와 기존 규칙·Git 가드 회귀 2개 통과. 실제 Orca PowerShell 탭의 `claude` 시작에서 채팅 1개 생성·화면 안내·additionalContext 전달(훅 1,763ms), 두 번째 CLI의 생성 억제, Claude 실행 셸의 `ORCA_SKIP_CHAT_REDIRECT=1`일 때 무출력(훅 217ms)을 확인했다. 이전 실측의 `claude -p`(`sdk-cli`)·채팅(`sdk-ts`) 무출력도 재사용했다. 설정 DB는 읽기 전용이며 `agentDefaultSurface=terminal`, `nativeChatProviders.claude=true` 그대로다.
+**남은 확인**: 사용자가 Orca UI에서 직접 여는 CLI와 에이전트가 `orca agent launch`로 여는 CLI의 환경·부모 비교. 이번 실물 검증은 에이전트가 만든 Orca 터미널에서 수행했으므로 사람의 클릭을 재현했다고 판정하지 않는다. 정확한 Chat | CLI 메뉴 경로도 미확정이다.
+**알려진 한계**: Orca 데몬 경유 launch는 호출한 Claude/Codex 조상이 없고, 호출자 셸에만 준 skip도 자식에게 전달되지 않았다. 확실히 제외하려면 실제 Claude 실행 셸에 skip을 설정한다. 자동 판별할 구분 변수는 확정하지 못했다. 표시 범위는 PC·체크아웃당 1회이며, Windows 이외 환경·판정 불가는 조용히 제외한다.
+**다음 확인**: 시험 표시를 지운 상태에서 사용자가 새 CLI를 한 번 열어 채팅 생성·첫 안내를 확인하고, 두 번째 시작에서 새 채팅이 생기지 않는지 확인한다. 의도적으로 CLI를 유지하려면 skip을 설정한다. 기본값 변경은 승인된 방침대로 UI 안내만 하며 DB를 쓰지 않는다.

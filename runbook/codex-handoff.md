@@ -1,6 +1,6 @@
 # Runbook — Codex 인계
 
-마지막 적용: 2026-11-05
+마지막 적용: 2026-11-09
 
 ## Claude Code가 Codex를 직접 호출하는 경우 (2026-08-30 확인)
 
@@ -122,6 +122,37 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
   사용자에게 알려 위 방식으로 진행한다.
 
 ## 인계할 때 꼭 넣을 것
+
+### 에이전트가 Claude CLI를 실행할 때
+
+이 워크스페이스는 사람이 Orca 터미널에서 Claude CLI를 시작하면 채팅으로 안내한다.
+에이전트가 검증·자동화를 위해 CLI를 실행할 때는 **그 Claude 프로세스가 상속할 환경**에 `ORCA_SKIP_CHAT_REDIRECT=1`을 넣는다.
+`-p`/SDK와 Claude·Codex 조상도 자동 제외하지만, 명시적 변수는 그 판정의 보조 수단이다.
+
+```bash
+ORCA_SKIP_CHAT_REDIRECT=1 claude -p "<검증 프롬프트>"
+```
+
+PowerShell에서는 원래 값을 보존하고 끝나면 복구한다.
+
+```powershell
+$previousChatRedirect = $env:ORCA_SKIP_CHAT_REDIRECT
+try {
+    $env:ORCA_SKIP_CHAT_REDIRECT = '1'
+    claude -p '<검증 프롬프트>'
+} finally {
+    $env:ORCA_SKIP_CHAT_REDIRECT = $previousChatRedirect
+}
+```
+
+`orca agent launch --agent claude --surface terminal`은 Orca 데몬이 새 프로세스를 띄우므로 호출자 환경·조상이 그대로 전달되지 않는다.
+이 CLI에는 임의 환경 변수를 지정하는 launch 옵션이 없어, **호출자에게만 skip을 붙인 launch를 확실한 제외 방법으로 쓰지 않는다.**
+대화형 검증에 skip이 필요하면 빈 Orca PowerShell 터미널을 만들고, 그 터미널 안에서
+`$env:ORCA_SKIP_CHAT_REDIRECT='1'`을 설정한 다음 `claude`를 실행한다.
+이 방식으로 만든 시험 탭은 검증 후 닫는다. 자동 생성된 채팅도 시험 탭인지 확인하고 정리한다.
+상세 조건·표시 위치·한계는 [세션 환경 런북](session-environment.md#orca-터미널-claude-cli--채팅-안내)을 참고한다.
+
+### 인계문 필수 정보
 
 1. **프로젝트 절대경로** — Codex 터미널의 cwd가 워크스페이스 루트일 수 있다. 브리프 경로도 절대경로로.
 2. **소유 파일 경계** — "이 파일은 내가 소유 중이니 건드리지 마라"를 명시. 안 적으면 동시 수정으로 충돌한다.

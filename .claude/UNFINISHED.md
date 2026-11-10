@@ -127,7 +127,6 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 **파일**: `tools/unity-hub.js`, `tools/UnityHub.ps1`, `tools/unity-hub.test.js`, 목록 picker·env-check, `OpenUnityProject.ps1`, `SetupLocalPaths.ps1`, `UnityLauncher.ps1`
 **확인됨**: 임시 JSON·SQLite/WAL fixture에서 picker·환경 표의 Hub 행·PowerShell 버전 조회 검증. Claude가 실제 `/시작`에서 「Unity Hub OK hub.db · 프로젝트 0개」와 "프로젝트가 없습니다." 확인. 실제 `OpenUnityProject.ps1`과 임시 프로젝트의 BOM 없음·있음+CRLF `ProjectVersion.txt`에서 버전 `6000.0.30f1` 조회 후 에디터 미설치 안내·종료 코드 1 확인.
 **남은 것**: 프로젝트가 실제 등록된 hub.db 실물 확인과 실제 에디터 실행. 현재 PC에는 등록 프로젝트·설치된 에디터가 없어 확인 불가.
-- **별도 미완료**: env-check 「Unity 에디터」 행이 스토어판 Hub를 "Hub 없음"으로 표시한다(`.claude/hooks/env-check.js:90`·`:113`). `hubInfo.json`의 실행 경로 존재 여부로 판정하는 보완이 필요하다.
 
 ## 2026-11-09 — Orca 터미널 Claude CLI → 채팅 유도 훅 (사람의 UI 진입 확인 대기)
 

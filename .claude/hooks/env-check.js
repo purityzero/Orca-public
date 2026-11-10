@@ -14,7 +14,7 @@ const WORKSPACE_ROOT = path.resolve(__dirname, '..', '..');
 const SETTINGS_PATH = path.join(WORKSPACE_ROOT, '.claude', 'settings.json');
 const AGENTS_MASTER = path.join(WORKSPACE_ROOT, 'agents');
 const OPEN_PROJECT_SCRIPT = path.join(WORKSPACE_ROOT, 'OpenUnityProject.ps1');
-const { readHub } = require('../../tools/unity-hub.js');
+const { readHub, hubDirectories } = require('../../tools/unity-hub.js');
 const REQUIRED_HOOKS = ['session-agents.js', 'session-start-project-picker.js', 'user-prompt-project-guard.js'];
 
 const CODEX_INSTALL_HINT = 'npm install -g @openai/codex';
@@ -110,7 +110,18 @@ function checkUnityEditor() {
         }
     }
 
-    const hubNote = fs.existsSync(hubExe) ? 'Hub 있음' : 'Hub 없음';
+    // 스토어판 Hub는 WindowsApps에 설치되므로 Hub가 기록한 hubInfo.json의 실행 경로도 본다.
+    const hubExes = [hubExe];
+    for (const directory of hubDirectories()) {
+        try {
+            const info = JSON.parse(fs.readFileSync(path.join(directory, 'hubInfo.json'), 'utf8').replace(/^﻿/, ''));
+            if (typeof info.executablePath === 'string' && info.executablePath.length > 0)
+                hubExes.push(info.executablePath);
+        } catch (error) {
+            // Hub를 한 번도 실행하지 않았으면 파일이 없다.
+        }
+    }
+    const hubNote = hubExes.some((exe) => fs.existsSync(exe)) ? 'Hub 있음' : 'Hub 없음';
     if (versions.length > 0)
         return { label: 'Unity 에디터', level: 'ok', detail: `${versions.join(', ')} (${hubNote})` };
     return { label: 'Unity 에디터', level: 'missing', detail: `미설치 (${hubNote})` };

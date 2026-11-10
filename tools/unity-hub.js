@@ -95,7 +95,7 @@ function resolveProject(projectPath, hub = readHub()) {
     return { path: resolved, version, versionSource: hubVersion ? 'Unity Hub' : version ? 'ProjectVersion.txt' : '',
         editorPath: editorCandidates.find(filename => fs.existsSync(filename)) || '', editorCandidates };
 }
-module.exports = { readHub, resolveProject, projectVersion };
+module.exports = { readHub, resolveProject, projectVersion, hubDirectories };
 if (require.main === module) {
     const hub = readHub();
     process.stdout.write(JSON.stringify(process.argv[2] === '--resolve' && process.argv[3] ? resolveProject(process.argv[3], hub) : hub));

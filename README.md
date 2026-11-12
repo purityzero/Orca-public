@@ -66,7 +66,7 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 <ORCA>\
 ├── README.md                    ← 이 문서 (전체 사용법)
 ├── AGENTS.md                    ← Codex가 세션 시작·대상 확정 후 읽을 문서를 지정하는 진입 지침
-├── CLAUDE.md                    ← 행동 지침 (AGENT.MD 자동 import, Codex 필수 읽기는 AGENTS.md)
+├── CLAUDE.md                    ← 행동 지침 (AGENT.MD는 배정·위임 전에 읽음, Codex 필수 읽기는 AGENTS.md)
 ├── CODEX.md                     ← Codex가 우선 소유하는 작업과 완료 조건
 ├── CODE.MD                      ← C#/Unity 코딩 규칙 (네이밍, 스타일 등)
 ├── AGENT.MD                     ← Codex/Claude 실행자 선택 + Claude 서브에이전트 라우팅

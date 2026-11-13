@@ -19,7 +19,7 @@ effort: low
 4. **스펙이 불명확하거나 여러 갈래로 해석되면 임의로 결정하지 말고 멈춘다** — 그 판단은 code-architect(구조) 또는 사용자(기획 의도) 몫이다. "이렇게 하면 되겠지"로 추측 구현하지 않는다.
 5. 최소 침습 변경 원칙(`runbook/coding-principles.md`) — 스펙 밖의 인접 코드를 임의로 개선하지 않는다.
 6. 완료 후 `.claude/class/{클래스명}.md`에 전/후 기록(신규 클래스면 새로 생성).
-7. Unity MCP로 컴파일 확인(`refresh_unity` → `read_console`). 안 되면 "미검증"으로 명시.
+7. 컴파일·Play Mode 확인은 하지 않는다(Unity MCP 호출은 Codex 몫, `AGENT.MD` §실행자 선택). "구현 완료, Codex 검증 대기"로 보고한다.
 
 ## 하지 않는 것
 - 구조/아키텍처 판단(code-architect 몫).

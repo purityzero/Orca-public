@@ -113,7 +113,7 @@ Codex는 별도 실험 환경이 아니라 현재 Orca 작업 흐름 안에서 �
 3. `AGENT.MD`로 Codex 단독 수행, Codex 프로필 위임, Claude Code 단독 수행, 비교 실행, 순차 핸드오프 중 하나를 정한다.
 4. 수정 전에 브랜치, 소유 파일, 성공 조건, Unity 배타 자원 사용 여부를 확정한다.
 5. Codex 소유 작업은 분석에서 멈추지 않고 구현·검증·관련 문서 갱신까지 수행한다.
-6. Unity 에디터 전용 확인(Play Mode QA)이 남으면 변경 파일을 넘기지 않고 재현 절차와 검증 항목만 **구현하지 않은 쪽**에 전달한다 — Codex가 구현했으면 Claude Code QA, Claude Code가 구현했으면 Codex가 검증한다("구현한 주체가 자기 구현을 검증하지 않는다").
+6. Unity MCP(MCP for Unity)를 쓰는 컴파일·Play Mode QA는 Codex 검증 담당이 한다(절차서 `runbook/codex-qa-full.md`·`codex-qa-quick.md`). 구현자는 자기 구현의 Play Mode QA를 맡지 않는다 — Claude Code가 구현했으면 Codex가 검증하고, Codex가 구현했으면 구현에 참여하지 않은 Codex 검증 담당 또는 사람이 확인한다. Claude Code에는 코드 검수와 수정만 맡기며 QA를 넘기지 않는다. 별도 검증 담당을 확보하지 못하면 미검증으로 남긴다. (2026-11-13 사용자 확인: "Claude는 만드는 역할이고 QA를 하지 않는다, 코드 검수는 할 수 있다")
 7. Claude Code에서 넘겨받은 작업은 완료 결과를 Orca의 원래 Claude 터미널에 직접 반환한다. 사용자에게 복사용 문구만 주는 것으로 대신하지 않는다.
 8. 최종 채택은 에이전트 이름이 아니라 diff, 테스트, Play Mode 결과로 결정한다.
 

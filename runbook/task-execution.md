@@ -95,4 +95,4 @@ LLM이 코딩할 때 흔히 저지르는 실수를 줄이기 위한 행동 지�
 
 ## 같이 읽어 드릴 파일
 
-자동 주입은 CLAUDE.md의 AGENT.MD import만 유지한다. C# 수정 전에는 CODE.MD와 runbook/coding-principles.md를 Read로 읽는다.
+자동 주입하는 문서는 없다. AGENT.MD는 작업을 Codex·서브에이전트에 배정·위임하기 전에 읽는다(2026-11-12 문맥 감량으로 CLAUDE.md의 import 제거). C# 수정 전에는 CODE.MD와 runbook/coding-principles.md를 Read로 읽는다.

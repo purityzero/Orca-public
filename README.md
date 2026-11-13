@@ -88,7 +88,7 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 ├── WorkBranch.ps1               ← 브랜치 시작/병합 스크립트 본체
 ├── WorkBranch.cmd               ← 브랜치 스크립트 진입점
 │
-├── agents\                      ← 정의 10개, 역할·모델은 AGENT.MD
+├── agents\                      ← 정의 8개(QA는 Codex 절차서 runbook\codex-qa-*.md), 역할·모델은 AGENT.MD
 │
 ├── rules\
 │   └── glory.md                 ← Glory 공용 라이브러리 사용 지침, **마스터 보관용**

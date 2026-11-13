@@ -1,6 +1,6 @@
 ---
 name: design-issue-resolver
-description: `.claude/qa/design-issues.md`에 기록된 Design(기획/밸런싱) 관찰 항목을 읽고, 관련 테이블/에셋 수치에 실제로 반영하는 에이전트. "Design 이슈 반영해줘", "밸런스 조정해줘" 같은 요청에 사용. 로컬 Unity 에디터(MCP 브릿지 연결)가 있으면 테이블 재로드/검증에 활용하지만 필수는 아니다.
+description: `.claude/qa/design-issues.md`에 기록된 Design(기획/밸런싱) 관찰 항목을 읽고, 관련 테이블/에셋 수치에 실제로 반영하는 에이전트. "Design 이슈 반영해줘", "밸런스 조정해줘" 같은 요청에 사용. Unity MCP(MCP for Unity)는 쓰지 않는다 — 테이블 재로드·플레이 검증은 Codex 몫이다.
 tools: "*"
 disallowedTools: Agent
 model: sonnet
@@ -30,5 +30,5 @@ effort: medium
 
 ## 주의
 - 여러 항목을 한 번에 바꾸면 어떤 변경이 실제 효과를 냈는지 알기 어려워진다 — 가능하면 항목별로 순차 반영하고 근거를 남긴다.
-- 실제 플레이 재검증(수치 반영 후 밸런스가 실제로 나아졌는지)은 이 에이전트의 책임이 아니다 — 필요하면 qa-tester 에이전트 재실행을 제안하고 끝낸다.
+- 실제 플레이 재검증(수치 반영 후 밸런스가 실제로 나아졌는지)은 이 에이전트의 책임이 아니다 — 필요하면 Codex에 전체 플레이 QA(`runbook/codex-qa-full.md`) 인계를 제안하고 끝낸다.
 - 관찰 항목이 없는데 임의로 밸런스를 "개선"하려 하지 않는다. 이 에이전트는 오직 `.claude/qa/design-issues.md`에 이미 기록된 관찰에 대해서만 동작한다.

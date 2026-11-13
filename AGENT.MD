@@ -47,12 +47,11 @@ Codex 호출·Unity 접근·인계·직접 반환 전에 `runbook/codex-handoff.
 | 컨텐츠 | — | `code-writer` | sonnet | low | 설계가 끝난 스펙을 그대로 구현 |
 | 분량 | 큰 범위 | `client-bugfixer` | sonnet | medium | 여러 파일/이슈에 걸친 진단된 버그 수정 |
 | 분량 | 작은 범위 | `quick-fix` | haiku | low | 원인이 명확한 단일 파일 국소 수정 |
-| QA | 큰 범위 | `qa-tester` | opus | high | 여러 시스템 걸친 전체 플레이+영상분석+판단 |
-| QA | 작은 범위 | `qa-quick-check` | sonnet | medium | 이미 고친 버그/특정 시나리오 하나만 재확인 |
 | 마무리 리뷰 | — | `code-reviewer-committer` | sonnet | medium | 여러 에이전트 산출물의 참조 정합성·규칙을 검토하고 Codex에 커밋 가능 여부를 인계(이름은 호환용, 직접 커밋 금지) |
 
+- **QA는 이 표에 없다 — Codex가 한다.** Claude는 만들고 코드 검수(읽기·규칙·정합성)까지 한다. MCP for Unity를 쓰는 컴파일·Play Mode QA는 Codex에 인계하고, 브리프에 절차서를 넣는다: 전체 플레이 `runbook/codex-qa-full.md`, 고친 것 재확인 `runbook/codex-qa-quick.md`. (2026-11-13 사용자 확인으로 `qa-tester`·`qa-quick-check` 서브에이전트를 이 절차서로 전환)
 - `effort`는 에이전트 정의에 고정되어 호출 시점에 못 바꾼다(`model`은 호출 시 오버라이드 가능) — 그래서 축마다 별도 에이전트 파일로 나눠뒀다.
-- 애매한 경우(둘 이상 축에 걸침) 더 무거운 쪽(설계 > QA-큰 > 분량-큰 > QA-작은 > 컨텐츠 > 분량-작은) 기준으로 판단.
+- 애매한 경우(둘 이상 축에 걸침) 더 무거운 쪽(설계 > 분량-큰 > 컨텐츠 > 분량-작은) 기준으로 판단.
 - `code-reviewer-committer`는 다른 축과 배타가 아니라 **뒤에 붙는다** — 구현 계열 에이전트를 돌린 뒤 Codex의 Git 마무리 직전에 태운다. 이름은 기존 호출 호환을 위해 유지하지만 commit·merge·push는 하지 않고 참조 정합성·규칙 검토 결과를 Codex에 넘긴다.
 
 ## Design 버킷 에이전트의 model/effort (라우팅 기준은 별도, 여기선 값만)
@@ -61,9 +60,9 @@ Codex 호출·Unity 접근·인계·직접 반환 전에 `runbook/codex-handoff.
 | `design-planner` | opus | high |
 | `design-issue-resolver` | sonnet | medium |
 
-## 위 9개 에이전트(Client 7 + Design 2) 공통 규칙
+## 위 7개 에이전트(Client 5 + Design 2) 공통 규칙
 - **자체 재위임 금지 — 구조적으로 강제**: 전부 `disallowedTools: Agent`가 걸려 있어 Agent 툴 자체가 없다. 스스로 다른 서브에이전트를 호출할 수 없고, 위임 순서는 감독(메인 세션)만 결정한다.
-- **QA 계열엔 `maxTurns` 안전장치**: `qa-tester`는 80, `qa-quick-check`는 45 — Play Mode 포커스/프레임 문제 등으로 반복 재시도에 빠졌을 때 무한정 턴을 소모하지 않도록 상한을 둔다. 나머지 에이전트는 보통 스스로 끝나는 작업이라 아직 안 걸어뒀다.
+- **Unity MCP를 부르지 않는다**: 컴파일·Play Mode 확인은 Codex 몫이므로 결과는 "Codex 검증 대기"로 보고한다. (QA 서브에이전트 시절의 재시도 상한 80·45턴은 Codex QA 절차서로 옮겼다)
 - **설계→구현 핸드오프**: `code-architect`가 구현까지 안 가고 설계안만 낸 경우, 그 설계안은 `.claude/architecture/{주제}.md`에 저장한다 — `code-writer`는 매번 새 컨텍스트로 뜨는 서브에이전트라 대화 내용을 못 보므로, 이어서 구현을 맡길 땐 반드시 이 파일 경로를 함께 전달한다. (`.claude/design/`은 design-planner의 기획 스펙 전용이라 혼용하지 않는다.)
 
 서브에이전트 완료 알림을 보내거나 목록 누락을 복구하기 전에 `runbook/subagents.md`를 읽는다.

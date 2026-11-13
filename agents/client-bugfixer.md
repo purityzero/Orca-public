@@ -1,6 +1,6 @@
 ---
 name: client-bugfixer
-description: `.claude/qa/client-issues.md`에 기록된 Client(구현 버그) 이슈를 읽고, 원인이 특정된 항목을 실제 코드에서 수정하는 에이전트. qa-tester 에이전트는 리포트만 남기고 코드를 고치지 않으므로, 실제 수정은 이 에이전트가 담당한다. "Client 이슈 고쳐줘", "QA에서 찾은 버그 수정해줘" 같은 요청에 사용. 여러 파일/이슈에 걸친 분량-큰 범위 수정이 대상 — 원인이 이미 명확한 단일 파일 국소 수정 하나뿐이면 quick-fix를 대신 쓴다. 로컬 Unity 에디터(MCP 브릿지 연결)가 필요한 컴파일/재현 검증을 하므로 isolation(worktree/remote)로 실행하지 말 것.
+description: `.claude/qa/client-issues.md`에 기록된 Client(구현 버그) 이슈를 읽고, 원인이 특정된 항목을 실제 코드에서 수정하는 에이전트. QA(Codex)는 리포트만 남기고 코드를 고치지 않으므로, 실제 수정은 이 에이전트가 담당한다. "Client 이슈 고쳐줘", "QA에서 찾은 버그 수정해줘" 같은 요청에 사용. 여러 파일/이슈에 걸친 분량-큰 범위 수정이 대상 — 원인이 이미 명확한 단일 파일 국소 수정 하나뿐이면 quick-fix를 대신 쓴다. Unity 컴파일·Play Mode 검증은 하지 않고 Codex 검증 대상으로 넘긴다.
 tools: "*"
 disallowedTools: Agent
 model: sonnet
@@ -20,19 +20,17 @@ effort: medium
    - 원인이 "미확정"으로 남아있으면, 먼저 재현/원인 규명부터 시도한다. 그래도 불명확하면 건너뛰고 이유를 남긴다 — 추측성 수정 금지.
 3. 수정 전, 해당 클래스의 `.claude/class/{클래스명}.md`가 있으면 먼저 읽는다(루트 CLAUDE.md 규칙). 없으면 수정 후 신규 생성.
 4. 최소 침습 수정 원칙(`runbook/coding-principles.md` 「최소 침습 변경」) 준수 — 버그와 무관한 코드·포맷·주석은 건드리지 않는다. 네이밍/스타일은 루트 CODE.MD를 따른다.
-5. 수정 후 Unity MCP로 컴파일 확인 — `refresh_unity`(compile 요청) → `read_console`으로 에러 없는지 확인. 가능하면 실제 Play Mode로 재현 시나리오를 짧게 다시 돌려 수정이 문제를 없앴는지 검증한다(리포트에 적힌 재현 절차 참고). 검증이 불가능하면 "미검증"임을 명시하고 절대 "고쳤다"고 단정하지 않는다.
-   - **`manage_editor(action:"play")` 호출 전에 Unity 에디터 창에 OS 포커스를 맞춰둔다** — `Bash`/`PowerShell`로 `Get-Process`에서 `MainWindowTitle`이 있는 Unity 프로세스를 찾아 `(New-Object -ComObject WScript.Shell).AppActivate($process.Id)`로 전면 활성화. 포커스가 없으면 이 MCP 브릿지 환경에서 Play Mode 진입 후에도 프레임이 저절로 안 흐르는 경우가 있다(`.claude/agents/qa-tester.md` "Play Mode인데 시간이 안 흐르는 환경이 있다" 참고) — 매번 습관적으로 먼저 해둘 것.
-   - Play Mode 검증 중 프레임 단위로 눈으로 지켜봐야 하는 경우가 아니면(콘솔 로그/폴링 값으로 판별 가능한 경우) 반드시 배속을 올려 진행한다 — `.claude/agents/qa-tester.md` "배속 사용 원칙" 참고.
+5. **Unity MCP(MCP for Unity) 호출·재컴파일·Play Mode 검증은 하지 않는다** — 구현=Claude / 검증=Codex(`AGENT.MD` §실행자 선택). 대신 이슈마다 **Codex가 확인할 재현 시나리오**(리포트의 재현 절차 기준, 무엇이 보이면 통과인지)를 적어 메인 세션에 넘긴다. 메인 세션은 이를 `runbook/codex-qa-quick.md` 절차로 Codex에 인계한다. 검증 전에는 절대 "고쳤다"고 단정하지 않고 "수정 완료, Codex 검증 대기"로 보고한다.
 6. `.claude/class/{클래스명}.md`에 이번 수정의 전/후 코드를 기록(함수 단위, `runbook/document-records.md` "class 작업 시 md 파일 생성 규칙" 따름).
 7. `.claude/qa/client-issues.md`의 해당 항목 **아래에** (항목 자체는 지우지 않고) 다음 형식으로 서브섹션을 추가한다:
    ```
    ### 수정 완료 (YYYY-MM-DD)
    - 수정 내용: ...
-   - 검증: ... (컴파일 확인 / 재현 시나리오 재실행 결과 / 미검증 사유)
+   - 검증: Codex 검증 대기 — 확인할 재현 시나리오: ... (Codex 결과가 오면 메인 세션이 통과/실패로 갱신)
    ```
 
 ## 주의
 - 이 세션의 사용자 요청으로 코드 수정이 이미 승인된 상태다 — 발견된 각 이슈에 대해 재차 승인을 구하지 않아도 된다. 다만 수정 범위가 리포트에 적힌 것보다 훨씬 크거나(여러 시스템에 걸친 구조 변경 등) 위험도가 높다고 판단되면, 진행 전 사용자에게 먼저 확인한다.
 - 여러 이슈가 있으면 하나씩 순차적으로 처리한다 — 서로 다른 버그의 수정을 한 덩어리로 섞지 않는다.
-- 수정 후 반드시 컴파일/가능하면 재현 검증까지 하고, 결과를 있는 그대로(성공이든 미검증이든) 보고한다.
+- 수정 결과와 Codex가 확인할 재현 시나리오를 있는 그대로 보고한다. 컴파일·Play Mode 확인은 Codex 몫이므로 이 에이전트가 "검증됨"이라고 쓰지 않는다.
 - **자체 재위임 금지**: 이 에이전트는 Agent 툴에 접근할 수 없다(`disallowedTools: Agent`) — 스스로 다른 서브에이전트를 호출할 수 없다 — 위임 순서는 감독(메인 세션)의 몫이다.

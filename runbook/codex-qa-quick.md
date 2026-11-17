@@ -4,7 +4,7 @@
 
 - **누가 쓰나**: Codex. Claude가 버그를 고친 뒤 "고쳐졌는지 확인"이 필요하면 Codex 인계 브리프에 이 파일 경로와 확인할 항목 목록을 넣는다(`runbook/codex-handoff.md`).
 - **언제**: 이미 수정한 버그(하나 또는 여러 개 묶음)가 해소됐는지, 특정 시나리오가 정상 동작하는지. `client-bugfixer`·`quick-fix`가 여러 건을 고친 뒤에도 한 Play Mode 세션 안에서 전부 훑는다 — 항목 수만큼 Play Mode를 반복 진입하지 않는다. 여러 시스템에 걸친 전체 플레이나 밸런스 판단은 `runbook/codex-qa-full.md`.
-- **도구**: MCP for Unity(Codex 설정의 `unityMCP`). 로컬 Unity 에디터가 필요하므로 워크트리·원격에서 실행하지 않는다.
+- **도구**: Unity 공식 CLI(`unity` + 프로젝트의 `com.unity.pipeline`). MCP for Unity는 2026-11-17에 걷어냈다. CLI 명령, **판정 정확도 규칙(기대값 직접 작성·프레임 스탬프·증거 대조·조작별 로그 구간)**, 아래 본문에 남은 옛 MCP 도구 이름의 CLI 대응은 `runbook/codex-qa-unity-cli.md`. 로컬 Unity 에디터가 필요하므로 워크트리·원격에서 실행하지 않는다.
 - **재시도 상한**: 서브에이전트 시절엔 설정(`maxTurns: 45`)으로 강제됐지만 지금은 문서 규칙이다. 같은 실패가 2~3회 반복되면 멈추고 원인을 해석하고, 도구 호출이 약 45회에 이르면 그때까지의 항목별 결과와 막힌 지점을 "QA 미완료"로 반환한다.
 - **시작 전 컴파일**: `runbook/codex-qa-full.md` 머리말의 「시작 전 컴파일」과 같다 — 반영 → 컴파일 완료 대기 → 최신 오류 0건 확인, 확인 못 하면 "QA 미확인"으로 반환.
 
@@ -12,7 +12,7 @@
 
 ## 절차
 
-1. MCP for Unity 도구가 이 Codex 세션에 연결돼 있는지 확인 — 안 잡히면 중단하고 보고(`Window → MCP for Unity` 연결 상태 확인 필요, 에디터를 켠 뒤 세션을 새로 열어야 할 가능성).
+1. 에디터 연결을 확인한다 — `unity status --project-path <경로>`가 ready인지. 안 되면 중단하고 보고. 기대값은 구현자 목록을 그대로 쓰지 않고 `runbook/codex-qa-unity-cli.md` §3-1대로 직접 세운다.
 2. 확인할 항목 목록을 정리한다 — 여러 건이면(예: client-bugfixer가 방금 배치로 고친 이슈 목록) 전부 나열해두고, 이후 **Play Mode를 한 번만 진입**해서 순서대로 확인한다.
 3. **Play Mode 진입 전 Unity 에디터 창에 OS 포커스를 맞춘다** — `Get-Process`에서 Unity 프로세스를 찾아 `AppActivate`로 전면 활성화(`runbook/codex-qa-full.md` 2절 "주의" 참고). 포커스 없으면 Play Mode 진입 후에도 프레임이 안 흐를 수 있다.
 4. Play Mode 진입 → `Time.frameCount`가 실제로 증가하는지 확인(멈춰 있으면 `EditorApplication.Step()`으로 수동 진행).

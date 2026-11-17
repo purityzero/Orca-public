@@ -13,7 +13,7 @@
 ```
 런처 실행 → Hub 등록 프로젝트 목록 표시 → 번호 선택
          → 해당 프로젝트 버전의 Unity.exe -projectPath 로 실행
-         → (에디터 로드 후) MCP for Unity 자동 연결
+         → CLI와 Pipeline 준비 후 대상 프로젝트 지정
 ```
 
 **Unity Hub는 실행하지 않아도 된다.** 공용 `tools/unity-hub.js`가 JSON 또는 SQLite에 저장된 목록을 읽고, 실행은 `Unity.exe`를 직접 호출한다. Hub가 실행 중이면 SQLite의 WAL에 반영된 목록도 읽기 전용 연결로 조회한다.
@@ -146,7 +146,9 @@ $text = [IO.File]::ReadAllText($p, [Text.Encoding]::UTF8)
 
 ---
 
-## 6. 마지막 조각 — MCP 자동 연결
+## 6. 과거 MCP 자동 연결 기록 (2026-11-17 폐기)
+
+현행 조작은 Unity 공식 CLI와 Pipeline을 사용한다(`runbook/codex-qa-unity-cli.md`). 아래는 MCP 시절 실측 기록이며 현재 절차가 아니다.
 
 런처는 Unity를 띄우는 데까지다. MCP 연결은 **MCP for Unity 패키지의 설정**이 담당한다.
 
@@ -172,7 +174,7 @@ $text = [IO.File]::ReadAllText($p, [Text.Encoding]::UTF8)
 
 ```
 [바로가기 클릭]
-  → Unity 프로젝트 선택 → 해당 버전 에디터 실행 → MCP 자동 연결
+  → Unity 프로젝트 선택 → 해당 버전 에디터 실행
   → Orca 실행
 ```
 
@@ -194,7 +196,7 @@ chcp 65001 >nul
 title Orca 시작 시퀀스
 
 rem Orca 기본 작동 시퀀스
-rem   1. Unity 프로젝트 선택 -> 해당 버전 에디터로 실행 (MCP 자동 연결)
+rem   1. Unity 프로젝트 선택 -> 해당 버전 에디터로 실행
 rem   2. Orca 실행
 rem Orca 자체에는 앱 시작 훅이 없으므로, 이 래퍼가 그 역할을 한다.
 
@@ -226,7 +228,7 @@ exit /b 0
 ## 8. 알려진 제약 / 나중에 붙일 것
 
 - **선택한 프로젝트가 Orca에 자동 등록되지는 않는다.** 현재 `orca repo add --path <경로> --kind git|folder`는 git 저장소와 일반 폴더를 등록할 수 있지만, 런처의 자동 등록은 구현하지 않았다. 필요해지면 런처 뒤에 한 줄 붙이면 된다.
-- **여러 프로젝트 동시 실행 시 MCP 포트 충돌 가능성.** 클라이언트 설정의 URL이 고정값(`http://127.0.0.1:8080/mcp`)이라, 두 번째 프로젝트가 다른 포트로 뜨면 클라이언트가 못 찾는다. 멀티 인스턴스 지원 여부는 `mcpforunity://instances` 리소스로 확인 필요(미검증).
+- **과거 MCP 시절 기록(2026-11-17 폐기): 여러 프로젝트 동시 실행 시 MCP 포트 충돌 가능성.** 클라이언트 설정의 URL이 고정값(`http://127.0.0.1:8080/mcp`)이라, 두 번째 프로젝트가 다른 포트로 뜨면 클라이언트가 못 찾는다. 멀티 인스턴스 지원 여부는 `mcpforunity://instances` 리소스로 확인 필요(미검증).
 - 목록은 **실행 시점에 매번 새로 읽으므로** Hub에서 프로젝트를 추가/삭제해도 자동 반영된다.
 - **`AutoStartOnLoad`를 스크립트로 자동 세팅하려는 시도는 Hot Reload가 켜진 프로젝트에서 조용히 실패한다(2026-08-21 확인).** `[InitializeOnLoad]` 정적 생성자로 `EditorPrefs.SetBool("MCPForUnity.AutoStartOnLoad", true)`를 실행시키는 임시 스크립트를 `Assets/Editor/`에 넣고 에디터 포커스를 강제로 줘서 컴파일까지는 성공시켰으나(로그에 `new=1, changed=1` 확인), Unity 6의 **Hot Reload**(`Scripting: domain reloads=0 ... Hotreload: 14.966ms`)가 켜져 있으면 **완전한 도메인 리로드 자체가 스킵**되어 새로 추가된 타입의 `[InitializeOnLoad]` cctor가 전혀 실행되지 않는다 — 컴파일 에러도 없고 어떤 로그도 안 남아서 겉보기엔 "성공"처럼 보이지만 레지스트리엔 반영되지 않는다(재확인 완료, 키 자체가 안 생김).
-  - **대응**: 이 값은 한 번만 켜면 전역(레지스트리 공유) 적용되므로, 자동화보다 **`MCP for Unity 창 → Advanced → Auto-Start Server on Editor Load`를 수동으로 한 번 켜는 쪽이 안전하고 확실**하다. 정말 자동화가 필요하면 Play 모드 진입/종료나 스크립팅 정의 심볼 변경처럼 강제 도메인 리로드를 유발하는 조치가 필요한데, 이는 현재 작업 중인 씬 상태에 영향을 줄 수 있어 사용자 동의 없이는 시도하지 않는다.
+  - **당시 대응(폐기)**: 이 값은 한 번만 켜면 전역(레지스트리 공유) 적용되므로, 자동화보다 **`MCP for Unity 창 → Advanced → Auto-Start Server on Editor Load`를 수동으로 한 번 켜는 쪽이 안전하고 확실**하다. 정말 자동화가 필요하면 Play 모드 진입/종료나 스크립팅 정의 심볼 변경처럼 강제 도메인 리로드를 유발하는 조치가 필요한데, 이는 현재 작업 중인 씬 상태에 영향을 줄 수 있어 사용자 동의 없이는 시도하지 않는다.

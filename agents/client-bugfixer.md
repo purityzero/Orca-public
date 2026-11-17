@@ -20,7 +20,7 @@ effort: medium
    - 원인이 "미확정"으로 남아있으면, 먼저 재현/원인 규명부터 시도한다. 그래도 불명확하면 건너뛰고 이유를 남긴다 — 추측성 수정 금지.
 3. 수정 전, 해당 클래스의 `.claude/class/{클래스명}.md`가 있으면 먼저 읽는다(루트 CLAUDE.md 규칙). 없으면 수정 후 신규 생성.
 4. 최소 침습 수정 원칙(`runbook/coding-principles.md` 「최소 침습 변경」) 준수 — 버그와 무관한 코드·포맷·주석은 건드리지 않는다. 네이밍/스타일은 루트 CODE.MD를 따른다.
-5. **Unity MCP(MCP for Unity) 호출·재컴파일·Play Mode 검증은 하지 않는다** — 구현=Claude / 검증=Codex(`AGENT.MD` §실행자 선택). 대신 이슈마다 **Codex가 확인할 재현 시나리오**(리포트의 재현 절차 기준, 무엇이 보이면 통과인지)를 적어 메인 세션에 넘긴다. 메인 세션은 이를 `runbook/codex-qa-quick.md` 절차로 Codex에 인계한다. 검증 전에는 절대 "고쳤다"고 단정하지 않고 "수정 완료, Codex 검증 대기"로 보고한다.
+5. **Unity 에디터 조작·재컴파일·Play Mode 검증은 하지 않는다** — 구현=Claude / 검증=Codex(`AGENT.MD` §실행자 선택). 대신 이슈마다 **Codex가 확인할 재현 시나리오**(리포트의 재현 절차 기준, 무엇이 보이면 통과인지)를 적어 메인 세션에 넘긴다. 메인 세션은 이를 `runbook/codex-qa-quick.md` 절차로 Codex에 인계한다. 검증 전에는 절대 "고쳤다"고 단정하지 않고 "수정 완료, Codex 검증 대기"로 보고한다.
 6. `.claude/class/{클래스명}.md`에 이번 수정의 전/후 코드를 기록(함수 단위, `runbook/document-records.md` "class 작업 시 md 파일 생성 규칙" 따름).
 7. `.claude/qa/client-issues.md`의 해당 항목 **아래에** (항목 자체는 지우지 않고) 다음 형식으로 서브섹션을 추가한다:
    ```

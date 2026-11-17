@@ -46,5 +46,5 @@ if ([string]::IsNullOrWhiteSpace($editorPath)) {
 
 Start-Process -FilePath $editorPath -ArgumentList @('-projectPath', "`"$resolvedPath`"")
 Write-Host "실행: $resolvedPath (Unity $version)" -ForegroundColor Green
-Write-Host "MCP는 에디터 로드 후 자동 연결됩니다."
+Write-Host "Unity CLI 준비와 대상 지정은 runbook/codex-qa-unity-cli.md를 참고하세요."
 exit 0

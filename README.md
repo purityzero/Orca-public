@@ -35,7 +35,7 @@ clone 위치도, Unity 프로젝트 위치도 PC마다 다르다. 그래서 공�
 
 ### 평소 실행 순서
 1. 바탕화면 바로가기(또는 `OrcaStart.cmd` 직접 실행) 클릭
-2. Unity 프로젝트 번호 선택 → 해당 버전 에디터 자동 실행 → MCP for Unity 자동 연결(전역 설정 켜둠)
+2. Unity 프로젝트 번호 선택 → 해당 버전 에디터 자동 실행
 3. Orca 앱이 뒤이어 자동으로 뜸 (Unity 로딩과 병렬)
 
 상세 메커니즘은 `UnityLauncher.MD` 참고.
@@ -49,7 +49,7 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 4. 고른 프로젝트의 에디터가 `OpenUnityProject.ps1`로 열리고(이미 열린 다른 에디터는 유지), 세션 작업 대상이 `.claude/session-project/{세션ID}.json`에 기록된다.
 
 - 작업 중에 프로젝트를 바꿀 때도 `/시작`을 다시 보낸다.
-- Unity MCP는 세션이 시작될 때만 붙는다. Play Mode 검증이 필요하면 **에디터를 먼저 켜고 새 채팅을 연다.**
+- Play Mode 검증은 Unity 공식 CLI와 프로젝트의 Pipeline으로 한다. 대상 지정과 준비는 `runbook/codex-qa-unity-cli.md`를 따른다.
 - Hub 프로젝트 목록은 공용 `tools/unity-hub.js`가 일반 설치판의 `projects-v1.json`과 스토어판의 `hub.db`를 읽는다. SQLite 조회에는 `node:sqlite`를 지원하는 Node가 필요하다. 자세한 데이터·에디터 경로는 `UnityLauncher.MD` §2를 참고한다.
 - 명령 정의는 `.claude/commands/시작.md`, 채팅에서 훅이 보이는 방식은 [Orca CLI 런북](runbook/orca-cli.md) 「Orca 채팅에서 훅이 보이는 방식」을 참고한다.
 
@@ -145,8 +145,8 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 
 1. **정본 위치가 종류별로 다르다** — 코딩 규칙은 루트 1부, 에이전트 정의는 `agents\`가 마스터(단 실제 실행엔 프로젝트 로컬 사본이 필요), 프로젝트 문서는 `Unity\{P}\.claude\`가 정본이고 `<원본:{P}>\.claude\`는 그 시점 스냅샷. (`Unity\README.md` 참고)
 2. **에이전트를 실행하기 전엔 이름에 프로젝트명을 붙인다** — `{ProjectName}_{ClassName}_class` 형식. 여러 프로젝트가 같은 "Glory" 라이브러리를 쓰면 클래스명이 겹치기 때문. 스폰 전 `ListAgents`로 같은 이름이 이미 실행 중이면 대기한다. (`ParallelWorkContract.MD` §11)
-3. **Unity 에디터·MCP 브릿지는 공유 자원, 한 번에 하나만** — Play Mode 검증이나 프리팹 편집은 병렬 불가. 코드/문서 편집만 병렬 가능. (`ParallelWorkContract.MD` §2)
-4. **MCP for Unity 전역 자동연결은 과거 PC 실측이다** — 당시 PC에서 `MCPForUnity.AutoStartOnLoad`가 레지스트리(모든 프로젝트 공유)에 `true`였고, 런처로 연 프로젝트에서 자동으로 서버가 떴다. 새 PC의 설정은 별도로 확인한다. (`UnityLauncher.MD` §6)
+3. **Unity 에디터와 CLI 조작은 공유 자원, 한 번에 하나만** — Play Mode 검증이나 프리팹 편집은 병렬 불가. 코드/문서 편집만 병렬 가능. (`ParallelWorkContract.MD` §2)
+4. **Unity 공식 CLI와 Pipeline으로 에디터를 조작한다** — 대상 프로젝트를 명시한다. MCP for Unity 자동연결은 2026-11-17 폐기된 과거 기록이다. (`UnityLauncher.MD` §6)
 5. **검증 전 변경은 기본 브랜치에 올리지 않는다** — Unity 프로젝트의 동작을 바꾸는 수정은 `work/{날짜}-{주제}` 브랜치에서 하고, Play Mode 확인까지 끝난 뒤 `--no-ff`로 합류한다. (`WorkBranchFlow.MD`)
 6. **프로젝트 고유 기록은 프로젝트 문서에만 남긴다** — 공용 문서에는 일반화한 규칙만 적는다. `runbook/feedback.md`의 "피드백 반영 프로세스" 참고.
 7. **Codex는 후속 처리 전용이 아니다** — 저장소 전체 분석·자동화·테스트·리팩터링·문서 정합성은 처음부터 Codex에 배정한다. Unity 에디터 전용 검증과 프로젝트별 Claude 노하우는 필요할 때 명시적으로 핸드오프한다. (`CODEX.md` 참고)

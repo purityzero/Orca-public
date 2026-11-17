@@ -172,24 +172,19 @@ function checkUnityHub() {
         detail: hub.sources.length ? `${hub.sources.map(filename => path.basename(filename)).join(', ')} · 프로젝트 ${hub.projects.length}개${hub.errors.length ? ' (일부 읽기 실패)' : ''}` : 'JSON/SQLite 목록 못 읽음 (프로젝트 목록 비어 보일 수 있음)' };
 }
 
-// Unity MCP 브릿지가 살아 있는지. **세션이 열리는 이 순간**이 중요하다 —
-// MCP는 세션 시작 때 한 번만 연결을 시도하고, 뒤늦게 브릿지가 살아나도 재연결하지 않는다.
-// 그래서 Unity가 꺼진 채 세션을 열면 그 세션에서는 Play Mode 검증을 아예 못 한다.
-// (2026-09-11~12에 Claude 세션과 Codex 세션이 연달아 이 상태로 열려 QA가 세 번 막혔다)
-function checkUnityBridge() {
-    // 포트가 열려 있는지만 본다. 실제 MCP 핸드셰이크는 클라이언트가 하고,
-    // 여기서 무거운 요청을 보내면 세션 시작이 그만큼 늦어진다.
-    const probe = run(`powershell -NoProfile -Command "(Test-NetConnection -ComputerName 127.0.0.1 -Port 8080 -InformationLevel Quiet)"`);
-    const alive = (probe.ok === true && /true/i.test(probe.out) === true);
-
-    if (alive === true)
-        return { label: 'Unity MCP', level: 'ok', detail: '브릿지 응답 (8080)' };
+// Unity 공식 CLI가 설치돼 있는지. Play Mode QA는 CLI(`unity` + 프로젝트의 com.unity.pipeline)로 한다.
+// CLI는 명령을 부를 때 실행 중인 에디터에 붙으므로 세션 시작 순서와 무관하다 — 그래서 에디터 상태는 보지 않는다.
+// (2026-11-17 MCP for Unity를 걷어내고 CLI로 전환. 근거 runbook/codex-qa-unity-cli.md)
+function checkUnityCli() {
+    const probe = run('unity --version');
+    if (probe.ok === true && probe.out.trim() !== '')
+        return { label: 'Unity CLI', level: 'ok', detail: probe.out.trim().slice(0, 40) };
 
     return {
-        label: 'Unity MCP',
+        label: 'Unity CLI',
         level: 'warn',
-        detail: '브릿지 없음 — 이 세션에서는 Play Mode 검증 불가',
-        action: 'Unity MCP 브릿지(127.0.0.1:8080)가 응답하지 않는다. **MCP는 세션 시작 때 한 번만 붙으므로 지금 에디터를 켜도 이 세션에는 안 붙는다.** 사용자에게 이 사실을 알리고, Play Mode 검증이 필요한 작업이면 Unity를 먼저 켠 뒤 세션을 새로 열어야 한다고 알려라(Codex 세션도 같은 제약을 받는다). 검증이 필요 없는 작업이면 그대로 진행한다.'
+        detail: '설치 안 됨 — Play Mode QA 불가',
+        action: 'Unity 공식 CLI(`unity`)가 없다. Play Mode QA가 필요한 작업이면 사용자에게 알리고 설치 여부를 묻는다(`winget install --id Unity.CLI --exact`). 임의로 설치하지 않는다. QA가 필요 없는 작업이면 그대로 진행한다.'
     };
 }
 
@@ -256,7 +251,7 @@ function main() {
         checkHooks(),
         checkAgents(),
         checkUnityHub(),
-        checkUnityBridge(),
+        checkUnityCli(),
         checkRepo()
     ];
 

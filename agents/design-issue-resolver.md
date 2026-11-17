@@ -1,6 +1,6 @@
 ---
 name: design-issue-resolver
-description: `.claude/qa/design-issues.md`에 기록된 Design(기획/밸런싱) 관찰 항목을 읽고, 관련 테이블/에셋 수치에 실제로 반영하는 에이전트. "Design 이슈 반영해줘", "밸런스 조정해줘" 같은 요청에 사용. Unity MCP(MCP for Unity)는 쓰지 않는다 — 테이블 재로드·플레이 검증은 Codex 몫이다.
+description: `.claude/qa/design-issues.md`에 기록된 Design(기획/밸런싱) 관찰 항목을 읽고, 관련 테이블/에셋 수치에 실제로 반영하는 에이전트. "Design 이슈 반영해줘", "밸런스 조정해줘" 같은 요청에 사용. Unity 에디터는 조작하지 않는다 — 테이블 재로드·플레이 검증은 Codex 몫이다.
 tools: "*"
 disallowedTools: Agent
 model: sonnet

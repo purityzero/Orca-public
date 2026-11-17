@@ -17,7 +17,7 @@ effort: low
 2. 지시받은 범위만 정확히 고친다 — 최소 침습 변경 원칙(`runbook/coding-principles.md`), 인접 코드/포맷/주석은 건드리지 않는다.
 3. 코드 규칙(Orca 루트 `CODE.MD`)을 따른다.
 4. 수정 중 지시 내용이 모호하거나(어느 줄을 말하는지 특정이 안 됨), 생각보다 범위가 커지면(여러 파일에 파급) — 임의로 확장하지 말고 멈추고 그대로 보고한다. 이 에이전트는 확장 판단을 하지 않는다.
-5. 컴파일·Play Mode 확인은 하지 않는다(Unity MCP 호출은 Codex 몫, `AGENT.MD` §실행자 선택). "수정 완료, Codex 검증 대기"로 보고한다.
+5. 컴파일·Play Mode 확인은 하지 않는다(에디터 조작은 Codex 몫, `AGENT.MD` §실행자 선택). "수정 완료, Codex 검증 대기"로 보고한다.
 6. **이 수정이 `.claude/qa/client-issues.md`(또는 `design-issues.md`)의 특정 항목에서 나온 것이면**, 그 항목 아래에 client-bugfixer와 동일한 형식으로 서브섹션을 추가한다(항목 자체는 지우지 않음):
    ```
    ### 수정 완료 (YYYY-MM-DD)

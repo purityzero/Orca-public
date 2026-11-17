@@ -75,7 +75,7 @@ Assets/Scripts/Glory/ 는 공용 라이브러리다. **새 유틸/패턴을 만�
 - **제네릭 타입 매개변수로는 그 타입의 static 멤버(`TSource.Current`)에 직접 접근 불가**(C# 컴파일 에러 CS0704) — `TSource.Current`가 필요하면 구체 타입을 아는 코드에서 직접 접근할 것.
 
 ## 직렬화 필드 리네임 시 주의 (전 영역 공통)
-MonoBehaviour의 `[SerializeField]` 필드 이름을 바꾸면, 씬/프리팹에 이미 저장된 참조는 새 이름과 매칭이 안 돼 **에러 없이 조용히 null로 떨어진다**(런타임에야 NRE로 터짐 — 컴파일 타임엔 안 잡힘). 특히 여러 클래스에 흩어져 있던 필드를 공용 베이스 클래스로 옮기면서 이름까지 통일할 때 자주 발생(2026-07-22, KillCountText/TowerHealthText를 ObservableIntText로 합치면서 실제로 겪음). 필드를 리네임/이동할 땐 `[FormerlySerializedAs("옛이름")]`(`UnityEngine.Serialization`)을 붙여 기존 씬 데이터를 그대로 살릴 것 — 여러 옛 이름이 하나의 새 필드로 합쳐지는 경우 이 attribute를 여러 번 스택해도 된다. 코드만 보고 "리팩토링 끝났다"고 판단하지 말고, 실제로 씬을 열어(또는 MCP로 컴포넌트 속성 조회) 참조가 여전히 연결돼 있는지 확인할 것.
+MonoBehaviour의 `[SerializeField]` 필드 이름을 바꾸면, 씬/프리팹에 이미 저장된 참조는 새 이름과 매칭이 안 돼 **에러 없이 조용히 null로 떨어진다**(런타임에야 NRE로 터짐 — 컴파일 타임엔 안 잡힘). 특히 여러 클래스에 흩어져 있던 필드를 공용 베이스 클래스로 옮기면서 이름까지 통일할 때 자주 발생(2026-07-22, KillCountText/TowerHealthText를 ObservableIntText로 합치면서 실제로 겪음). 필드를 리네임/이동할 땐 `[FormerlySerializedAs("옛이름")]`(`UnityEngine.Serialization`)을 붙여 기존 씬 데이터를 그대로 살릴 것 — 여러 옛 이름이 하나의 새 필드로 합쳐지는 경우 이 attribute를 여러 번 스택해도 된다. 코드만 보고 "리팩토링 끝났다"고 판단하지 말고, 실제로 씬을 열어(또는 CLI의 `script eval`로 컴포넌트 속성 조회) 참조가 여전히 연결돼 있는지 확인할 것.
 
 ## 씬 전환 (Scene/SceneManager)
 - `SceneManager.instance.NextScene(name)`: 페이드아웃 → additive 로드 → 이전 씬 언로드 → DontDestroy 정리 → 메모리 정리 → 페이드인. 전환 중 여부는 `IsSceneTransitioning`.

@@ -37,7 +37,7 @@
 Codex 역할·프로필·완료 조건은 `CODEX.md`를 따른다.
 - `CODEX.md`에 정의된 저장소 전체 분석·자동화·테스트·리팩터링·문서 정합성 작업은 Codex의 우선 소유 영역이다. 해당 작업을 Claude Code에만 고정하지 않는다.
 - Codex와 협업하거나 비교 실행할 때는 `AGENT.MD`의 실행자 선택과 `ParallelWorkContract.MD`의 파일 소유권·평가 계약을 따른다.
-- Codex가 이미 소유한 파일을 동시에 수정하지 않는다. Unity MCP·Play Mode는 Codex가 맡고, 배타 자원 검증 결과는 파일 변경과 분리해 전달한다.
+- Codex가 이미 소유한 파일을 동시에 수정하지 않는다. Unity 에디터 조작·Play Mode는 Codex가 맡고, 배타 자원 검증 결과는 파일 변경과 분리해 전달한다.
 - Codex가 끝까지 수행 가능한 작업은 구현·검증까지 소유하며, 검증되지 않은 우열을 고정하지 않고 실측 결과로 배정을 갱신한다.
 - 최종 stage·commit·merge·push와 병합 완료 브랜치 삭제는 Codex 메인 세션이 담당한다. Claude Code와 그 서브에이전트는 변경 파일, 검증 결과, 남은 위험을 보고하고 Git 마무리를 요청한다.
 
@@ -58,7 +58,7 @@ Codex 역할·프로필·완료 조건은 `CODEX.md`를 따른다.
 - 세션에서 처음 호출되면 `.claude/UNFINISHED.md`를 확인해 남은 작업을 첫 응답에서 알린다. 끝내면 그 항목을 제거한다.
 - **워크스페이스 루트 세션**은 SessionStart 훅이 번호 매긴 Unity Hub 목록을 세션이 열리는 즉시 화면에 출력한다.
   같은 목록을 응답에서 다시 나열하지 않는다. 사용자가 고르기 전에 임의로 고르지 않는다. 고른 직후 두 가지를 한다 —
-  ① `OpenUnityProject.ps1 -ProjectPath "<절대경로>"`로 에디터 실행(MCP는 에디터 로드 후 자동 연결)
+  ① `OpenUnityProject.ps1 -ProjectPath "<절대경로>"`로 에디터 실행(CLI와 Pipeline 준비는 `runbook/codex-qa-unity-cli.md`)
   ② `.claude/session-project/{세션ID}.json`에 확정 기록(안 적으면 UserPromptSubmit 가드가 매 턴 미확정 알림을 띄운다).
 - **검증 못 한 작업이 생기는 그 시점에** 날짜·남은 작업·검증 항목·관련 파일·브랜치를 UNFINISHED에 적는다.
   특히 **커밋을 하나 만들 때마다** 그게 검증된 것인지 판단하고, 아니면 그 자리에서 반영한다.

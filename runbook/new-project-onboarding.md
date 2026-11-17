@@ -13,8 +13,8 @@
   - [ ] `unity doctor`로 CLI/PATH/에디터 설치 환경 확인
   - [ ] `unity status`와 `unity pipeline list`로 실행 중인 에디터 및 Pipeline 서버 연결 확인 ← 갈림길, 안 붙으면 에디터 재시작 후 재확인하고 그래도 실패하면 EditMode 테스트 + CI 사본 경로로 우회
   - [ ] 위 검증 2개를 `CliCommand`로 노출 (2026-08-28 첫 실측 완료, 신규 프로젝트마다 별도 구현 필요)
-- [ ] **4. MCP 브릿지**
-  - [ ] `mcpforunity://instances`로 멀티 인스턴스 지원 여부 확정 (`ParallelWorkContract.MD` §2)
+- [ ] **4. Unity CLI와 Pipeline**
+  - [ ] `runbook/codex-qa-unity-cli.md`에 따라 CLI·Pipeline 준비 및 대상 프로젝트 지정 확인
   - [ ] 단일 인스턴스뿐이면 "한 번에 Unity 하나" 규칙을 문서·훅에 명시
 - [ ] **5. Orca 설정**
   - [ ] `orca repo add --path <프로젝트 경로>`

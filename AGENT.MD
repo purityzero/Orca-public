@@ -9,7 +9,7 @@ Orca의 작업을 Codex 또는 Claude Code 서브에이전트에 배정하는 �
 | 저장소 전체 분석, 대규모 리팩터링, 마이그레이션 | **Codex** | 여러 파일의 흐름을 추적하고 구현·테스트·문서를 한 작업으로 닫아야 함 |
 | CLI, PowerShell, 자동화, 검사기, 테스트 기반 수정 | **Codex** | 수동 규칙을 재현 가능한 명령과 종료 코드로 바꾸는 작업 |
 | 문서-코드 정합성, 중복 규칙, 오래된 참조 감사 | **Codex** | 저장소 전역 검색과 실제 파일 수정이 함께 필요 |
-| Unity MCP 호출 전반 — 씬·프리팹 **편집**, 리임포트·재컴파일 | **Codex** | 2026-09-10 방침. `--approve-for-me`로 조작 도구가 통과한다(§Codex의 Unity 접근) |
+| Unity 에디터 조작 전반(공식 CLI `unity`) — 씬·프리팹 **편집**, 리임포트 | **Codex** | 2026-09-10 방침. 2026-11-17 MCP for Unity를 걷어내고 CLI로 전환(`runbook/codex-qa-unity-cli.md`). 구현자의 컴파일 오류 확인은 예외(아래 방침) |
 | Play Mode **검증·QA** | **Codex** | **구현한 주체가 자기 구현을 검증하지 않는다.** 구현=Claude Code / 검증=Codex로 가른다 |
 | 프로젝트 전용 기획·밸런스 | `design-planner` / `design-issue-resolver` | 기존 에이전트 정의의 절차와 누적 노하우 사용 |
 | 사용자가 실행자를 지정 | **사용자 지정 우선** | 다른 기준보다 우선 |
@@ -20,11 +20,12 @@ Orca의 작업을 Codex 또는 Claude Code 서브에이전트에 배정하는 �
 
 Codex로 배정한 뒤에는 `CODEX.md` §2의 프로필로 model/effort를 고른다. 기본 대응은 복잡한 설계·감사=`gpt-5.6-sol/high`, 일반 구현·문서=`gpt-5.6-terra/medium`, 명확한 국소 수정=`gpt-5.6-luna/low`다. 서브에이전트가 필요 없는 단일 흐름은 Codex 메인 세션이 직접 끝낸다.
 
-### ★ 방침 — Unity MCP를 부르는 작업은 Codex가 맡는다 (2026-09-10 사용자 지시)
+### ★ 방침 — Unity 에디터를 조작하는 작업은 Codex가 맡는다 (2026-09-10 사용자 지시, 2026-11-17 CLI 전환)
 
 | 작업 | 담당 |
 |---|---|
-| **씬·프리팹 편집, Play Mode, 리임포트·재컴파일** (Unity MCP 호출 전반) | **Codex** |
+| **씬·프리팹 편집, Play Mode, 리임포트** (Unity CLI로 에디터를 조작하는 일 전반) | **Codex** |
+| 자기 변경의 **컴파일 오류 확인**(`unity recompile`·`script recompile_status`) | **구현자(Claude Code)도 가능** — 2026-11-17 사용자 결정. Play Mode·화면 판정·QA 통과 선언은 안 한다(`runbook/codex-qa-unity-cli.md` §4) |
 | `.cs` · CSV · md 파일 편집 | **Claude Code** |
 | Git 마무리(stage·commit·merge·push) | Codex **메인 세션** |
 
@@ -49,7 +50,7 @@ Codex 호출·Unity 접근·인계·직접 반환 전에 `runbook/codex-handoff.
 | 분량 | 작은 범위 | `quick-fix` | haiku | low | 원인이 명확한 단일 파일 국소 수정 |
 | 마무리 리뷰 | — | `code-reviewer-committer` | sonnet | medium | 여러 에이전트 산출물의 참조 정합성·규칙을 검토하고 Codex에 커밋 가능 여부를 인계(이름은 호환용, 직접 커밋 금지) |
 
-- **QA는 이 표에 없다 — Codex가 한다.** Claude는 만들고 코드 검수(읽기·규칙·정합성)까지 한다. MCP for Unity를 쓰는 컴파일·Play Mode QA는 Codex에 인계하고, 브리프에 절차서를 넣는다: 전체 플레이 `runbook/codex-qa-full.md`, 고친 것 재확인 `runbook/codex-qa-quick.md`. (2026-11-13 사용자 확인으로 `qa-tester`·`qa-quick-check` 서브에이전트를 이 절차서로 전환)
+- **QA는 이 표에 없다 — Codex가 한다.** Claude는 만들고 코드 검수(읽기·규칙·정합성)까지 한다. Unity CLI를 쓰는 Play Mode QA는 Codex에 인계하고, 브리프에 절차서를 넣는다: 전체 플레이 `runbook/codex-qa-full.md`, 고친 것 재확인 `runbook/codex-qa-quick.md`. (2026-11-13 사용자 확인으로 `qa-tester`·`qa-quick-check` 서브에이전트를 이 절차서로 전환)
 - `effort`는 에이전트 정의에 고정되어 호출 시점에 못 바꾼다(`model`은 호출 시 오버라이드 가능) — 그래서 축마다 별도 에이전트 파일로 나눠뒀다.
 - 애매한 경우(둘 이상 축에 걸침) 더 무거운 쪽(설계 > 분량-큰 > 컨텐츠 > 분량-작은) 기준으로 판단.
 - `code-reviewer-committer`는 다른 축과 배타가 아니라 **뒤에 붙는다** — 구현 계열 에이전트를 돌린 뒤 Codex의 Git 마무리 직전에 태운다. 이름은 기존 호출 호환을 위해 유지하지만 commit·merge·push는 하지 않고 참조 정합성·규칙 검토 결과를 Codex에 넘긴다.
@@ -62,7 +63,7 @@ Codex 호출·Unity 접근·인계·직접 반환 전에 `runbook/codex-handoff.
 
 ## 위 7개 에이전트(Client 5 + Design 2) 공통 규칙
 - **자체 재위임 금지 — 구조적으로 강제**: 전부 `disallowedTools: Agent`가 걸려 있어 Agent 툴 자체가 없다. 스스로 다른 서브에이전트를 호출할 수 없고, 위임 순서는 감독(메인 세션)만 결정한다.
-- **Unity MCP를 부르지 않는다**: 컴파일·Play Mode 확인은 Codex 몫이므로 결과는 "Codex 검증 대기"로 보고한다. (QA 서브에이전트 시절의 재시도 상한 80·45턴은 Codex QA 절차서로 옮겼다)
+- **Unity 에디터를 조작하지 않는다**: Play Mode 확인은 Codex 몫이므로 결과는 "Codex 검증 대기"로 보고한다. 컴파일 오류 확인만은 메인 세션이 할 수 있다(`runbook/codex-qa-unity-cli.md` §4). (QA 서브에이전트 시절의 재시도 상한 80·45턴은 Codex QA 절차서로 옮겼다)
 - **설계→구현 핸드오프**: `code-architect`가 구현까지 안 가고 설계안만 낸 경우, 그 설계안은 `.claude/architecture/{주제}.md`에 저장한다 — `code-writer`는 매번 새 컨텍스트로 뜨는 서브에이전트라 대화 내용을 못 보므로, 이어서 구현을 맡길 땐 반드시 이 파일 경로를 함께 전달한다. (`.claude/design/`은 design-planner의 기획 스펙 전용이라 혼용하지 않는다.)
 
 서브에이전트 완료 알림을 보내거나 목록 누락을 복구하기 전에 `runbook/subagents.md`를 읽는다.

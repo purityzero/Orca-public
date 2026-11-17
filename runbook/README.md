@@ -32,11 +32,12 @@
 | [new-project-onboarding.md](new-project-onboarding.md) | 신규 Unity 프로젝트를 편입할 때 (Day-1 체크리스트) |
 | [coding-principles.md](coding-principles.md) | C# 수정 전 CODE.MD와 함께 Read로 읽는다. UI·프리팹·동작 변경도 해당 절을 확인한다. |
 | [codex-handoff.md](codex-handoff.md) | Codex에 작업을 넘기거나 결과를 회수·직접 반환할 때 |
+| [codex-qa-unity-cli.md](codex-qa-unity-cli.md) | Play Mode QA를 Unity 공식 CLI로 하거나, QA 판정(기대값·화면 캡처·로그)을 믿기 전에 |
 | [subagents.md](subagents.md) | 서브에이전트 완료 알림·목록 누락 복구 전에 |
 | [unity-font.md](unity-font.md) | TMP 폰트·글리프·다국어 표시를 건드릴 때 |
-| [scene-prefab-edit.md](scene-prefab-edit.md) | 씬·프리팹 YAML이나 MCP로 구조를 바꿀 때 |
+| [scene-prefab-edit.md](scene-prefab-edit.md) | 씬·프리팹 YAML이나 CLI로 구조를 바꿀 때 |
 | [verification-scripts.md](verification-scripts.md) | 검사 도구를 만들거나 그 결과를 믿기 전에 |
-| [prefab-ui.md](prefab-ui.md) | UI 컴포넌트를 고르거나 프리팹을 만들 때 (표준 타입·MCP/YAML 선택·스크롤·풀링 레시피) |
+| [prefab-ui.md](prefab-ui.md) | UI 컴포넌트를 고르거나 프리팹을 만들 때 (표준 타입·CLI/YAML 선택·스크롤·풀링 레시피) |
 | [recurring-bugs.md](recurring-bugs.md) | 데이터 파일·CSV·로컬라이제이션 키·바이너리 자산을 건드리기 전에 |
 | [session-reset.md](session-reset.md) | 대화를 리셋(`/clear`·`/new`)하거나 다른 탭에 보낼 때, 작업 내역을 남길 때 |
 | [session-environment.md](session-environment.md) | 환경 점검 결과 처리 전에 읽는다. 사용자 조치 항목은 첫 응답에서 질문하고 임의 설치·pull은 하지 않는다. |

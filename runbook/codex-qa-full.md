@@ -4,22 +4,19 @@
 
 - **누가 쓰나**: Codex. Claude는 이 절차를 직접 실행하지 않고, Play Mode 확인이 필요하면 Codex 인계 브리프에 이 파일 경로를 넣는다(`runbook/codex-handoff.md`).
 - **언제**: 여러 시스템에 걸친 전체 플레이 검증, 눈으로 봐야 판단되는 변경(UI 애니메이션, 스폰/이동, 밸런스 등). 이미 고친 버그 하나만 빠르게 재확인하면 `runbook/codex-qa-quick.md`.
-- **도구**: MCP for Unity(로컬 `127.0.0.1:8080`, Codex 설정의 `unityMCP`). 로컬 Unity 에디터가 같은 머신에서 떠 있어야 하므로 워크트리·원격에서 실행하지 않는다.
+- **도구**: Unity 공식 CLI(`unity` + 프로젝트의 `com.unity.pipeline`). MCP for Unity는 2026-11-17에 걷어냈다. CLI 명령, **판정 정확도 규칙(기대값 직접 작성·프레임 스탬프·증거 대조·조작별 로그 구간)**, 아래 본문에 남은 옛 MCP 도구 이름의 CLI 대응(메뉴 실행은 `editor invoke_menu`)은 `runbook/codex-qa-unity-cli.md`. QARecorder 녹화가 필요한데 메뉴 실행이 안 되면 그 녹화 검증은 미확인으로 반환한다. 로컬 Unity 에디터가 같은 머신에서 떠 있어야 하므로 워크트리·원격에서 실행하지 않는다.
 - **재시도 상한**: 서브에이전트 시절엔 설정(`maxTurns: 80`)으로 강제됐지만 지금은 문서 규칙이다. 같은 실패가 2~3회 반복되면 멈추고 원인을 해석하고(`runbook/task-execution.md` 「반복 실패」), 이번 QA에서 도구 호출이 약 80회에 이르면 그 시점까지의 결과와 막힌 지점을 "QA 미완료"로 반환한다.
-- **시작 전 컴파일**: Claude 쪽은 컴파일을 확인하지 않고 넘긴다. Play Mode에 들어가기 전에 변경을 반영(리임포트·재컴파일 요청) → 컴파일 완료까지 대기 → 최신 콘솔에서 컴파일 오류 0건을 확인한다. 완료나 최신 결과를 확인하지 못하면 Play Mode로 넘어가지 말고 "QA 미확인(컴파일 미확인)"으로 반환한다. 여러 수정이 모였으면 컴파일은 한 번만 하고 항목별 확인을 이어 간다.
-- 아래 본문의 도구 이름은 서브에이전트 시절 그대로다. `manage_editor`·`execute_code`·`read_console`·`find_gameobjects` 등은 MCP for Unity 도구이므로 Codex에서도 같은 이름으로 쓴다.
+- **시작 전 컴파일**: 구현자도 자기 변경의 컴파일 오류를 확인할 수 있다. 검증자는 결과를 다시 확인한다. Play Mode에 들어가기 전에 변경을 반영(리임포트·재컴파일 요청) → 컴파일 완료까지 대기 → 최신 콘솔에서 컴파일 오류 0건을 확인한다. 완료나 최신 결과를 확인하지 못하면 Play Mode로 넘어가지 말고 "QA 미확인(컴파일 미확인)"으로 반환한다. 여러 수정이 모였으면 컴파일은 한 번만 하고 항목별 확인을 이어 간다.
+- 아래 본문의 옛 도구 이름은 `runbook/codex-qa-unity-cli.md` §2의 CLI 대응으로 읽는다.
 
-MCP for Unity → QARecorder(스크린샷 연속 캡처 + ffmpeg 스티칭) → 영상 확인 파이프라인으로 실제 플레이를 녹화해서 보고, 발견한 문제를 **Client**(구현 버그)와 **Design**(기획/밸런싱)으로 나눠 기록한다.
+Unity CLI → QARecorder(스크린샷 연속 캡처 + ffmpeg 스티칭) → 영상 확인 파이프라인으로 실제 플레이를 녹화해서 보고, 발견한 문제를 **Client**(구현 버그)와 **Design**(기획/밸런싱)으로 나눠 기록한다.
 
 ## 0. 시작 전 필수 확인 (건너뛰지 말 것)
 
-0. **Play Mode 진입/재진입마다 항상**: 먼저 Unity 에디터 창에 OS 포커스를 맞춘 뒤에 Play를 누른다(아래 2절 "주의" 참고). 포커스 없이 Play를 누르면 프레임이 안 흐르는 등 여러 문제의 원인 후보다.
+0. Play 진입 전 자동 틱을 설정하고 프레임 진행을 확인한다. 프레임이 멈추면 포커스를 시도한다(`runbook/codex-qa-unity-cli.md` §2).
 0-1. **게임플레이/진행도/저장 데이터가 관련된 QA는 시작 전 항상 유저 데이터를 초기화할지 판단한다** — 이전 세션의 잔여 상태(해금/재화/저장값 등)를 이어받은 채로 시작하면 회차 간 비교가 왜곡된다. 프로젝트에 세이브 초기화 수단(PlayerPrefs 키 삭제 등)이 있으면 그걸로 초기화 후 신규 유저 상태인지 확인한다. 진행도와 무관한 순수 UI/애니메이션 확인이면 이 단계는 생략해도 된다. 편법 치트(강제 해금 등)로 진행 상태를 조작하지 말 것 — 실제 플레이 경로로만 진행시킨다.
-1. MCP for Unity 도구(`unityMCP`)가 이 Codex 세션에 연결돼 있는지 확인 — 도구가 하나도 안 잡히면 **여기서 중단**하고 다음을 보고:
-   - Unity 에디터 메뉴 `Window → MCP for Unity`에서 연결 상태가 "Connected"인지 확인 필요
-   - 이 Codex 세션이 에디터를 켠 **뒤에** 시작됐는지 확인 필요 (MCP는 세션 시작 때만 붙는다)
-   - 이 확인 없이 "녹화했다"거나 "확인했다"고 보고하지 말 것 — 실제로 도구가 없으면 아무것도 실행되지 않는다.
-2. 도구가 보이면, 메뉴 아이템 실행 계열 도구(이름에 menu/editor/execute 등이 들어간 것)와 콘솔 로그 조회 계열 도구(console/log)를 찾아 **각각의 정확한 파라미터 스키마를 먼저 읽는다** — 이름을 추측해서 바로 호출하지 말 것.
+1. 에디터 연결을 확인한다 — `unity status --project-path <경로>`가 ready인지 본다(`runbook/codex-qa-unity-cli.md` §2). 안 되면 **여기서 중단**하고 원인(에디터 꺼짐, Pipeline 미설치·로딩 중, 컴파일 오류로 인한 안전 모드)을 보고한다. 확인 없이 "녹화했다"거나 "확인했다"고 보고하지 않는다.
+2. 쓸 명령의 정확한 인자를 `unity command <이름> --help`로 먼저 읽는다 — 이름·인자를 추측해서 바로 호출하지 말 것.
 3. `QA_Recordings/last_recording.json`이 이미 있는지 확인(이전 실행 잔재일 수 있음, 무시하고 진행해도 무방 — 이번 실행이 덮어씀).
 
 ## 1. 무엇을 테스트할지 정하기
@@ -34,21 +31,21 @@ MCP for Unity → QARecorder(스크린샷 연속 캡처 + ffmpeg 스티칭) → 
 **배속 조절에 인게임 치트/디버그 UI를 쓰지 말 것.** `execute_code`로 `Time.timeScale`을 직접 대입하거나 에디터 전용 배속 메뉴를 쓸 수 있으면 그쪽을 우선한다 — 인게임 UI를 열고 닫는 절차 자체가 관찰 구간에 불필요한 이벤트를 끼워 넣어 관찰을 왜곡할 수 있다(예: 그 UI가 열리는 동안 게임 로직을 자체적으로 멈추는 구조라면 더더욱).
 
 **주의 — Play Mode인데 시간이 안 흐르는 환경이 있다:**
-`manage_editor(action:"play")`가 성공을 반환해도, 이 MCP 브릿지 환경에서는 에디터에 실제 포커스/렌더링이 없어 **Play Mode의 프레임이 저절로 진행되지 않을 수 있다** (`Time.frameCount`가 수십 초 동안 그대로 멈춰있는 사례 확인됨). 이 상태에서 `sleep`으로만 기다리면 초기화도 안 되고 스폰도 안 되는데, 코드 버그처럼 보이는 거짓 양성(false negative)이 발생한다. 매 실행마다 아래를 따를 것:
-- **`manage_editor(action:"play")` 호출 전에 Unity 에디터 창에 OS 포커스를 맞춰둔다** — `Bash`/`PowerShell`로 `Get-Process`에서 `MainWindowTitle`이 있는 Unity 프로세스를 찾아 `(New-Object -ComObject WScript.Shell).AppActivate($process.Id)`로 전면 활성화. 포커스 없는 상태가 위 "프레임이 안 흐르는" 현상의 원인 후보로 지목되어 있으므로, 매번 습관적으로 먼저 해둘 것.
+`manage_editor(action:"play")`가 성공을 반환해도, 과거 MCP 환경에서는 에디터에 실제 포커스/렌더링이 없어 **Play Mode의 프레임이 저절로 진행되지 않을 수 있다** (`Time.frameCount`가 수십 초 동안 그대로 멈춰있는 사례 확인됨). 이 상태에서 `sleep`으로만 기다리면 초기화도 안 되고 스폰도 안 되는데, 코드 버그처럼 보이는 거짓 양성(false negative)이 발생한다. 매 실행마다 아래를 따를 것:
+- **프레임이 멈추면 Unity 에디터 창에 OS 포커스를 맞춘다** — `Bash`/`PowerShell`로 `Get-Process`에서 `MainWindowTitle`이 있는 Unity 프로세스를 찾아 `(New-Object -ComObject WScript.Shell).AppActivate($process.Id)`로 전면 활성화. 포커스 없는 상태가 위 "프레임이 안 흐르는" 현상의 원인 후보로 지목되어 있으므로, 매번 습관적으로 먼저 해둘 것.
 - Play Mode 진입 직후 `execute_code`로 `UnityEditor.EditorApplication.isPlaying`, `Time.frameCount`를 확인. 프레임이 몇 초 뒤에도 그대로면(같은 `sleep` 반복으로 확인) 자동 진행이 안 되는 환경이라는 뜻.
 - 이 경우 `execute_code`에서 `UnityEditor.EditorApplication.Step()`을 반복 호출해 프레임을 수동으로 밀어야 한다(1회 호출 = 1프레임, `deltaTime` 약 0.02초). 한 번의 `execute_code` 호출 안에서 bounded for문으로 여러 번 `Step()`을 부르면 된다(예: 2000회 = 게임 시간 약 40초). `sleep`은 이 환경에서 게임 시간 확보 수단으로 신뢰하지 말 것 — 반드시 `Time.time`/`Time.frameCount`로 실제 진행을 확인.
-- 씬 전환/화면 이동은 **반드시 실제 UI 클릭 경로**로 유발한다 — 버튼의 `OnClickXxx()`를 `execute_code`로 직접 호출하지 말 것(Edit Mode에서도 실행되어버려 "실제 플레이"를 검증한 게 아니게 된다). `find_gameobjects`(`by_component: Button`)로 버튼을 찾고, `UnityEngine.EventSystems.ExecuteEvents.Execute(buttonGameObject, pointerEventData, ExecuteEvents.pointerClickHandler)`로 실제 클릭 이벤트를 발생시킬 것.
+- 씬 전환/화면 이동은 검증에 필요한 입력 경로로 유발한다 — 버튼의 `OnClickXxx()`를 `execute_code`로 직접 호출하지 말 것(Edit Mode에서도 실행되어버려 "실제 플레이"를 검증한 게 아니게 된다). `find_gameobjects`(`by_component: Button`)로 버튼을 찾고, `UnityEngine.EventSystems.ExecuteEvents.Execute(buttonGameObject, pointerEventData, ExecuteEvents.pointerClickHandler)`로 핸들러 경로 이벤트를 발생시킬 수 있다. 물리 입력·히트 테스트 검증이 아니므로 그렇게 기록한다.
 
-1. Unity MCP로 Play Mode 진입 (발견한 도구 사용).
+1. CLI로 Play Mode 진입 (`unity command editor.playmode start`).
 2. Play Mode가 실제로 시작됐는지 확인 — `EditorApplication.isPlaying == true`이고, `Time.frameCount`가 이후 실제로 증가하는지까지 확인(위 주의 참고. isPlaying만 True인 걸로 안심하지 말 것).
    - Play 중 재컴파일 이력이 있는 에디터 세션에서는 텍스트/UI 초기화 관련 `NullReferenceException`이 핫 리로드 잔재로 반복될 수 있다 — 새 버그로 오인하기 전에 Stop 후 Play로 재진입해 깨끗한 세션에서 재확인한다. 재진입해도 같은 에러가 바로 또 나면 이번 세션 자체의 문제이니 사용자에게 보고.
 3. 메뉴 아이템 `Tools/QA/Start Recording` 실행 (`QARecorder.cs`, `Assets/Editor/QA/QARecorder.cs` 참고 — `EditorApplication.update`마다 `ScreenCapture.CaptureScreenshot`로 PNG만 저장하는 방식이라 Play Mode 실시간 재생 속도에 영향을 안 준다).
    - 대량 `Step()`을 한 번에 몰아 부르기보다는 소량씩 나눠 호출하며 진행 상황을 확인하는 습관을 유지할 것.
 4. 게임 시간을 진행시켜 플레이 구간을 확보한다. 확인하려는 이벤트/구간이 충분히 포함될 만큼 길게 잡을 것(예: 웨이브·페이즈 전환처럼 특정 시점 이후에만 보이는 요소가 있다면 그 시점을 넘겨야 함).
-   - 일시정지형 모달 팝업이 뜨는 구조의 게임이라면, 팝업을 방치하지 말고 즉시 선택/닫기 클릭으로 넘긴다. 이런 팝업은 대개 열려있는 동안 게임 로직 자체를 멈추는데, 팝업과 무관하게 계속 흐르는 값(예: `Time.time`)만 기준으로 대기하면 "그 시간 내내 로직이 멈춰있었다"는 걸 놓치고 관찰 대상이 실제보다 느리거나 안 움직이는 것처럼 보이는 거짓 양성이 생길 수 있다. 매 폴링 시점마다 이런 팝업이 열려 있는지 확인하고, 있으면 실제 클릭(`ExecuteEvents.pointerClickHandler`)으로 즉시 닫은 뒤 이어간다.
+   - 일시정지형 모달 팝업이 뜨는 구조의 게임이라면, 팝업을 방치하지 말고 즉시 선택/닫기 클릭으로 넘긴다. 이런 팝업은 대개 열려있는 동안 게임 로직 자체를 멈추는데, 팝업과 무관하게 계속 흐르는 값(예: `Time.time`)만 기준으로 대기하면 "그 시간 내내 로직이 멈춰있었다"는 걸 놓치고 관찰 대상이 실제보다 느리거나 안 움직이는 것처럼 보이는 거짓 양성이 생길 수 있다. 매 폴링 시점마다 이런 팝업이 열려 있는지 확인하고, 있으면 핸들러 경로 호출(`ExecuteEvents.pointerClickHandler`)으로 즉시 닫은 뒤 이어간다.
 5. 메뉴 아이템 `Tools/QA/Stop Recording` 실행 — 캡처된 PNG 시퀀스를 ffmpeg로 mp4 하나로 자동 스티칭한 뒤 PNG는 정리(삭제)된다.
-6. Unity MCP로 Play Mode 종료.
+6. CLI로 Play Mode 종료 (`unity command editor.playmode stop`).
 7. `Read` 또는 `Bash`로 `QA_Recordings/last_recording.json` 확인 — `status`가 `recording_stopped`이고 `path`가 `null`이 아니며 실제 존재하는 파일인지 검증(`Bash`의 `test -f` 등). 아직 `recording_started`면 Stop이 아직 반영 안 된 것이니 1~2초 뒤 재확인. `frameCount`도 함께 확인 — 확보한 시간에 비해 한 자릿수 등 비정상적으로 적으면 캡처 자체가 제대로 안 된 것. ffmpeg를 못 찾으면 `path`가 `null`로 기록되고 PNG 폴더(`QA_Recordings/{세션명}_frames/`)가 남아있으니, 그 경우 PATH에 `ffmpeg`가 있는지(`%LOCALAPPDATA%\ffmpeg\*\bin\ffmpeg.exe`도 자동 탐색됨) 먼저 확인.
 8. 가능하면 이 플레이 구간의 콘솔 로그(에러/예외/경고)도 함께 확보 — 영상만으로 안 보이는 NRE 등은 로그가 훨씬 확실한 증거다.
 

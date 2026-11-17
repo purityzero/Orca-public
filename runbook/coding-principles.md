@@ -15,7 +15,7 @@ C# 코드를 작성·수정하기 전에 `CODE.MD`와 함께 Read로 읽는다. 
 | 목록/스크롤 | `UnityEngine.UI.ScrollRect` |
 
 **프리팹·UI를 만들거나 고치기 전에** `runbook/prefab-ui.md`를 읽는다 — 표준 컴포넌트의 예외,
-MCP와 YAML 직접 편집의 선택 기준, 스크롤·풀링·토글 레시피가 거기 있다.
+CLI와 YAML 직접 편집의 선택 기준, 스크롤·풀링·토글 레시피가 거기 있다.
 겪은 사고는 `runbook/scene-prefab-edit.md`.
 (2026-09-11에 `PREFAB.MD` 상시 주입을 끊고 런북으로 내렸다 — 8K자가 매 세션 들어왔다)
 

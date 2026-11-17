@@ -111,7 +111,6 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 
 ## 2026-11-06 — README에서 이관한 미완료 항목
 
-- **MCP 멀티 인스턴스 (a)/(b) 미확정** — Unity 에디터를 켠 상태에서 이 세션에 MCP for Unity 도구를 붙여 `mcpforunity://instances`를 한 번 읽으면 닫을 수 있다. `ParallelWorkContract.MD` §2 참고.
 - **Orca 바탕화면 바로가기가 실제로 `OrcaStart.cmd`를 가리키는지 미확인.**
 
 ## 2026-11-06 — /시작 명령의 에디터 실행 (미검증)
@@ -136,3 +135,10 @@ Git 마무리는 Codex 메인 세션 담당이므로 인계한다.
 **남은 확인**: 사용자가 Orca UI에서 직접 여는 CLI와 에이전트가 `orca agent launch`로 여는 CLI의 환경·부모 비교. 이번 실물 검증은 에이전트가 만든 Orca 터미널에서 수행했으므로 사람의 클릭을 재현했다고 판정하지 않는다. 정확한 Chat | CLI 메뉴 경로도 미확정이다.
 **알려진 한계**: Orca 데몬 경유 launch는 호출한 Claude/Codex 조상이 없고, 호출자 셸에만 준 skip도 자식에게 전달되지 않았다. 확실히 제외하려면 실제 Claude 실행 셸에 skip을 설정한다. 자동 판별할 구분 변수는 확정하지 못했다. 표시 범위는 PC·체크아웃당 1회이며, Windows 이외 환경·판정 불가는 조용히 제외한다.
 **다음 확인**: 시험 표시를 지운 상태에서 사용자가 새 CLI를 한 번 열어 채팅 생성·첫 안내를 확인하고, 두 번째 시작에서 새 채팅이 생기지 않는지 확인한다. 의도적으로 CLI를 유지하려면 skip을 설정한다. 기본값 변경은 승인된 방침대로 UI 안내만 하며 DB를 쓰지 않는다.
+
+## 2026-11-17 — MCP for Unity 폐기, Unity 공식 CLI로 QA 전환 (브랜치 `work/2026-11-17-qa-unity-cli`, 미커밋)
+
+**사용자 결정**: MCP 제거, 구현자(Claude)도 컴파일 오류 확인 가능(Play·화면 판정은 Codex).
+**바꾼 것**: 신규 `runbook/codex-qa-unity-cli.md`(CLI 명령·MCP 이름 대응·판정 정확도 규칙·구현자 컴파일 확인), 신규 `tools/unity-qa/framestamp.eval.cs`, `runbook/codex-qa-full.md`·`codex-qa-quick.md` 도구·연결 단계, `runbook/README.md` 색인, `AGENT.MD`·`CODEX.md`·`CLAUDE.md` 역할 문장, `.claude/hooks/env-check.js`(8080 점검 → `unity --version` 점검, 실행 확인), `.claude/hooks/unity-bridge-notify.js` 삭제와 `.claude/settings.json` 등록 제거.
+**저장소 밖 변경**: `~/.codex/config.toml`의 `[mcp_servers.unityMCP]` 제거(백업 `~/.codex/config.toml.bak-2026-11-17-mcp`), `C:\Unity\Cell_Test\Packages\manifest.json`에서 `com.coplaydev.unity-mcp` 제거(백업 `_backup_2026-11-17_before_pipeline\manifest.after-pipeline.json`). 구현자 컴파일 확인: `package resolve` 후 `script recompile_status` completed·errors [] , PackageCache에서 MCP 제거 확인(2026-11-17).
+**남은 것**: 나머지 문서의 MCP 현행 절차 정리(Codex 위임), Codex 검토, Git 마무리(Codex 탭), `editor invoke_menu` 실측.

@@ -76,7 +76,7 @@ Codex 메인 세션은 Orca에 등록된 저장소의 Git 마무리 담당이다
 ## 3. Claude Code 에이전트가 우선 맡는 일
 
 - 기존 `.claude/agents/*.md`에 프로젝트 전용 노하우가 충분히 축적된 작업
-- `.cs`·CSV·md 파일 편집과 구현 — **Unity MCP 호출 전반(씬·프리팹 편집, Play Mode, 리임포트·재컴파일)은 2026-09-10 사용자 지시로 Codex가 맡는다**(`AGENT.MD` §실행자 선택 · §방침). 여기 남는 것은 MCP를 거치지 않는 텍스트 작업이다
+- `.cs`·CSV·md 파일 편집과 구현 — **Unity 에디터 조작 전반(씬·프리팹 편집, Play Mode, 리임포트 — 2026-11-17부터 공식 CLI `unity`로 한다)은 2026-09-10 사용자 지시로 Codex가 맡는다. 단 구현자의 컴파일 오류 확인은 Claude Code도 한다(2026-11-17)**(`AGENT.MD` §실행자 선택 · §방침). 여기 남는 것은 에디터 조작을 거치지 않는 텍스트 작업이다
 - `design-planner`/`design-issue-resolver`에 이미 정의된 기획·밸런스 절차
 - 사용자가 명시적으로 Claude Code 또는 특정 Claude 서브에이전트를 지정한 작업
 
@@ -113,7 +113,7 @@ Codex는 별도 실험 환경이 아니라 현재 Orca 작업 흐름 안에서 �
 3. `AGENT.MD`로 Codex 단독 수행, Codex 프로필 위임, Claude Code 단독 수행, 비교 실행, 순차 핸드오프 중 하나를 정한다.
 4. 수정 전에 브랜치, 소유 파일, 성공 조건, Unity 배타 자원 사용 여부를 확정한다.
 5. Codex 소유 작업은 분석에서 멈추지 않고 구현·검증·관련 문서 갱신까지 수행한다.
-6. Unity MCP(MCP for Unity)를 쓰는 컴파일·Play Mode QA는 Codex 검증 담당이 한다(절차서 `runbook/codex-qa-full.md`·`codex-qa-quick.md`). 구현자는 자기 구현의 Play Mode QA를 맡지 않는다 — Claude Code가 구현했으면 Codex가 검증하고, Codex가 구현했으면 구현에 참여하지 않은 Codex 검증 담당 또는 사람이 확인한다. Claude Code에는 코드 검수와 수정만 맡기며 QA를 넘기지 않는다. 별도 검증 담당을 확보하지 못하면 미검증으로 남긴다. (2026-11-13 사용자 확인: "Claude는 만드는 역할이고 QA를 하지 않는다, 코드 검수는 할 수 있다")
+6. Unity 공식 CLI를 쓰는 Play Mode QA는 Codex 검증 담당이 한다(절차서 `runbook/codex-qa-full.md`·`codex-qa-quick.md`, CLI·판정 규칙 `runbook/codex-qa-unity-cli.md`). MCP for Unity는 2026-11-17에 걷어냈다. 구현자의 컴파일 오류 확인은 QA가 아니며 구현자가 해도 된다. 구현자는 자기 구현의 Play Mode QA를 맡지 않는다 — Claude Code가 구현했으면 Codex가 검증하고, Codex가 구현했으면 구현에 참여하지 않은 Codex 검증 담당 또는 사람이 확인한다. Claude Code에는 코드 검수와 수정만 맡기며 QA를 넘기지 않는다. 별도 검증 담당을 확보하지 못하면 미검증으로 남긴다. (2026-11-13 사용자 확인: "Claude는 만드는 역할이고 QA를 하지 않는다, 코드 검수는 할 수 있다")
 7. Claude Code에서 넘겨받은 작업은 완료 결과를 Orca의 원래 Claude 터미널에 직접 반환한다. 사용자에게 복사용 문구만 주는 것으로 대신하지 않는다.
 8. 최종 채택은 에이전트 이름이 아니라 diff, 테스트, Play Mode 결과로 결정한다.
 

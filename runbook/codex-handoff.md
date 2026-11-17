@@ -6,7 +6,9 @@
 
 `codex` CLI가 로컬에 설치돼 있어 Claude Code가 `codex exec`로 비대화형 실행을 시킬 수 있다. 다만 **`ListAgents`에는 Codex가 안 잡힌다** — 돌고 있는 Codex 세션에 `SendMessage`로 지시하는 건 불가능하고, 새 프로세스를 띄우는 것만 된다.
 
-### Codex의 Unity 접근 — 조작까지 된다 (2026-09-10 정정)
+### Codex의 Unity 접근 — 과거 MCP 실측 (2026-11-17 폐기)
+
+현행 에디터 접근은 Unity 공식 CLI와 Pipeline을 쓴다. 준비·대상 지정은 `runbook/codex-qa-unity-cli.md`를 따른다. 아래는 MCP 시절 기록이다.
 
 `~/.codex/config.toml`에 `[mcp_servers.unityMCP] url = "http://127.0.0.1:8080/mcp"`가 등록돼 있어 **Codex도 같은 Unity 에디터에 붙는다.**
 
@@ -49,7 +51,7 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
   세션을 이어붙이는 길이 Windows에선 막혀 있어서(아래) 브리프가 그 역할을 대신한다.
   브리프와 Codex 산출물은 일회용이다 — **요약 보고 직후 지운다**(`.gitignore` 대상, 절차는 `runbook/codex-handoff.md` 7단계).
 - **진행 로그는 Orca 안에 남긴다** — `D:\Orca\보고서\{주제}-{날짜}.log`. 그래야 사용자가 다른 창에서 흐름을 본다.
-  `codex exec`의 stdout에는 세션 id·모델·승인 정책과 호출하는 MCP 도구가 한 줄씩 찍힌다.
+  `codex exec`의 stdout에는 세션 id·모델·승인 정책과 도구 호출이 한 줄씩 찍힌다.
 - **`--approve-for-me`는 workspace-write 샌드박스를 쓴다.** 파일 소유권을 지키려면
   프롬프트에 **"프로젝트 파일 수정 금지, 산출물은 `Temp/` 아래에만"**을 명시한다.
 - 에디터를 쓰는 주체가 동시에 둘이 되지 않게 **한 번에 하나만** 돌린다.

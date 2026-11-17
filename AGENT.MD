@@ -18,7 +18,32 @@ Orca의 작업을 Codex 또는 Claude Code 서브에이전트에 배정하는 �
 - 한 작업을 Codex와 Claude Code가 비교 수행하면 동일한 목표·범위·성공 조건을 주고, 설명의 설득력이 아니라 테스트와 diff로 채택한다.
 - Codex와 Claude Code가 협업하면 파일 소유권을 먼저 나누고, Unity 에디터 검증은 한 번에 하나만 수행한다. 상세는 `ParallelWorkContract.MD`를 따른다.
 
-Codex로 배정한 뒤에는 `CODEX.md` §2의 프로필로 model/effort를 고른다. 기본 대응은 복잡한 설계·감사=`gpt-5.6-sol/high`, 일반 구현·문서=`gpt-5.6-terra/medium`, 명확한 국소 수정=`gpt-5.6-luna/low`다. 서브에이전트가 필요 없는 단일 흐름은 Codex 메인 세션이 직접 끝낸다.
+Codex로 배정한 뒤에는 `CODEX.md` §2의 프로필로 model/effort를 고른다. 서브에이전트가 필요 없는 단일 흐름은 Codex 메인 세션이 직접 끝낸다.
+
+### ★ Orca 작업자는 작업마다 모델·추론 강도를 골라 띄운다 (2026-11-17 사용자 지시)
+
+Claude Code 메인 세션은 작업을 맡기기 전에 **작업 성격을 한 번 판단해** Orca 작업자(Claude Code 또는 Codex)의 모델과 추론 강도를 정한다. 무조건 가장 강한 조합을 쓰지 않는다 — 토큰을 아끼는 쪽이 기본이다.
+
+```
+orca orchestration worker-start --spec-file <브리프> --worktree current \
+  --agent <claude|codex> --model <모델 ID> --effort <low|medium|high|xhigh|max> \
+  --display-name "<Claude|Codex> · <작업명>"
+```
+
+| 작업 성격 | Claude Code 작업자 | Codex 작업자 |
+|---|---|---|
+| 구조 설계·어려운 원인 분석·넓은 감사 | `claude-opus-5-5` / `high` | `gpt-6.1-sol` / `high` |
+| 스펙이 정해진 구현·문서 정리·일반 QA | `claude-sonnet-5-5` / `medium` | `gpt-6.1-terra` / `medium` |
+| 원인이 명확한 국소 수정·검색·단순 확인 | `claude-haiku-5-5` / `low` | `gpt-6-luna` / `low` |
+| 실패 비용이 아주 큰 판단 | `claude-fable-5-2` / `high` 이상 | `gpt-6.1-sol` / `xhigh` 이상 |
+
+- **누구에게 맡길지(Claude/Codex)는 위 「실행자 선택」 표가 먼저다.** 이 표는 정해진 실행자의 모델·강도만 고른다.
+- 이 기준은 Claude Code 메인 세션이 띄우는 Claude·Codex 작업자와, Codex 메인 세션이 만드는 Codex 서브에이전트 모두에 적용한다. Codex 서브에이전트는 `CODEX.md` §2 프로필로 역할을 고르고, 모델·강도는 이 표에서 작업 성격에 맞춰 최종 선택한다. 프로필 기본값과 다르면 그 이유를 보고한다.
+- 사용자가 모델이나 강도를 지정하면 그것을 따른다(예: 2026-11-17 웹 조사·토론은 사용자 지정 `gpt-6-astra` / `high`).
+- 선택 이유를 한 줄로 사용자에게 알린다. 표와 다르게 고르면 그 이유도 적는다.
+- 끝난 작업자는 보고한 턴에 `orca orchestration worker-release --dispatch <id>`로 닫는다.
+- 실측(2026-11-17): `--agent claude --model claude-haiku-5-5 --effort low`로 띄운 작업자가 그 모델로 응답했다. 추론 강도는 작업자가 스스로 확인하지 못하므로 시작 영수증(`effort` 필드)으로 확인한다. 화면 표시 방식(터미널 탭 / 구조화 채팅)은 Orca의 새 에이전트 탭 설정을 따른다.
+- 모델 ID는 바뀐다. Codex는 `~/.codex/models_cache.json`, Claude는 시스템 안내의 최신 모델 목록으로 확인하고 이 표를 갱신한다.
 
 ### ★ 방침 — Unity 에디터를 조작하는 작업은 Codex가 맡는다 (2026-09-10 사용자 지시, 2026-11-17 CLI 전환)
 

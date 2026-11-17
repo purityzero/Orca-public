@@ -91,10 +91,10 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
 
 1. **질문은 브리프 파일로 쓴다** — `.claude/briefs/{날짜}-{주제}.md`. 전제·확인된 사실·내 안·묻는 것·범위 제한,
    그리고 **산출물 경로 하나**(`…-codex.md`)를 적는다. 2차 질문은 `-r2.md`처럼 이어 붙인다.
-   **맨 위에 "답변·중간 보고·산출물 모두 한국어로" 한 줄을 넣는다** — 사용자가 Codex 출력을 직접 읽는다(2026-11-05 지시, `CODEX.md` §0).
+   **맨 위에 "답변·중간 보고는 한국어 존댓말로, 산출물은 한국어로" 한 줄을 넣는다** — 사용자가 Codex 출력을 직접 읽는다(2026-11-05 지시, 존댓말은 2026-11-17 요청, `CODEX.md` §0). 브리프 자체도 존댓말로 쓴다.
 2. **탭을 연다** — `orca agent launch --agent codex --surface terminal` (옵션은 `--help` 확인).
    이미 열린 탭이 있으면 `orca terminal list --json`에서 `agentIdentity == "codex"`를 찾아 재사용한다.
-3. **보낸다** — `orca terminal send --terminal <handle> --text "<브리프 절대경로> 를 읽고 요청대로 검토해줘" --enter`
+3. **보낸다** — `orca terminal send --terminal <handle> --text "<브리프 절대경로> 를 읽고 요청대로 검토해 주세요" --enter`
    - **보내기 전에 탭 상태와 작업 폴더를 확인한다.** `orca terminal list --json`에 그 handle이 없으면 그 탭에 보내지 않는다
      (보내면 `terminal_not_writable`). `terminal list`의 `worktreePath`는 Orca가 관리하는 경로라 실제 Codex cwd와 다를 수 있다 —
      **화면 아랫줄 또는 최신 rollout 첫 줄 `session_meta.cwd`**로 확인한다. 2026-11-05에 Codex 탭의 cwd가

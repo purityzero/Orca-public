@@ -33,10 +33,11 @@ orca orchestration worker-start --environment local --spec-file <브리프> --wo
 
 | 작업 성격 | Claude Code 작업자 | Codex 작업자 |
 |---|---|---|
-| 구조 설계·어려운 원인 분석·넓은 감사 | `claude-opus-5-5` / `high` | `gpt-6.1-sol` / `high` |
+| 어려운 구조 설계·흐름 판단 | `claude-opus-5-5` / `high` | `gpt-6.2-astra` / `high` (실패 비용이 아주 크면 `xhigh`) |
+| 어려운 원인 분석·넓은 감사 | `claude-opus-5-5` / `high` | `gpt-6.1-sol` / `high` |
 | 스펙이 정해진 구현·문서 정리·일반 QA | `claude-sonnet-5-5` / `medium` | `gpt-6.1-terra` / `medium` |
 | 원인이 명확한 국소 수정·검색·단순 확인 | `claude-haiku-5-5` / `low` | `gpt-6-luna` / `low` |
-| 실패 비용이 아주 큰 판단 | `claude-fable-5-2` / `high` 이상 | `gpt-6.1-sol` / `xhigh` 이상 |
+| 실패 비용이 아주 큰 그 밖의 판단(위 첫 행이 우선) | `claude-fable-5-2` / `high` 이상 | `gpt-6.1-sol` / `xhigh` 이상 |
 
 - **누구에게 맡길지(Claude/Codex)는 위 「실행자 선택」 표가 먼저다.** 이 표는 정해진 실행자의 모델·강도만 고른다.
 - 이 기준은 Claude Code 지휘자가 띄우는 Claude·Codex Orca 작업자에 적용한다. 지휘자는 Codex 작업자의 역할을 `CODEX.md` §2 프로필로 고르고, 모델·강도는 이 표에서 작업 성격에 맞춰 최종 선택한다. 프로필 기본값과 다르면 그 이유를 보고한다. Codex는 다른 작업자를 띄우거나 재위임하지 않는다.
@@ -66,14 +67,14 @@ Codex는 넘겨받은 작업 결과를 원래 Claude 지휘자에게 직접 반�
 Codex 호출·Unity 접근·인계·직접 반환 전에 `runbook/codex-handoff.md`를 읽는다.
 
 ## Claude Code 서브에이전트 감독 방식
-별도 감독 에이전트를 따로 두지 않는다 — **Claude Code 메인 채팅이 지휘자**로서 아래 기준으로 분류해 맞는 역할 에이전트를 띄운다. Codex 작업은 이 표 밖에서 `CODEX.md`에 따라 Codex 작업자가 수행한다.
+별도 감독 에이전트를 따로 두지 않는다 — **Claude Code 메인 채팅이 지휘자**로서 아래 기준으로 분류해 맞는 역할 에이전트를 띄운다. Codex 작업은 이 표 밖에서 `CODEX.md`에 따라 Codex 작업자가 수행한다. 단, 흐름 판단은 아래 표의 Codex 예외를 따른다.
 
 ### ★ Claude 역할 에이전트 실행 방식 (2026-11-25 사용자 결정)
 - **역할 에이전트는 새 세션(Orca 작업자)으로 띄운다.** Agent 도구 서브에이전트는 기본 경로가 아니다. Orca 작업자로 띄울 수 없을 때만 쓰고, 그 사실을 사용자에게 알린다.
-  `orca orchestration worker-start --environment local --worktree current --agent claude --model <아래 표 model의 ID> --effort <아래 표 effort> --spec-file <브리프>`
+  흐름 판단 예외를 빼면: `orca orchestration worker-start --environment local --worktree current --agent claude --model <아래 표 model의 ID> --effort <아래 표 effort> --spec-file <브리프>`
   `--display-name`은 `--worktree current`에서는 탭 이름을 바꾸지 못한다(설치본 1.4.274 도움말은 "current/existing worktree에서 거부"라고 하지만, 실제로는 오류 없이 무시됐다 — 2026-11-25 이 세션의 작업자 탭은 모두 기본 이름으로 떴다).
 - **역할 파일(`agents/{이름}.md`)은 정의서로 쓴다.** 브리프 첫 줄에 "`C:\AI\Orca\agents\{이름}.md`를 읽고 그 역할·절차·금지 사항을 따른다"를 넣고, 둘째 줄에 언어·존댓말 지시를 넣는다. 역할 정의서가 없는 작업은 언어 지시를 첫 줄에 넣는다.
-- **frontmatter의 도구 제한(`tools`·`disallowedTools`)은 Orca 작업자에 자동으로 적용되지 않는다.** 읽기 전용, 재위임 금지, 수정 허용 파일 같은 제한은 브리프에 문장으로 명시한다. 이것은 지시일 뿐 구조적 강제가 아니다. 작업자가 끝나면 diff로 지켰는지 확인한다.
+- **frontmatter의 도구 제한(`tools`·`disallowedTools`)은 Orca 작업자에 자동으로 적용되지 않는다.** 읽기 전용, 재위임 금지, 수정 허용 파일 같은 제한은 브리프에 문장으로 명시한다. 이것은 지시일 뿐 구조적 강제가 아니다. 작업자가 끝나면 diff로 지켰는지 확인한다. frontmatter의 `model`·`effort`도 Orca 작업자 실행값을 정하지 않는다. 실행값은 아래 표와 `worker-start` 옵션이 정한다.
 - **Codex 세션은 작업자 역할만 한다.** 지휘하거나 다른 작업자를 재위임하지 않는다. Git 마무리도 지휘자가 맡기는 작업으로 수행한다.
 - 파일 소유권이 겹치는 작업자는 순차로, 겹치지 않으면 병렬로 띄운다(`ParallelWorkContract.MD`).
 - Claude 작업자가 끝나면 SessionEnd 훅이 `.claude/agents/` 사본을 지운다. 닫은 뒤 `node .claude/hooks/session-agents.js sync`로 다시 깐다(`runbook/subagents.md`).
@@ -84,12 +85,13 @@ Codex 호출·Unity 접근·인계·직접 반환 전에 `runbook/codex-handoff.
 | 컨텐츠 | — | `code-writer` | sonnet | low | 설계가 끝난 스펙을 그대로 구현 |
 | 분량 | 큰 범위 | `client-bugfixer` | sonnet | medium | 여러 파일/이슈에 걸친 진단된 버그 수정 |
 | 분량 | 작은 범위 | `quick-fix` | haiku | low | 원인이 명확한 단일 파일 국소 수정 |
-| 검토 | 흐름 판단 | `code-flow-reviewer` | opus | high | 실제 호출 흐름에서 일어나는 문제만 판정(방어코드 필요 여부·과잉 지적 가리기). 읽기 전용 |
+| 검토 | 흐름 판단 | `code-flow-reviewer` | **Codex `gpt-6.2-astra`** (Astra를 못 띄우면 opus) | high | 실제 호출 흐름에서 일어나는 문제만 판정(방어코드 필요 여부·과잉 지적 가리기). 읽기 전용 |
 | 검토 | 이론 판단 | `code-theory-reviewer` | sonnet | medium | API 계약·내부 동작 근거로 이론상 실패 조건과 발생 조건을 정리. 수정 여부는 흐름 판단이 정함. 읽기 전용 |
 | 마무리 리뷰 | — | `code-reviewer-committer` | sonnet | medium | 여러 에이전트 산출물의 참조 정합성·규칙을 검토하고 Codex에 커밋 가능 여부를 인계(이름은 호환용, 직접 커밋 금지) |
 
 - **QA는 이 표에 없다 — Codex가 한다.** Claude는 만들고 코드 검수(읽기·규칙·정합성)까지 한다. Unity CLI를 쓰는 Play Mode QA는 Codex에 인계하고, 브리프에 절차서를 넣는다: 전체 플레이 `runbook/codex-qa-full.md`, 고친 것 재확인 `runbook/codex-qa-quick.md`. (2026-11-13 사용자 확인으로 `qa-tester`·`qa-quick-check` 서브에이전트를 이 절차서로 전환)
 - 표의 model·effort는 기본값이다. Orca 작업자는 `--model`·`--effort`로 지정한다. 작업 성격에 따라 위 「모델·추론 강도」 표로 바꿀 수 있고, 바꾸면 이유를 알린다. 모델 별칭은 ID로 바꿔 쓴다: opus=`claude-opus-5-5`, sonnet=`claude-sonnet-5-5`, haiku=`claude-haiku-5-5`.
+- **흐름 판단은 Codex 작업자로 띄운다**(2026-11-25 사용자 결정): `worker-start --agent codex --model gpt-6.2-astra --effort high`(실패 비용이 아주 크면 `xhigh`, Astra를 띄울 수 없으면 Claude `claude-opus-5-5`/high). 브리프 첫 줄에서 `agents/code-flow-reviewer.md`를 읽게 한다. 이 기준 밖의 작업은 위 「모델·추론 강도」 표의 기존 값을 쓴다.
 - **검토 축 순서**: 방어코드·예외 처리 검토는 `code-theory-reviewer`가 먼저 조건을 뽑고, 그 결과 표를 `code-flow-reviewer` 브리프에 넣어 실사용 기준으로 판정받는다. 고칠지 말지는 흐름 판단 결과로 정한다. 둘 다 읽기 전용이라 위 우선순위(설계 > 분량 …)와 겹치지 않고, 구현 에이전트보다 앞에 붙는다.
 - 애매한 경우(둘 이상 축에 걸침) 더 무거운 쪽(설계 > 분량-큰 > 컨텐츠 > 분량-작은) 기준으로 판단.
 - `code-reviewer-committer`는 다른 축과 배타가 아니라 **뒤에 붙는다** — 구현 계열 에이전트를 돌린 뒤 Codex의 Git 마무리 직전에 태운다. 이름은 기존 호출 호환을 위해 유지하지만 commit·merge·push는 하지 않고 참조 정합성·규칙 검토 결과를 Codex에 넘긴다.

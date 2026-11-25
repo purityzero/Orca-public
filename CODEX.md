@@ -24,7 +24,7 @@ Orca에서는 공용 계약·설정·README/AGENT/ParallelWorkContract의 정합
 
 | 프로필 | 기본 model | 기본 effort | 맡는 일 | 사용 기준 |
 |---|---|---|---|---|
-| `codex-architect` | `gpt-6.1-sol` | `high` | 아키텍처, 복잡한 원인 분석, 대규모 리팩터링 경계 설계 | 여러 시스템의 상호작용을 판단해야 할 때 |
+| `codex-architect` | `gpt-6.2-astra` | `high` | 아키텍처, 대규모 리팩터링 경계 설계(어려운 원인 분석은 AGENT.MD 기준표의 `gpt-6.1-sol`/high) | 여러 시스템의 상호작용을 판단해야 할 때 |
 | `codex-builder` | `gpt-6.1-terra` | `medium` | 일반 구현, CLI·PowerShell, 테스트와 기능 수정 | 설계가 충분히 명확하고 구현량이 클 때 |
 | `codex-auditor` | `gpt-6.1-sol` | `high` | 코드 리뷰, 보안·회귀·데이터 정합성 감사 | 놓친 위험의 비용이 크거나 넓은 diff를 검토할 때 |
 | `codex-quick-fix` | `gpt-6-luna` | `low` | 원인이 명확한 작은 수정, 단순 검색·기계적 변경 | 한두 파일의 국소 작업이며 판단 부담이 낮을 때 |

@@ -33,7 +33,7 @@
 | [coding-principles.md](coding-principles.md) | C# 수정 전 CODE.MD와 함께 Read로 읽는다. UI·프리팹·동작 변경도 해당 절을 확인한다. |
 | [codex-handoff.md](codex-handoff.md) | Codex에 작업을 넘기거나 결과를 회수·직접 반환할 때 |
 | [codex-qa-unity-cli.md](codex-qa-unity-cli.md) | Play Mode QA를 Unity 공식 CLI로 하거나, QA 판정(기대값·화면 캡처·로그)을 믿기 전에 |
-| [subagents.md](subagents.md) | 서브에이전트 완료 알림·목록 누락 복구 전에 |
+| [subagents.md](subagents.md) | 서브에이전트 목록 누락 복구 전에 |
 | [unity-font.md](unity-font.md) | TMP 폰트·글리프·다국어 표시를 건드릴 때 |
 | [scene-prefab-edit.md](scene-prefab-edit.md) | 씬·프리팹 YAML이나 CLI로 구조를 바꿀 때 |
 | [verification-scripts.md](verification-scripts.md) | 검사 도구를 만들거나 그 결과를 믿기 전에 |

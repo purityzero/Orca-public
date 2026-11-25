@@ -1,10 +1,25 @@
 # Runbook — Codex 인계
 
-마지막 적용: 2026-11-09
+마지막 적용: 2026-11-25
 
-## Claude Code가 Codex를 직접 호출하는 경우 (2026-08-30 확인)
+## 현행 기본 경로 — Orca 작업자 시작과 완료 반환
 
-`codex` CLI가 로컬에 설치돼 있어 Claude Code가 `codex exec`로 비대화형 실행을 시킬 수 있다. 다만 **`ListAgents`에는 Codex가 안 잡힌다** — 돌고 있는 Codex 세션에 `SendMessage`로 지시하는 건 불가능하고, 새 프로세스를 띄우는 것만 된다.
+Claude 메인 채팅이 지휘자이며, **신규 Codex 작업은 `worker-start`로 새 Orca 작업자 세션에 배정한다.** 기존 탭을 자동 재사용하지 않으며, `codex exec`로 대신하지 않는다. Codex는 브리프의 수정 허용 범위를 직접 수행하고 재위임하지 않는다(`AGENT.MD` 「Claude 역할 에이전트 실행 방식」).
+
+```
+orca orchestration worker-start --environment local --worktree current --agent codex --model <모델 ID> --effort <강도> --spec-file <브리프 절대경로> --json
+```
+
+- 브리프에는 목표·소유 파일·금지 범위·검증 조건·UTF-8 보고서 경로를 적는다. `--display-name`은 current worktree 예시에 붙이지 않는다(`AGENT.MD`).
+- 지휘자는 시작 영수증의 Task·Dispatch ID와 `next`를 따른다. 작업자와의 질문·추가 지시는 orchestration 메시지로 주고받으며, 작업자 터미널에 `terminal send`로 넣지 않는다.
+- 작업자는 프리앰블의 `--from`·Task·Dispatch ID와 `--outcome succeeded|failed`로 `orca orchestration send --type worker_done ... --report-path <보고서 절대경로>`를 정확히 한 번 보내고, 성공 영수증을 확인하면 그 작업을 끝낸다. 전송 실패 시 CLI가 안내한 복구만 따른다.
+- 지휘자는 `worker_done`과 보고서로 결과를 회수하고 핵심 주장을 원본에서 재확인한다. 이 경로에는 `terminal wait --for tui-idle`, rollout 수신 확인, `accepted: true`를 완료 판정으로 쓰지 않는다.
+
+**사용자가 기존 탭을 지정한 경우만** 아래 기존 탭 경로를 쓴다. 이 탭이 orchestration 작업자로 등록됐다고 가정하지 않는다. 이미 Dispatch가 있는 작업자는 지정된 탭이어도 orchestration 메시지와 `worker_done` 경로를 유지한다.
+
+## Claude Code가 Codex를 직접 호출한 과거 기록 (2026-08-30 확인)
+
+아래 `codex exec`·MCP 관련 내용은 당시 실측 기록이며 현재 실행 지침이 아니다. 현행 신규 작업은 위 `worker-start` 경로를 따른다. 당시 **`ListAgents`에는 Codex가 안 잡혔다** — 이 관찰을 Orca orchestration 메시징이 불가능하다는 뜻으로 해석하지 않는다.
 
 ### Codex의 Unity 접근 — 과거 MCP 실측 (2026-11-17 폐기)
 
@@ -26,9 +41,9 @@ Play Mode 진입·조작·종료까지 실제 QA 1회를 완주했다.
 
 > **도구가 막혔다고 결론 내기 전에 `--help`를 끝까지 읽는다.**
 
-### 실행 중인 Codex 세션에 직접 인계 — `orca terminal`
+### 사용자가 지정한 기존 Codex 탭에 직접 인계 — `orca terminal`
 
-`codex exec`는 새 프로세스라 대화가 안 이어진다. 살아 있는 세션에 넣으려면:
+사용자가 기존 탭을 지정했고 그 탭이 orchestration Dispatch에 속하지 않을 때만 쓰는 별도 경로다. 신규 작업자를 이 흐름으로 시작하지 않는다. 지정한 기존 세션에 넣으려면:
 
 ```
 orca terminal list --worktree path:<워크트리> --json     # agentIdentity == "codex" 를 찾는다
@@ -47,27 +62,31 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
 
 ### Codex에 넘길 때 지킬 것
 
-- **맥락은 브리프 파일로 넘긴다.** `.claude/briefs/{날짜}-{주제}.md`에 적고 그 파일을 stdin으로 준다.
+- **맥락은 브리프 파일로 넘긴다.** `.claude/briefs/{날짜}-{주제}.md`에 적고 신규 작업은 `worker-start --spec-file`로 준다. 사용자가 지정한 기존 탭에는 브리프 절대경로를 전달한다.
   세션을 이어붙이는 길이 Windows에선 막혀 있어서(아래) 브리프가 그 역할을 대신한다.
   브리프와 Codex 산출물은 일회용이다 — **요약 보고 직후 지운다**(`.gitignore` 대상, 절차는 `runbook/codex-handoff.md` 7단계).
-- **진행 로그는 Orca 안에 남긴다** — `D:\Orca\보고서\{주제}-{날짜}.log`. 그래야 사용자가 다른 창에서 흐름을 본다.
-  `codex exec`의 stdout에는 세션 id·모델·승인 정책과 도구 호출이 한 줄씩 찍힌다.
-- **`--approve-for-me`는 workspace-write 샌드박스를 쓴다.** 파일 소유권을 지키려면
+- **진행과 결과는 Orca 작업자 기록과 브리프의 보고서 경로에 남긴다.** 위 `codex exec` stdout 기록은 과거 관찰이며 현행 로그 수집 경로가 아니다.
+- **파일 소유권과 산출물 경로를 브리프에 명시한다.** 읽기 전용 검토라면
   프롬프트에 **"프로젝트 파일 수정 금지, 산출물은 `Temp/` 아래에만"**을 명시한다.
 - 에디터를 쓰는 주체가 동시에 둘이 되지 않게 **한 번에 하나만** 돌린다.
 - 받은 보고서는 **핵심 주장을 원본에서 재확인한 뒤에만** 사용한다. Codex 출력도 「검증은 프로덕션 경로를 타야 한다」의 적용 대상이다.
   긴 문서의 **앞뒤 모순 찾기**엔 쓸 만하지만 **단순 계수는 틀린 적이 있다**(줄 수를 158로 답했는데 실제 223).
+- **한글 보고는 파일로 받는다.** Orca `worker_done` 본문의 한글이 `?`로 깨져 도착한 적이 있다. 수신함 원문도 같이 깨져 있었다. 그래서 브리프에 "보고는 UTF-8 md 파일로 저장하고 `reportPath`로 경로를 알려 달라"를 넣는다. 본문은 결론 한 줄만 받는다. (2026-11-25, 풀링 흐름 확인 보고가 깨져서 줄 번호만 보고 직접 다시 읽었다)
 - **Codex가 낸 의견은 반드시 사용자에게 요약해 보여준다.** 보고서 경로만 남기고 넘어가지 않는다 — 사용자는 그 파일을 열어보지 않는다. ①무엇을 지적했나 ②내가 사실 확인한 것과 못 한 것 ③채택/미채택과 이유를 짧게. 길면 표로.
 
-### Windows에서 막혀 있는 것 (2026-09-10 실측)
+### Windows에서 막혀 있던 것 (2026-09-10 과거 실측)
+
+아래는 당시 `codex exec` 경로의 한계이며, 현재 신규 작업을 그 경로로 실행하라는 뜻이 아니다.
 
 - `codex app-server daemon`이 **`only supported on Unix platforms`** — 그래서 `codex agents`(세션 브라우징 TUI)와 `codex remote-control`을 쓸 수 없다.
 - `~/.codex/sessions/`에 **rollout이 안 남는다**(`codex exec`가 session id를 찍어도 파일이 없다) — `codex exec resume`으로 이어가거나 되짚을 수 없다.
   - **단, Orca 탭의 대화형 Codex는 남는다**(2026-11-05 실측, codex-cli 0.166.0): `$CODEX_HOME`(Orca 계정 홈)`/sessions/YYYY/MM/DD/rollout-*.jsonl`과 제목 색인 `session_index.jsonl`이 쌓이고, `codex resume <ID>`로 다시 열 수 있다(같은 `CODEX_HOME`에서). 위 관측은 기본 홈의 `codex exec` 기준이다.
-- → **QA 한 건 = `codex exec` 한 번.** 맥락은 매번 브리프로 싣는다.
-- 대화형 TUI는 Claude Code의 비대화형 셸에서 직접 못 띄운다. **대신 Orca의 Codex 터미널 탭으로 묻고 답한다** — 브리프 파일 → `orca terminal send` → `orca terminal wait --for tui-idle` → 산출물 파일 읽기. 절차는 `runbook/codex-handoff.md` 「Codex와 묻고 답하기」(2026-11-05 실측).
+- 당시에는 QA 한 건마다 `codex exec`를 한 번 실행했다. 현행 QA도 신규 작업은 Orca 작업자에 배정하고 맥락을 브리프로 싣는다.
+- 대화형 TUI를 Claude Code의 비대화형 셸에서 직접 띄우지 못했던 관찰이다. 현행은 `worker-start` → `worker_done` → 보고서 회수이며, 사용자가 기존 탭을 지정했을 때만 아래 「Codex와 묻고 답하기」의 `terminal send`·대기·파일 회수 절차를 쓴다.
 
 ### 사용자가 "새 세션 열었다"고 하면 **전송 직전에** 핸들을 다시 확인한다
+
+이 절은 사용자가 인계받을 기존 탭을 지정한 경우에만 적용한다. 새 세션을 열었다는 말만으로 아무 Codex 탭이나 골라 재사용하지 않으며, 지정 탭을 특정할 수 없으면 확인한다. 신규 작업자 배정에는 시작 영수증의 Dispatch를 사용한다.
 
 터미널 핸들은 세션마다 바뀐다. 그런데 **목록을 확인한 시점과 전송 시점 사이에 세션이 또 바뀔 수 있다.**
 
@@ -86,15 +105,13 @@ Claude 터미널이 2개 이상일 수 있다. **`lastOutputAt`이 방금인 쪽
 
 ## Codex와 묻고 답하기 — Orca 탭 (2026-11-05 실측)
 
-사용자가 "Codex랑 논의해줘, 생각도 보이게"라고 하면 `codex exec`가 아니라 **Orca의 Codex 터미널 탭**을 쓴다.
-탭이라서 Codex가 생각하는 과정이 사용자 화면에 그대로 보인다.
+사용자가 "Codex랑 논의해줘, 생각도 보이게"라고 해도 **신규 작업은 위 `worker-start`·`worker_done` 경로가 기본**이다. 아래 2~5단계는 사용자가 기존 Codex 탭을 지정한 경우만 적용하는 별도 절차이며, 그 탭의 대화 과정이 사용자 화면에 보인다. `codex exec`는 쓰지 않는다.
 
 1. **질문은 브리프 파일로 쓴다** — `.claude/briefs/{날짜}-{주제}.md`. 전제·확인된 사실·내 안·묻는 것·범위 제한,
    그리고 **산출물 경로 하나**(`…-codex.md`)를 적는다. 2차 질문은 `-r2.md`처럼 이어 붙인다.
    **맨 위에 "답변·중간 보고는 한국어 존댓말로, 산출물은 한국어로" 한 줄을 넣는다** — 사용자가 Codex 출력을 직접 읽는다(2026-11-05 지시, 존댓말은 2026-11-17 요청, `CODEX.md` §0). 브리프 자체도 존댓말로 쓴다.
-2. **탭을 연다** — `orca agent launch --agent codex --surface terminal` (옵션은 `--help` 확인).
-   이미 열린 탭이 있으면 `orca terminal list --json`에서 `agentIdentity == "codex"`를 찾아 재사용한다.
-3. **보낸다** — `orca terminal send --terminal <handle> --text "<브리프 절대경로> 를 읽고 요청대로 검토해 주세요" --enter`
+2. **사용자가 지정한 기존 탭을 확인한다** — `orca terminal list --json`으로 지정 탭의 handle과 현재 세션을 대조한다. `agentIdentity == "codex"`라는 이유만으로 다른 탭을 재사용하지 않는다. 지정 탭이 없으면 확인하며, 신규 배정은 `worker-start`로 한다.
+3. **지정한 기존 탭에만 보낸다** — `orca terminal send --terminal <handle> --text "<브리프 절대경로> 를 읽고 요청대로 검토해 주세요" --enter`
    - **보내기 전에 탭 상태와 작업 폴더를 확인한다.** `orca terminal list --json`에 그 handle이 없으면 그 탭에 보내지 않는다
      (보내면 `terminal_not_writable`). `terminal list`의 `worktreePath`는 Orca가 관리하는 경로라 실제 Codex cwd와 다를 수 있다 —
      **화면 아랫줄 또는 최신 rollout 첫 줄 `session_meta.cwd`**로 확인한다. 2026-11-05에 Codex 탭의 cwd가
@@ -164,15 +181,20 @@ try {
    (적어도 놓칠 수 있다 — 2026-09-10에 EventSystem 중복을 제외 대상으로 적었는데도 "항목 8 실패"로 왔다)
 6. **QA 절차서 경로** — Play Mode QA를 맡길 때는 `runbook/codex-qa-full.md`(전체 플레이) 또는 `runbook/codex-qa-quick.md`(고친 것 재확인)를 브리프에 넣고, 확인할 시나리오와 통과 기준을 함께 적는다. (2026-11-13: QA 서브에이전트를 Codex 절차서로 전환)
 
-### ★ 완료 결과를 이 터미널로 돌려달라고 **인계문에 직접 쓴다**
+### ★ 완료 반환 경로를 **인계문에 직접 쓴다**
 
-`CODEX.md` §5와 `AGENT.MD`에 "원래 Claude Code 터미널에 직접 전송하고 `accepted: true`까지 확인한다"가
-규칙으로 있다. **그런데 문서에 있다는 것만으로는 안 지켜진다** — 2026-09-12에 Codex가 Orca Git 마무리를
+`CODEX.md` §5와 `AGENT.MD`에 원래 지휘자에게 직접 반환하는 규칙이 있다. 신규 Orca 작업자는 **프리앰블의 Task·Dispatch ID로 `worker_done`을 보내도록** 브리프에 명시한다. 사용자가 지정한 기존 탭에는 아래 별도 반환문을 쓴다.
+
+**문서에 있다는 것만으로는 안 지켜진다** — 2026-09-12에 Codex가 Orca Git 마무리를
 끝낸 뒤 사용자에게만 답하고 이 절차를 건너뛰었다(사용자가 지적한 뒤에야 전송).
 
 그래서 **인계문 끝에 한 줄을 직접 넣는다.** 눈앞에 있는 지시가 문서보다 강하다.
 
-> 작업이 끝나면 이 터미널(`<handle>`)로 결과를 직접 보내주시고 `accepted: true`까지 확인해 주세요.
+> Orca 작업자는 작업이 끝나면 프리앰블의 Task·Dispatch ID로 `worker_done`을 정확히 한 번 보내고 성공 영수증을 확인해 주세요. 보고서는 UTF-8 md 파일로 저장하고 `--report-path`로 알려 주세요.
+
+사용자가 지정한 기존 탭 경로에만 다음 문장을 쓴다.
+
+> 작업이 끝나면 지정한 원래 Claude 세션으로 아래 별도 반환 절차에 따라 결과를 직접 보내 주세요. `terminal send`를 쓰는 경우 `accepted: true`도 확인해 주세요.
 
 **왜 이게 중요한가** — 돌려주지 않으면 세션이 결과를 모른 채 다음 작업을 시작한다.
 사용자가 중간에서 복사해 옮기게 되고, 그러면 인계가 사람 손을 거치는 구조가 된다.
@@ -201,16 +223,20 @@ try {
 
 Claude Code가 Codex에 넘긴 작업은 Codex의 사용자 보고만으로 끝내지 않는다. 작업 완료 후 **인계한 원래 Claude Code 세션에 결과를 직접 전송**해야 한다.
 
+**Orca 작업자는 `worker_done`으로 반환한다.** 프리앰블의 `--from`·Task·Dispatch ID와 실제 성공·실패를 사용하고 `--report-path`로 UTF-8 보고서를 전달한다. 성공 영수증을 확인하면 그 작업은 끝이며, 같은 결과를 `terminal send`로 중복 전송하지 않는다. 전송 실패 시 CLI가 제시한 복구 절차만 따른다.
+
+**아래 1~4단계는 사용자가 기존 탭을 지정했고 orchestration Dispatch가 없는 경우에만 적용한다.** 지휘자의 명시된 수신 세션으로 `orca orchestration send --to <handle 또는 orca_session_id:...>`를 우선 사용한다. `terminal send`는 사용자가 기존 수신 탭을 지정한 경우에만 사용하며, 다른 탭을 임의로 고르지 않는다.
+
 1. `orca worktree ps --json`과 `orca terminal list --json`으로 같은 워크트리의 기존 Claude 터미널을 찾는다.
 2. 프롬프트·최근 출력·터미널 identity를 대조해 인계한 세션을 특정한다. 애매하면 임의 전송하지 말고 사용자에게 확인한다.
 3. `orca terminal send --terminal <handle> --text "<인계 요약>" --enter --json`으로 결과를 직접 보낸다.
-4. 응답의 `accepted: true`를 확인한다. 실패하면 한 번 재조회·재시도하고, 그래도 실패할 때만 사용자에게 전달 불가 사실과 복사용 인계문을 보고한다.
+4. `terminal send` 응답의 `accepted: true`를 확인한다. 실패하면 CLI가 안내한 복구를 따르고, 임의로 새 요청을 재전송하지 않는다. 전달이 불가능하면 사용자에게 그 사실과 복사용 인계문을 보고한다.
 
 인계 요약에는 결과, 변경 파일 또는 커밋 해시, 검증 상태, 남은 위험과 다음 작업을 넣는다. **사용자에게 인계문만 보여주고 복사해 달라고 하거나, 새 Claude 프로세스를 띄우는 것은 직접 반환이 아니다.** 원래 세션이 이미 종료됐거나 찾을 수 없을 때만 사용자에게 대체 전달 방법을 요청한다.
 
 **금지**
 - `--dangerously-bypass-approvals-and-sandbox`로 호출하지 않는다. 승인이 필요하면 `--approve-for-me`를 쓴다.
-- Git 마무리(stage·commit·merge·push)를 `codex exec`로 대신하지 않는다. 그건 Codex **메인 세션**의 몫이고, 여기서 띄우는 건 별도 프로세스라 같은 저장소를 두 주체가 동시에 건드리게 된다.
+- Git 마무리(stage·commit·merge·push)는 지휘자가 배정한 Codex Orca 작업자가 맡는다. `codex exec`로 대신하지 않는다. 별도 프로세스에 중복 배정하면 같은 저장소를 두 주체가 동시에 건드리게 된다. 소유권·검증·삭제 조건은 `CODEX.md` 「Git 마무리 전담」을 유지한다.
   - `.claude/hooks/codex-exec-git-guard.js`의 PreToolUse 훅(`Bash|PowerShell`)으로 명령 인수·stdin 브리프 파일의 Git 마무리 위임을 차단한다. 근거: 2026-11-06 재발 3회로 문서 규칙을 훅으로 승격했다.
   - stdin 브리프 파일을 읽을 수 없어도 차단한다. 브리프를 먼저 만든 뒤 별도 명령으로 실행한다(2026-11-06: 한 명령에서 파일 생성 후 위임하면 훅 시점에 파일이 없어 검사를 빠져나간 사례 보완).
   - 한계: 셸 전체 문법·동적 변수/래퍼·복잡한 중첩 치환은 완전 해석하지 않으므로 누락·오탐 가능성이 있다.

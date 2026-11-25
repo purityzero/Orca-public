@@ -29,4 +29,4 @@ effort: low
 - 원인 규명이 필요한 버그 조사(client-bugfixer 몫).
 - 여러 파일에 걸친 수정, 구조 판단(code-architect/client-bugfixer 몫).
 - 완료 후 `.claude/class/*.md` 갱신은 변경이 작으면 생략 가능 — 이미 문서가 있는 클래스면 해당 항목만 짧게 추가.
-- **자체 재위임 금지**: 이 에이전트는 Agent 툴에 접근할 수 없다(`disallowedTools: Agent`) — 스스로 다른 서브에이전트를 호출할 수 없다 — 위임 순서는 감독(메인 세션)의 몫이다.
+- **자체 재위임 금지**: Agent 도구로 띄울 때만 `disallowedTools: Agent`로 구조적으로 막힌다. Orca 작업자로 띄우면 이 제한은 자동 적용되지 않으므로 브리프에 "다른 에이전트·작업자를 띄우지 않는다"를 명시한다. 위임 순서는 Claude 지휘자만 정한다(`AGENT.MD` 「위 9개 에이전트(Client 7 + Design 2) 공통 규칙」).

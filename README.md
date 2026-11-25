@@ -66,10 +66,10 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 <ORCA>\
 ├── README.md                    ← 이 문서 (전체 사용법)
 ├── AGENTS.md                    ← Codex가 세션 시작·대상 확정 후 읽을 문서를 지정하는 진입 지침
-├── CLAUDE.md                    ← 행동 지침 (AGENT.MD는 배정·위임 전에 읽음, Codex 필수 읽기는 AGENTS.md)
+├── CLAUDE.md                    ← 2026-11-25에 31줄로 압축한 지휘자 지침(역할과 위임·작업 전 읽기 표·원칙)
 ├── CODEX.md                     ← Codex가 우선 소유하는 작업과 완료 조건
 ├── CODE.MD                      ← C#/Unity 코딩 규칙 (네이밍, 스타일 등)
-├── AGENT.MD                     ← Codex/Claude 실행자 선택 + Claude 서브에이전트 라우팅
+├── AGENT.MD                     ← Codex/Claude 실행자 선택 + 역할 에이전트 실행 방식
 │
 ├── ParallelWorkContract.MD      ← Orca 모델·Unity 제약·병렬 레인 분할/평가 계약 (Main→워커 핸드오프 규격)
 │
@@ -88,14 +88,14 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 ├── WorkBranch.ps1               ← 브랜치 시작/병합 스크립트 본체
 ├── WorkBranch.cmd               ← 브랜치 스크립트 진입점
 │
-├── agents\                      ← 정의 8개(QA는 Codex 절차서 runbook\codex-qa-*.md), 역할·모델은 AGENT.MD
+├── agents\                      ← 역할 정의서 10개(test-echo 포함), 역할·모델은 AGENT.MD
 │
 ├── rules\
 │   └── glory.md                 ← Glory 공용 라이브러리 사용 지침, **마스터 보관용**
 │                                    (frontmatter의 paths가 Assets/Scripts 전용이라 여기선 발동 안 함)
 │
 ├── runbook\                     ← 주제별 운용 절차 (진입점: runbook/README.md)
-├── .claude\                     ← settings·hooks·commands(`/시작`)·UNFINISHED.md
+├── .claude\                     ← settings·hooks(인용 전 재독 검사 포함)·commands(`/시작`)·UNFINISHED.md
 ├── tools\                       ← 검사·자동화 도구
 ├── .local\                      ← PC·세션 로컬 기록 (git 제외)
 │
@@ -118,6 +118,10 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 
 > `Unity\` 폴더 자체의 정본 규칙·동기화 함정·마스터 관계는 **`Unity\README.md`에 훨씬 상세히** 정리돼 있다 — 프로젝트 문서를 실제로 갱신하기 전엔 그 문서부터 읽을 것.
 
+2026-11-25에 읽기 전용 검토 역할 `code-flow-reviewer`(흐름 판단)와 `code-theory-reviewer`(이론 판단)를 추가했다. QA는 Codex 절차서 `runbook/codex-qa-*.md`를 따른다. `CLAUDE.md`의 커뮤니케이션 세부 규칙은 `runbook/task-execution.md` 「커뮤니케이션 세부」로 옮겼다.
+
+Stop 훅 `reread-before-cite-guard.js`는 답변에 `.cs:줄`을 인용하면서 이번 턴에 해당 파일을 읽은 흔적이 없으면 막는다. 2026-11-25 실제 세션에서 1회 차단을 확인했다. Claude 세션이 끝나면 공유 `.claude/agents/` 사본이 지워진다. 사본 복구와 Agent 도구 목록 문제는 [서브에이전트 목록 복구](runbook/subagents.md)를 따른다.
+
 ---
 
 ## 3. 문서 지도 — 뭘 언제 읽나
@@ -130,7 +134,8 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 | `runbook/prefab-ui.md` | 프리팹·UI를 만들거나 고칠 때만 읽는 컴포넌트·편집 규칙 |
 | `CODEX.md` | Codex 작업 배정·완료 조건을 확인할 때. 모델·effort는 `CODEX.md` §2에서 고른다. |
 | `runbook/README.md` | 주제별 운용 절차를 찾는 진입점 |
-| `.claude/UNFINISHED.md` | 세션 시작 시 항상 — Orca 자체의 미완료 작업 |
+| `runbook/subagents.md` | Agent 도구의 서브에이전트 목록 누락과 공유 정의 사본 복구를 확인할 때 |
+| `.claude/UNFINISHED.md` | `/해야할일`을 받을 때, 미검증 작업을 기록할 때 — Orca 자체의 미완료 작업 |
 | `Unity\{P}\.claude\UNFINISHED.md` | 특정 프로젝트 작업 시작 시 |
 | `ParallelWorkContract.MD` | 레인 2개 이상으로 병렬 작업을 짤 때, 또는 Orca/Unity CLI 모델 자체를 다시 확인할 때 (특히 §11 이름 기반 소프트 락) |
 | `LocalPaths.json` | **프로젝트 원본(`<원본:{P}>`)을 읽거나 쓰기 직전 항상** — 실제 경로가 여기에만 있다 |
@@ -143,14 +148,16 @@ Orca 채팅은 세션 시작 훅의 화면 출력(환경 체크 표·프로젝�
 
 ## 4. 핵심 원칙 요약 (각 문서에 상세 근거 있음)
 
-1. **정본 위치가 종류별로 다르다** — 코딩 규칙은 루트 1부, 에이전트 정의는 `agents\`가 마스터(단 실제 실행엔 프로젝트 로컬 사본이 필요), 프로젝트 문서는 `Unity\{P}\.claude\`가 정본이고 `<원본:{P}>\.claude\`는 그 시점 스냅샷. (`Unity\README.md` 참고)
-2. **에이전트를 실행하기 전엔 이름에 프로젝트명을 붙인다** — `{ProjectName}_{ClassName}_class` 형식. 여러 프로젝트가 같은 "Glory" 라이브러리를 쓰면 클래스명이 겹치기 때문. 스폰 전 `ListAgents`로 같은 이름이 이미 실행 중이면 대기한다. (`ParallelWorkContract.MD` §11)
+**Claude 메인 채팅이 지휘자다.** 역할 에이전트는 Orca 작업자(새 세션)로 띄우고, 브리프 첫 줄에서 역할 정의서 `agents/{이름}.md`를 읽게 한다. Codex 세션은 작업자 역할만 하며 재위임하지 않는다. 정본은 `AGENT.MD` 「Claude 역할 에이전트 실행 방식」이다.
+
+1. **정본 위치가 종류별로 다르다** — 코딩 규칙은 루트 1부, 에이전트 정의는 `agents\`가 마스터(Agent 도구 실행에는 프로젝트 로컬 사본이 필요), 프로젝트 문서는 `Unity\{P}\.claude\`가 정본이고 `<원본:{P}>\.claude\`는 그 시점 스냅샷. (`Unity\README.md` 참고)
+2. **Agent 도구 서브에이전트는 이름에 프로젝트명을 붙인다** — `{ProjectName}_{ClassName}_class` 형식. 여러 프로젝트가 같은 "Glory" 라이브러리를 쓰면 클래스명이 겹치기 때문. `ListAgents` 이름 락은 Agent 도구의 같은 세션 안에서만 검증됐고, 정의 파일의 세션 사본도 Agent 도구 등록용이다. 기본 실행 경로인 Orca 작업자 사이의 락으로는 검증되지 않았으므로, Claude 지휘자가 브리프의 수정 허용 범위를 나누고 겹치는 파일은 순차 배정한다. (`ParallelWorkContract.MD` §11)
 3. **Unity 에디터와 CLI 조작은 공유 자원, 한 번에 하나만** — Play Mode 검증이나 프리팹 편집은 병렬 불가. 코드/문서 편집만 병렬 가능. (`ParallelWorkContract.MD` §2)
 4. **Unity 공식 CLI와 Pipeline으로 에디터를 조작한다** — 대상 프로젝트를 명시한다. MCP for Unity 자동연결은 2026-11-17 폐기된 과거 기록이다. (`UnityLauncher.MD` §6)
 5. **검증 전 변경은 기본 브랜치에 올리지 않는다** — Unity 프로젝트의 동작을 바꾸는 수정은 `work/{날짜}-{주제}` 브랜치에서 하고, Play Mode 확인까지 끝난 뒤 `--no-ff`로 합류한다. (`WorkBranchFlow.MD`)
 6. **프로젝트 고유 기록은 프로젝트 문서에만 남긴다** — 공용 문서에는 일반화한 규칙만 적는다. `runbook/feedback.md`의 "피드백 반영 프로세스" 참고.
 7. **Codex는 후속 처리 전용이 아니다** — 저장소 전체 분석·자동화·테스트·리팩터링·문서 정합성은 처음부터 Codex에 배정한다. Unity 에디터 전용 검증과 프로젝트별 Claude 노하우는 필요할 때 명시적으로 핸드오프한다. (`CODEX.md` 참고)
-   - **저장소 Git 일(commit·merge·push)은 Codex 메인 세션, 즉 Orca의 Codex 터미널 탭이 한다.** Claude가 `codex exec`로 대신 넘기면 `.claude/hooks/codex-exec-git-guard.js`가 막는다. (`runbook/codex-handoff.md` 「금지」)
+   - **저장소 Git 일(commit·merge·push)은 지휘자가 배정한 Codex Orca 작업자가 마무리한다.** Claude가 `codex exec`로 대신 넘기면 `.claude/hooks/codex-exec-git-guard.js`가 막는다. (`runbook/codex-handoff.md` 「금지」)
 8. 모델·effort는 `CODEX.md` §2에서 고른다.
 
 ---

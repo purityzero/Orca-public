@@ -2,7 +2,7 @@
 //
 // 왜 필요한가: Claude Code는 subagent_type을 **작업 디렉토리**의 `.claude/agents/`에서 찾는다.
 // 이 워크스페이스는 세션을 루트(<ORCA>)에서 열고 그 안에서 Unity 프로젝트를 고르는 구조라,
-// 프로젝트 원본(<원본:{P}>\.claude\agents\)에 8개가 멀쩡히 있어도 cwd가 거기가 아니라 안 잡힌다.
+// 프로젝트 원본(<원본:{P}>\.claude\agents\)에 정의들이 멀쩡히 있어도 cwd가 거기가 아니라 안 잡힌다.
 // 그래서 마스터(<ORCA>\agents\)를 세션용 임시 사본으로 <ORCA>\.claude\agents\에 깐다.
 //
 // 마스터는 일부러 `.claude` 밖에 둔 영구본이다 — 옮기거나 지우지 않는다

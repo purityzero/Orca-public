@@ -25,4 +25,4 @@ effort: low
 - 구조/아키텍처 판단(code-architect 몫).
 - 밸런스 수치 결정(design-issue-resolver 몫).
 - 원인 규명이 필요한 버그 수정(client-bugfixer/quick-fix 몫) — 이 에이전트는 "무엇을 만들지 이미 정해진" 신규/확장 구현 전용이다.
-- **자체 재위임 금지**: 이 에이전트는 Agent 툴에 접근할 수 없다(`disallowedTools: Agent`) — 스스로 다른 서브에이전트를 호출할 수 없다 — 위임 순서는 감독(메인 세션)의 몫이다.
+- **자체 재위임 금지**: Agent 도구로 띄울 때만 `disallowedTools: Agent`로 구조적으로 막힌다. Orca 작업자로 띄우면 이 제한은 자동 적용되지 않으므로 브리프에 "다른 에이전트·작업자를 띄우지 않는다"를 명시한다. 위임 순서는 Claude 지휘자만 정한다(`AGENT.MD` 「위 9개 에이전트(Client 7 + Design 2) 공통 규칙」).

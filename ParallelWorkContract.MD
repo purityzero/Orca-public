@@ -5,7 +5,7 @@
 
 > **§0~§9는 미검증** — 설계안이다. 실제로 레인을 동시에 돌려 확인한 절차가 아니다.
 > 근거는 한 Unity 프로젝트(타워디펜스)의 실측이며, 다른 구조에서는 §4의 판정 절차부터 다시 밟아야 한다.
-> **§11(이름 기반 소프트 락)만 2026-08-21에 레인 2개 실제 실행으로 검증 완료.**
+> **§11(이름 기반 소프트 락)은 2026-08-21에 같은 세션의 Agent 도구 호출로 검증 완료. Orca 작업자 사이에서는 미검증이다.**
 
 ---
 
@@ -329,16 +329,20 @@ MemoryPoolFactory<T, string>
 - 테스트 결과와 diff를 우선한다. 에이전트의 문장 설명은 근거가 아니다.
 - 둘 다 통과하면 변경 줄 수가 아니라 **원인 제거 여부**와 예외 처리 명확성으로 고른다.
 - 둘 다 실패하면 억지로 섞지 말고, 실패 로그를 새 worktree의 입력으로 넘긴다.
-- 채택 결과를 Codex 메인 세션에 인계한다. Codex가 stage → commit → merge → push를 수행하고, 포함 관계 확인 후 남은 worktree/브랜치를 archive 또는 삭제한다.
+- 채택 결과는 지휘자가 배정한 Codex Orca 작업자에게 인계해 Git을 마무리한다. 그 작업자가 소유권·검증 상태를 확인해 stage → commit → merge → push를 수행하고, push 성공·포함 관계 확인 후 남은 worktree/브랜치를 archive 또는 삭제한다(`CODEX.md` 「Git 마무리 전담」). `codex exec`로 대신하지 않는다.
 - 기록 md는 **채택 후 원본에서 한 번만** 남긴다.
 
 ---
 
-## 11. 이름 기반 소프트 락 — Agent 실행 규칙 (2026-08-21)
+## 11. 이름 기반 소프트 락 — Agent 도구 전용 실행 규칙 (2026-08-21)
 
-§5~6의 "소유 파일 계약"은 워크트리 레인 단위의 무거운 사전 협의다. 아래는 개별 `Agent` 스폰 단위로 즉석에서 충돌을 막는 가벼운 보조 장치 — 정식 레인이 아닌 fork/서브에이전트 산발 호출에도 쓴다.
+§5~6의 "소유 파일 계약"은 워크트리 레인 단위의 무거운 사전 협의다. 아래는 개별 `Agent` 도구 스폰 단위의 보조 장치다. `ListAgents` 조회·이름 락과 정의 파일의 세션 사본 설명은 Agent 도구 경로에 한정하며, Orca 작업자 사이의 락으로 검증한 내용이 아니다.
+
+**기본 실행 경로인 Orca 작업자**는 `AGENT.MD` 「Claude 역할 에이전트 실행 방식」을 따른다. Claude 지휘자가 브리프의 수정 허용 파일·경로로 소유권을 나누고, 시작 전 기존 작업자의 브리프·Task/Dispatch 상태와 작업자 목록(`orca orchestration worker-list --environment local --json`)을 대조한다. 이 목록은 Run에 바인딩된 호출이면 해당 Run 범위이므로, 같은 파일을 다른 Run에서도 쓰면 그 배정도 별도로 확인한다. 범위가 겹치면 앞 작업이 끝난 뒤 배정하며, `ListAgents`에 같은 이름이 없다는 이유로 동시 수정을 허용하지 않는다.
 
 ### 마스터-사본 관계 (에이전트 정의 파일)
+아래 사본은 Agent 도구의 `subagent_type` 등록용이다. Orca 작업자가 역할 파일을 읽는 경로에서는 브리프에 마스터 `agents/{이름}.md` 경로와 제한을 명시하며, 이 사본으로 작업자 등록·도구 제한·세션 간 락이 보장되지는 않는다.
+
 각 Unity 프로젝트의 `.claude`를 Orca가 통합 관리하게 되면서(구조 설명은 `Unity\README.md` 참고), 에이전트 정의(`.claude/agents/*.md`)도 `<ORCA>\agents\`가 마스터다. Claude Code는 subagent_type을 프로젝트 로컬 `.claude/agents/`에서 찾으므로(Orca 루트에 있는 것만으론 인식 안 됨), **해당 프로젝트에서 Agent를 실행하기 전에 `<ORCA>\agents\*.md`를 그 프로젝트의 `.claude\agents\`로 맞춰둔다.** 그 프로젝트의 실제 위치는 `<ORCA>\LocalPaths.json`의 `projects.{프로젝트명}`에서 읽는다(경로 토큰 `<ORCA>`/`<원본:{P}>` 설명은 루트 `README.md`).
 
 **⚠️ 무조건 덮어쓰기 금지 (2026-08-21 발견):** GeometryDefender의 `qa-tester.md`/`design-issue-resolver.md`엔 그 프로젝트만의 튜닝(WaveTable 페이즈 타이밍, `isAutoMode` 플래그 절차, Text Animator 핫리로드 우회법, `08_balance.html` 기준선 등)이 body에 녹아있었다 — 마스터로 그냥 덮어썼다면 이 노하우가 통째로 사라질 뻔했다. 실제 절차:
@@ -347,6 +351,8 @@ MemoryPoolFactory<T, string>
 3. 마스터 자체의 오탈/끊긴 참조(예: 삭제된 `.claude/CODE.md` 참조)를 발견하면 마스터부터 고치고, 그 수정을 모든 프로젝트 사본에 전파한다.
 
 ### 워크스페이스 루트에서 연 세션 — 세션용 임시 사본 후 삭제 (2026-08-24)
+
+이 절의 세션 사본은 Agent 도구용이며, 같은 루트의 `.claude/agents/`를 세션들이 공유한다. 별도 Orca 작업자마다 격리된 사본이나 소유권 락을 만든다는 뜻이 아니다. SessionEnd 삭제와 복구 절차의 정본은 `runbook/subagents.md`다.
 
 위 절차는 **"그 프로젝트에서 세션을 연다"를 전제**한다. 그런데 `OrcaStart.cmd` 흐름은 세션을 `<ORCA>` 루트에서 열고 **그 안에서** 프로젝트를 고른다 — 이때 cwd는 끝까지 `<ORCA>`이므로, 프로젝트 원본에 에이전트 정의가 멀쩡히 동기화돼 있어도 **subagent_type이 하나도 안 잡힌다**(Claude Code는 cwd의 `.claude/agents/`만 본다). 2026-08-24 세션에서 실제로 겪음 — AGENT.MD 라우팅 대상인 작업을 위임 못 하고 메인이 직접 처리했고, 원인을 알아채는 데 대화 여러 번을 썼다.
 
@@ -382,16 +388,16 @@ mklink /J "<worktree경로>\.claude" "<원본경로>\.claude"
 > 여러 레인이 같은 기록 파일을 동시 편집하는 충돌도 이걸로 함께 막힌다.
 
 ### 명명 규칙
-Agent를 스폰할 때 `name`을 대상 식별자로 짓는다 — 기존 `.claude/class/{ClassName}.md` / `.claude/prefab/{PrefabName}.md` 문서 관례와 짝을 맞추되, **프로젝트명을 맨 앞에 붙인다.**
+Agent 도구로 스폰할 때 `name`을 대상 식별자로 짓는다 — 기존 `.claude/class/{ClassName}.md` / `.claude/prefab/{PrefabName}.md` 문서 관례와 짝을 맞추되, **프로젝트명을 맨 앞에 붙인다.** Orca 작업자의 탭 이름을 이 락의 식별자로 사용하지 않는다.
 - 클래스 작업 → `{ProjectName}_{ClassName}_class` (예: `MyGame_TableManager_class`)
 - 프리팹 작업 → `{ProjectName}_{PrefabName}_prefab` (예: `MyGame_UICardDraft_prefab`)
 
 **프로젝트명이 필수인 이유:** 여러 프로젝트가 같은 "Glory" 공용 라이브러리를 쓰면 클래스명이 겹친다(`TableManager`, `UIAssetBox`, `UIToastMessage`, `GlobalEnum` 등). 프로젝트명 없이 `{ClassName}_class`만 쓰면 서로 무관한 두 프로젝트의 동명 클래스 작업이 같은 이름으로 충돌 판정되어 불필요하게 대기하게 된다(2026-08-21 발견).
 
 ### 대기 프로토콜
-새 Agent를 스폰하기 전에 `ListAgents`로 동일 이름이 이미 떠 있는지 확인한다. 있으면 **그 작업이 끝날 때까지 대기한 뒤 시작한다** — 같은 프로젝트의 같은 클래스/프리팹을 두 레인이 동시에 건드리는 걸 막는다.
+같은 세션에서 새 Agent 도구 서브에이전트를 스폰하기 전에 `ListAgents`로 동일 이름이 이미 떠 있는지 확인한다. 있으면 **그 작업이 끝날 때까지 대기한 뒤 시작한다**. 이 조회로 별도 Orca 작업자의 파일 소유권을 판정하지 않는다. Orca 작업자는 위 브리프의 수정 허용 범위와 활성 배정을 기준으로 겹치는 파일을 순차 배정한다.
 
-### 검증 완료 (2026-08-21, 레인 2개 실제 실행)
+### 검증 완료 (2026-08-21, 같은 세션의 Agent 도구 레인 2개 실제 실행)
 - `ListAgents`가 `name`을 그대로 노출 → `{ProjectName}_{ClassName}_class` 형식으로 조회/식별 가능함을 확인.
 - 레인 A(`HouseRulez_TestTarget_class`)가 `running`인 동안 감지 → 대기 → A가 `completed`로 바뀐 뒤 같은 이름으로 레인 B를 스폰하는 흐름이 실제로 동작함을 확인.
 - 레인 C(`GeometryDefender_TestTarget_class`, 동일 클래스명·다른 프로젝트)는 A/B와 전혀 안 걸리고 동시 실행됨 — 프로젝트명 접두사가 오인 충돌을 막는 것도 함께 확인.
@@ -399,6 +405,7 @@ Agent를 스폰할 때 `name`을 대상 식별자로 짓는다 — 기존 `.clau
 
 ### 미검증
 - `ListAgents`가 다른 세션(이 대화 밖에서 뜬 별도 Claude Code 세션)에서 뜬 동일 이름 에이전트까지 전부 보여주는지 — 이번 검증은 같은 세션 안에서만 확인됨.
+- 별도 Orca 작업자 사이에서 `ListAgents` 이름 락이 동작하는지 — 검증되지 않았으므로 작업자 간 충돌 방지 수단으로 주장하지 않는다.
 - 두 세션이 동시에 "없음"을 확인하고 동시에 스폰하는 레이스 컨디션 — 아직 막을 장치 없음.
 
 ---

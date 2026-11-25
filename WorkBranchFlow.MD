@@ -4,37 +4,22 @@
 **도구:** `WorkBranch.cmd` (본체 `WorkBranch.ps1`)
 **관련 문서:** `README.md`(경로 토큰·LocalPaths), `ParallelWorkContract.MD` §2·§4(Unity 제약), `Unity\README.md`(정본 규칙)
 
----
-
 ## 1. 왜 만들었나
 
-2026-08-23 기준 GeometryDefender 원본은 마지막 커밋이 2026-07-30(코드 기준)인데 작업 폴더엔 **미커밋 변경이 32개**(수정 25 + 신규 7) 쌓여 있었다. `UNFINISHED.md`가 "컴파일만 확인, Play Mode 완전 미검증"이라고 적어둔 배치 작업들이 전부 그 안에 섞여 있어서, **어디까지가 검증된 상태인지 git으로는 구분할 수 없는 상태**였다.
-
-브랜치를 나누면 그 경계가 생긴다. 기본 브랜치(`main`)는 "검증을 통과한 것만", 작업 브랜치는 "아직 확인 안 된 것"으로 읽으면 된다.
-
-> 위 32개는 이 흐름을 만들기 전의 것이라 그대로 뒀다. **앞으로의 작업부터** 이 흐름을 따른다.
-
----
+검증 전 변경은 작업 브랜치에 두고, `main`에는 검증을 통과한 작업만 합류시킨다. 미커밋 변경이 섞여 검증 경계를 잃었던 2026-08-23 사례에서 정한 흐름이다.
 
 ## 2. 원칙
 
 1. **Unity 프로젝트의 코드/프리팹/테이블을 고치기 전에 작업 브랜치를 판다.** 오타 하나 고치는 수준이면 굳이 안 파도 되지만, 동작이 바뀌는 수정이면 판다.
 2. **기본 브랜치에는 검증을 통과한 것만 들어간다.** 통과 판정은 사람이 한다(§4).
-3. **작업 브랜치는 병합 후에도 지우지 않는다.** 되돌릴 때 필요하다.
+3. **병합한 작업 브랜치는 push 성공과 `main` 포함 확인 뒤 삭제한다.** 미병합·미검증 브랜치는 보존하고 미검증 상태와 브랜치명을 `.claude/UNFINISHED.md`에 남긴다. 삭제·원격 권한은 `CODEX.md` 「Git 마무리 전담」을 따른다.
 4. **한 브랜치 = 한 주제.** 밸런스 조정과 신규 무기 추가를 한 브랜치에 섞으면 "밸런스만 되돌리기"가 불가능해진다.
 5. **최종 Git 마무리는 지휘자가 배정한 Codex Orca 작업자가 담당한다.** Claude Code와 Git 마무리를 배정받지 않은 작업자는 구현·검증·리뷰까지만 하고, stage·commit·merge·push·병합 브랜치 삭제는 하지 않는다. `codex exec`로 대신하지 않으며, 소유권·검증·삭제 조건은 `CODEX.md` 「Git 마무리 전담」을 따른다.
-
----
 
 ## 3. 절차
 
 ### ① 시작
 `WorkBranch.cmd` → `1` → 주제 입력. `work/{날짜}-{주제}` 브랜치가 기본 브랜치에서 뻗어 나온다.
-
-```
-work/2026-08-23-balance-retune
-work/2026-08-23-synergy-table
-```
 
 - 미커밋 변경이 남아 있으면 **그대로 새 브랜치로 따라온다**(파일은 손대지 않으므로 잃는 건 없다).
 - Unity 에디터가 열려 있으면 전환 직후 리임포트/재컴파일이 한 번 돈다. 그게 끝날 때까지 기다렸다가 작업을 시작한다.
@@ -46,7 +31,7 @@ work/2026-08-23-synergy-table
 §4의 체크리스트를 통과시킨다. 이 단계에서 브랜치를 오가지 않는다(리임포트가 반복돼 시간만 든다).
 
 ### ④ 병합
-지휘자가 배정한 Codex Orca 작업자가 `WorkBranch.cmd` → `2` 또는 동등한 Git 명령을 실행한다. 미커밋 변경이 남아 있거나 작업 브랜치가 아니면 스크립트가 막는다. 체크리스트를 보여주고 `y`를 받아야 `--no-ff`로 합류한다. 병합 후 push가 성공하고 브랜치 포함 관계를 확인한 다음 병합 완료 브랜치를 정리한다.
+지휘자가 배정한 Codex Orca 작업자가 `WorkBranch.cmd` → `2` 또는 동등한 Git 명령을 실행한다. 미커밋 변경이 남아 있거나 작업 브랜치가 아니면 스크립트가 막는다. 체크리스트를 보여주고 `y`를 받아야 `--no-ff`로 합류한다. 병합 후 push가 성공하고 작업 브랜치가 `main`에 포함됐는지 확인한 뒤 §2 원칙 3에 따라 삭제한다.
 
 `--no-ff`인 이유: 병합 커밋이 남아야 "이 작업 묶음"이 나중에 통째로 보이고 통째로 되돌릴 수 있다.
 
@@ -72,45 +57,27 @@ work/2026-08-23-synergy-table
 - **브랜치 전환은 에디터를 건드린다.** `.cs`가 바뀌면 재컴파일, `.prefab`/`.asset`/`.csv`가 바뀌면 리임포트가 돈다. Play Mode 중에는 절대 전환하지 않는다.
 - **`.meta` 파일은 항상 짝으로 커밋한다.** 에셋만 커밋하고 `.meta`를 빼면 다른 브랜치/PC에서 guid가 새로 발급돼 참조가 통째로 끊긴다.
 - **`.claude\`는 이 프로젝트에서 git 추적 제외다.** 즉 브랜치를 오가도 문서 기록은 그대로 남는다. 문서 정본은 어차피 Orca 쪽(`Unity\{P}\.claude\`)이다 — `Unity\README.md` 참고.
-- **워크트리를 쓰지 않는 이유:** 검증에 Unity 에디터가 필요한데, 워크트리 폴더는 `Library`를 처음부터 다시 만들어야 하고 에디터 인스턴스도 따로 띄워야 한다. 게다가 CLI 대상 경로를 잘못 지정하면 **열려 있는 원본을 검증할 수 있다**(`ParallelWorkContract.MD` §4 함정). 그래서 검증이 목적인 이 흐름에서는 원본에서 브랜치만 전환한다.
+- **Unity 공유 자원과 worktree 경계는 [ParallelWorkContract.MD](ParallelWorkContract.MD) §2·§4를 읽고 따른다.** 이 검증 흐름은 원본에서 브랜치를 전환한다.
 
 ---
 
 ## 6. 되돌리기 / 폐기
 
-스크립트는 되돌릴 수 없는 동작을 넣지 않았다. 필요하면 직접 친다.
-
-```bash
-# 병합을 취소 (병합 직후, 아직 push 안 했을 때)
-git -C "<원본:{P}>" reset --hard HEAD~1
-
-# 작업 브랜치를 버린다 (그 브랜치의 커밋이 사라진다 — 병합 안 한 상태면 복구 어려움)
-git -C "<원본:{P}>" branch -D work/2026-08-23-balance-retune
-
-# 검증 실패분만 빼고 싶다 — 브랜치에서 해당 커밋만 되돌린 뒤 다시 병합
-git -C "<원본:{P}>" revert <커밋>
-```
-
-`<원본:{P}>`의 실제 경로는 `LocalPaths.json`에 있다(`README.md` 경로 표기 규칙).
+스크립트에는 되돌리기·폐기를 넣지 않았다. 변경 취소는 `git -C "<원본:{P}>" revert <커밋>`을 우선 검토한다. 병합 직후 push 전의 `reset --hard HEAD~1`은 미커밋 변경을 잃을 수 있으므로 상태와 권한을 먼저 확인한다.
+병합 완료 브랜치는 §2 원칙 3의 조건을 충족한 뒤 `git branch -d <작업 브랜치>`로 삭제한다. 미병합·미검증 브랜치를 보존하고, `branch -D` 강제 폐기는 별도 확인 없이는 하지 않는다(`CODEX.md`).
+`<원본:{P}>`의 실제 경로는 `LocalPaths.json`에서 확인한다(`README.md` 경로 표기 규칙).
 
 ---
 
 ## 7. 전역 gitignore 의존 — 왜 프로젝트로 옮겼나 (2026-08-23)
 
-이 PC의 git 전역 설정이 이렇게 돼 있었다.
+Unity의 `Library/`·`Temp/`·`obj/`·`Logs/`·`UserSettings/` 무시는 PC 전역 설정에 의존하지 않고 프로젝트 `.gitignore`에 둔다. 다른 PC에서도 같은 규칙이 적용돼야 한다.
+신규 편입 시 전역 설정을 끄고 확인한다. 기존 추적 파일이 새 무시 규칙에 걸리는지도 점검한다.
 
+```bash
+git -C "<원본:{P}>" -c core.excludesfile=/dev/null check-ignore -v Library/ Temp/ obj/ Logs/ UserSettings/
+git -C "<원본:{P}>" -c core.excludesfile=/dev/null ls-files --cached --ignored --exclude-standard
+git -C "<원본:{P}>" rev-parse --show-toplevel
 ```
-core.excludesfile = D:\BackUp\Kapi\.gitignore
-```
 
-Unity의 `Library/`, `Temp/`, `obj/`를 무시하는 규칙이 **프로젝트의 `.gitignore`가 아니라 이 PC에만 있는 파일**에 들어 있었다. GeometryDefender의 `.gitignore`엔 `QA_Recordings/`와 `.claude/` 두 줄뿐이었다.
-
-**왜 위험한가:** 다른 PC에서 clone하면 그 파일이 없으므로 `Library/`(수 GB, 매번 바뀜)가 통째로 추적 대상이 된다. 브랜치를 오가는 이 흐름에서는 전환 때마다 거대한 변경으로 잡혀 사실상 작동하지 않는다.
-
-**처리:** GeometryDefender는 Unity 표준 목록에서 이 프로젝트에 해당하는 것만 추려 프로젝트 `.gitignore`에 커밋했다(`c0d1146`). 전역 설정을 꺼도 `Library/`·`Temp/`·`obj/`·`Logs/`·`UserSettings/`가 무시되는 것을 확인했고, 이미 추적 중이던 파일 중 새로 무시되는 것은 없었다.
-
-HouseRulez는 2026-08-23에 이 PC로 clone한 뒤 점검했고, 프로젝트 자체 `.gitignore`에 표준 목록이 이미 들어 있어 손댈 게 없었다.
-
-**주의 — 저장소 루트가 프로젝트 폴더보다 위일 수 있다.** HouseRulez가 그렇다(`<repo>\HouseRulez\Assets\` 구조라 `.git`은 한 단계 위에 있다). `.git` 폴더의 위치로 프로젝트를 판정하면 이런 배치를 놓치므로, `WorkBranch.ps1`은 `git rev-parse --show-toplevel`로 저장소 루트를 물어본다. 브랜치는 **저장소 단위**라 이 경우 한 브랜치가 저장소 전체에 걸린다.
-
-> **새 Unity 프로젝트를 이 워크스페이스에 편입할 때 확인할 것:** `git -C <원본> -c core.excludesfile=/dev/null check-ignore -v Library/` 가 프로젝트 `.gitignore`를 가리키는지. 전역 파일을 가리키거나 아무것도 안 나오면 위와 같이 옮긴다.
+`check-ignore`가 프로젝트 `.gitignore`를 가리키지 않으면 규칙을 옮긴다. 저장소 루트가 Unity 프로젝트보다 위일 수 있으므로 `rev-parse` 결과로 확인한다. 브랜치는 저장소 전체에 적용된다.

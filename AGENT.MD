@@ -42,7 +42,7 @@ orca orchestration worker-start --environment local --spec-file <브리프> --wo
 - 이 기준은 Claude Code 지휘자가 띄우는 Claude·Codex Orca 작업자에 적용한다. 지휘자는 Codex 작업자의 역할을 `CODEX.md` §2 프로필로 고르고, 모델·강도는 이 표에서 작업 성격에 맞춰 최종 선택한다. 프로필 기본값과 다르면 그 이유를 보고한다. Codex는 다른 작업자를 띄우거나 재위임하지 않는다.
 - 사용자가 모델이나 강도를 지정하면 그것을 따른다(예: 2026-11-17 웹 조사·토론은 사용자 지정 `gpt-6-astra` / `high`).
 - 선택 이유를 한 줄로 사용자에게 알린다. 표와 다르게 고르면 그 이유도 적는다.
-- 끝난 작업자는 보고한 턴에 `orca orchestration worker-release --dispatch <id>`로 닫는다.
+- 지휘자는 `worker_done`을 받고 보고한 그 턴에 `orca orchestration worker-release --dispatch <id>`로 닫는다. release가 이미 닫힘·비활성으로 답하면 그대로 둔다. `--keep-open`은 사용자가 원할 때만 쓴다. 아직 끝나지 않은 작업자는 release할 수 없으므로 `worker-stop`으로 멈춘다. `worker-list`의 `next`가 다른 조치를 요구하면 그것을 따른다.
 - 실측(2026-11-17): `--agent claude --model claude-haiku-5-5 --effort low`로 띄운 작업자가 그 모델로 응답했다. 추론 강도는 작업자가 스스로 확인하지 못하므로 시작 영수증(`effort` 필드)으로 확인한다. 화면 표시 방식(터미널 탭 / 구조화 채팅)은 Orca의 새 에이전트 탭 설정을 따른다.
 - 모델 ID는 바뀐다. Codex는 `~/.codex/models_cache.json`, Claude는 시스템 안내의 최신 모델 목록으로 확인하고 이 표를 갱신한다.
 
@@ -72,7 +72,7 @@ Codex 호출·Unity 접근·인계·직접 반환 전에 `runbook/codex-handoff.
 - **역할 에이전트는 새 세션(Orca 작업자)으로 띄운다.** Agent 도구 서브에이전트는 기본 경로가 아니다. Orca 작업자로 띄울 수 없을 때만 쓰고, 그 사실을 사용자에게 알린다.
   `orca orchestration worker-start --environment local --worktree current --agent claude --model <아래 표 model의 ID> --effort <아래 표 effort> --spec-file <브리프>`
   `--display-name`은 `--worktree current`에서는 탭 이름을 바꾸지 못한다(설치본 1.4.274 도움말은 "current/existing worktree에서 거부"라고 하지만, 실제로는 오류 없이 무시됐다 — 2026-11-25 이 세션의 작업자 탭은 모두 기본 이름으로 떴다).
-- **역할 파일(`agents/{이름}.md`)은 정의서로 쓴다.** 브리프 첫 줄에 "`C:\AI\Orca\agents\{이름}.md`를 읽고 그 역할·절차·금지 사항을 따른다"를 넣는다.
+- **역할 파일(`agents/{이름}.md`)은 정의서로 쓴다.** 브리프 첫 줄에 "`C:\AI\Orca\agents\{이름}.md`를 읽고 그 역할·절차·금지 사항을 따른다"를 넣고, 둘째 줄에 언어·존댓말 지시를 넣는다. 역할 정의서가 없는 작업은 언어 지시를 첫 줄에 넣는다.
 - **frontmatter의 도구 제한(`tools`·`disallowedTools`)은 Orca 작업자에 자동으로 적용되지 않는다.** 읽기 전용, 재위임 금지, 수정 허용 파일 같은 제한은 브리프에 문장으로 명시한다. 이것은 지시일 뿐 구조적 강제가 아니다. 작업자가 끝나면 diff로 지켰는지 확인한다.
 - **Codex 세션은 작업자 역할만 한다.** 지휘하거나 다른 작업자를 재위임하지 않는다. Git 마무리도 지휘자가 맡기는 작업으로 수행한다.
 - 파일 소유권이 겹치는 작업자는 순차로, 겹치지 않으면 병렬로 띄운다(`ParallelWorkContract.MD`).

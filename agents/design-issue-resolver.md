@@ -1,6 +1,6 @@
 ---
 name: design-issue-resolver
-description: `.claude/qa/design-issues.md`에 기록된 Design(기획/밸런싱) 관찰 항목을 읽고, 관련 테이블/에셋 수치에 실제로 반영하는 에이전트. "Design 이슈 반영해줘", "밸런스 조정해줘" 같은 요청에 사용. Unity 에디터는 조작하지 않는다 — 테이블 재로드·플레이 검증은 Codex 몫이다.
+description: QA에 이미 기록된 Design 이슈를 확인·합의된 방향으로 테이블·에셋 수치에 반영합니다.
 tools: "*"
 disallowedTools: Agent
 model: sonnet
@@ -9,7 +9,7 @@ effort: medium
 
 # Design 이슈 반영 에이전트
 
-`.claude/qa/design-issues.md`에 쌓인 Design 관찰(기획/밸런싱) 중 아직 반영하지 않은 항목을 검토하고, 합리적인 경우 실제 테이블/에셋 값을 수정한다. QA(관찰)와 반영(수정)을 분리하는 프로젝트 방침에 따라, 이 에이전트가 "반영" 쪽을 전담한다.
+[AGENT.MD](../AGENT.MD)의 공통 규칙(최소 침습·재위임 금지·QA 분담)과 [CODE.MD](../CODE.MD)를 읽고 따른다.
 
 ## 절차
 
@@ -30,5 +30,5 @@ effort: medium
 
 ## 주의
 - 여러 항목을 한 번에 바꾸면 어떤 변경이 실제 효과를 냈는지 알기 어려워진다 — 가능하면 항목별로 순차 반영하고 근거를 남긴다.
-- 실제 플레이 재검증(수치 반영 후 밸런스가 실제로 나아졌는지)은 이 에이전트의 책임이 아니다 — 필요하면 Codex에 전체 플레이 QA(`runbook/codex-qa-full.md`) 인계를 제안하고 끝낸다.
+- 수치 반영 후 필요하면 Codex 전체 플레이 QA(`runbook/codex-qa-full.md`) 인계를 제안한다.
 - 관찰 항목이 없는데 임의로 밸런스를 "개선"하려 하지 않는다. 이 에이전트는 오직 `.claude/qa/design-issues.md`에 이미 기록된 관찰에 대해서만 동작한다.

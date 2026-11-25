@@ -1,14 +1,15 @@
 # Codex QA — Unity 공식 CLI 경로와 판정 정확도 규칙
 
-마지막 적용: 2026-11-17. **MCP for Unity는 2026-11-17 사용자 결정으로 걷어냈다.** Unity 에디터 조작·Play Mode QA는 공식 CLI(`unity`) + 프로젝트의 `com.unity.pipeline`으로 한다.
+마지막 적용: 2026-11-25. **MCP for Unity는 2026-11-17 사용자 결정으로 걷어냈다.** Unity 에디터 조작·Play Mode QA는 공식 CLI(`unity`) + 프로젝트의 `com.unity.pipeline`으로 한다. 이 문서는 공통 준비·판정 증거의 정본이다.
 근거는 Cell_Test 시범 3회(CLI 1.0.1 + Pipeline 1.0.0). `runbook/codex-qa-full.md`·`codex-qa-quick.md`가 이 문서를 참조한다.
 
 ## 1. 준비
 
 - CLI 설치 확인: `unity --version`. 없으면 사용자에게 묻고 `winget install --id Unity.CLI --exact`(임의 설치 금지).
-- 프로젝트에 `com.unity.pipeline`이 없으면 `unity pipeline install --project-path <경로> --non-interactive`. 그 전에 `Packages/manifest.json`·`packages-lock.json`을 백업한다. **팀 공용 저장소의 manifest 변경은 사용자 승인을 받는다.**
+- 프로젝트에 `com.unity.pipeline`이 없으면 `unity pipeline install --project-path <경로> --non-interactive`. 설치는 `Packages/manifest.json`·`packages-lock.json`을 바꾸므로 **설치 전에 사용자 승인을 받는다.** 원본 백업은 만들지 않는다(`runbook/feedback.md` 「원본 파일 백업을 만들지 않는다」, 2026-11-25 사용자 결정).
 - CLI는 명령을 부를 때 실행 중인 에디터에 붙는다. 세션을 먼저 열고 에디터를 나중에 켜도 된다.
 - 에디터가 둘 이상 떠 있으면 대상을 반드시 지정한다. 지정하지 않으면 Pipeline 명령 검색이 거부된다(2026-11-17 실측).
+- QA는 구현에 참여하지 않은 Codex 또는 사람이 맡는다([CODEX.md](../CODEX.md) 독립 QA 경계). 같은 머신의 원본 에디터에서 실행하며 워크트리·원격에서 실행하지 않는다. Unity 조작은 한 번에 하나만 한다([병렬 계약](../ParallelWorkContract.MD) §2).
 
 ## 2. 명령 (PowerShell)
 
@@ -29,25 +30,19 @@
 
 설정을 바꾸기 전에 원래 값을 조회해 기록하고, 끝나면 되돌린다. 호출당 0.6~0.9초가 걸렸다.
 
-### 절차서의 옛 MCP 도구 이름 대응
+### 공통 시작·프레임 진행 절차
 
-`codex-qa-full.md`·`codex-qa-quick.md` 본문에는 MCP 시절 도구 이름이 남아 있다. 아래처럼 바꿔 읽는다.
-
-| 옛 이름 | CLI |
-|---|---|
-| `manage_editor(action:"play"/"stop")` | `editor.playmode start` / `stop` |
-| `execute_code` | `script eval --file` |
-| `read_console` | `console get` + `Logs/Editor.log` |
-| `find_gameobjects`, 컴포넌트 조회 | `script eval`로 조회, 또는 `--query`로 전용 명령 검색 |
-| 메뉴 실행(`Tools/QA/Start Recording` 등) | `editor invoke_menu` |
-| 리임포트·재컴파일 | `unity recompile` |
-| OS 포커스 맞추기(`AppActivate`) | `editor set_auto_tick`으로 대신한다. 그래도 프레임이 멈추면 포커스를 시도한다 |
+- `unity status`가 ready인지 확인한다. `STATUS_PIPELINE_LOAD_PENDING`이면 로딩 완료까지 기다린다. 로딩이 계속 실패하거나 정한 대기 시간을 넘기면 중단하고 원인을 보고한다. 에디터 꺼짐·Pipeline 미설치·컴파일 오류 안전 모드 등 다른 준비 실패도 중단·보고한다. 명령·인자는 위 `--help`로 확인하며 추측하지 않는다.
+- 변경 반영(리임포트·재컴파일 요청) → 완료 대기 → 최신 상태와 콘솔의 컴파일 오류 0건을 확인한다. 완료·최신성을 확인하지 못하면 Play에 들어가지 않고 **QA 미확인(컴파일 미확인)**으로 반환한다. 여러 수정은 컴파일 한 번 뒤 항목별로 검증하며 구현자 결과도 §4대로 재확인한다.
+- Play 전에 `editor set_auto_tick`을 설정한다. Play 직후 `script eval --file`로 `EditorApplication.isPlaying`과 `Time.frameCount`·`Time.time`의 실제 증가를 확인한다. 시작 성공·sleep만으로 시간 진행을 가정하지 않는다.
+- 자동 틱에도 프레임이 멈출 때만 OS 포커스를 시도한다. 그래도 진행하지 않으면 `script eval --file`에서 `EditorApplication.Step()`을 유한 횟수·소량 배치로 호출하고 실제 시간·프레임 증가를 확인한다. 과거 수동 진행의 약 0.02초/회 관측을 고정 시간으로 가정하지 않는다.
 
 ## 3. 판정 정확도 규칙 (과거 오판 재발 방지)
 
-배경: 2026-09-15 QA에서 내부 메서드를 직접 부르고 실플레이라고 보고했다. 구현자 브리프의 틀린 기준으로 통과를 냈다. 2026-11-17 시범에서도 캡처 최신성 문제와 콘솔 누락이 나왔다.
+근거: 2026-09-15 내부 메서드 직접 호출·구현자 오답 기준으로 오판했고, 2026-11-17에는 캡처 최신성·콘솔 누락을 확인했다.
 
 1. **기대값은 검증자가 직접 세운다.** 기획 문서·데이터(CSV)·코드에서 수치 기대값과 근거(파일:줄)를 먼저 적는다. 구현자가 준 목록은 그대로 쓰지 않고 대조 대상으로만 둔다. 문서와 코드가 다르면 그 자체를 발견으로 기록한다.
+   - 원본 설정값과 보너스·초기화가 더해진 최종 표시값을 구분해 확인한다. 화면 숫자만 보고 판정하지 않는다([검사기 런북](verification-scripts.md)의 2026-09-10 오판 근거).
 2. **정지 화면 캡처는 프레임 스탬프로 시점을 증명한다.**
    - Play 직후 `script eval --file <Orca 저장소 루트>\tools\unity-qa\framestamp.eval.cs`를 실행한다. 화면 왼쪽 위에 `F=<frameCount> T=<time>`이 뜬다. 런타임 전용이라 Play 종료와 함께 사라진다.
    - 캡처마다 비교한다. a는 캡처 직전 CLI로 읽은 frameCount, b는 이미지에 찍힌 F, c는 캡처 직후 frameCount다.
@@ -65,8 +60,9 @@
    - **Play 종료 직후 신규 예외도 따로 확인한다.**
    - `console get`이 `console status`의 건수보다 적게 돌려준 적이 있다. 콘솔만 믿지 않는다.
    - 스크립트 리로드 중 Pipeline의 `/api/exec` 처리에서 나는 `ObjectDisposedException`은 도구 쪽 기록일 가능성이 있다. 게임 오류와 구분해 적는다.
-5. **조작 경로를 항목마다 적는다.** `ExecuteEvents.pointerClickHandler` 직접 발송은 핸들러 경로 확인이다. 물리 입력·히트 테스트·가림 검증이 아니다. 값 직접 대입이나 메서드 호출로 얻은 결과는 "사용자 조작 검증 아님"으로 표시한다.
+5. **조작 경로를 항목마다 적는다.** 씬 전환·화면 이동을 검증할 때 `OnClickXxx()`를 직접 호출하지 않는다(Edit Mode에서도 실행될 수 있다). `script eval`로 Button을 조회해 `ExecuteEvents.pointerClickHandler`를 발송한 결과는 **핸들러 경로 확인**이다. 실제 클릭·물리 입력·히트 테스트·가림 검증과 구분한다. 값 직접 대입이나 메서드 호출로 얻은 결과는 "사용자 조작 검증 아님"으로 표시한다.
 6. **간헐 오류는 한 번 안 보였다고 해결로 치지 않는다.** Cell_Test의 Play 종료 예외는 3회 중 2회 나왔다.
+7. **항목별 결과를 보고한다.** 통과/실패/불일치/미확인을 구분하고, 필요한 증거·물리 입력을 확보하지 못한 항목은 미확인으로 남긴다. 일부 통과를 전체 통과로 확대하지 않는다.
 
 ## 4. 구현자(Claude)의 컴파일 확인
 
@@ -80,11 +76,7 @@
 
 ## 5. 시험 기록 (근거)
 
-| 회차 | 한 것 | 결과 |
-|---|---|---|
-| 1 | CLI만으로 Play 진입·조작·캡처·종료 | 경로는 끝까지 수행. 종료 예외와 미검증 항목 때문에 화면 QA는 미완료. 예전 문제(대상 지정 무시, Play 후 401)는 재현 안 됨 |
-| 2 | 검증자가 알고 넣은 오답 2개 | 관측 차이는 찾았으나 화면 최신성을 증명하지 못함 |
-| 3 | 프레임 스탬프 + 구현자 목록에 몰래 넣은 오답 2개 | screen 캡처 11회 모두 범위 안. 오답 2개를 불일치로 찾음. 일부 화면(스크롤 밖)과 항목별 로그 대조는 미완료 |
+2026-11-17 Cell_Test 시범 3회(CLI 1.0.1 + Pipeline 1.0.0): Play 진입·조작·캡처·종료 경로를 수행했고 대상 지정 무시·Play 후 401은 재현되지 않았다. 2회차는 알려진 오답 2개의 관측 차이만 확인했고 화면 최신성 증명은 실패했다. 3회차는 스탬프 캡처 11회 모두 범위 안이고 숨긴 오답 2개를 불일치로 검출했지만, 종료 예외·스크롤 밖 화면·항목별 로그 대조 때문에 전체 QA는 미완료다.
 
 보고서: `.claude/briefs/`의 2026-11-17 시범 보고는 일회용이라 지웠다. 결과는 `.claude/UNFINISHED.md` Cell_Test 항목에 남아 있다.
 미검증: 실행 중 에디터에 Pipeline 추가·업그레이드 직후의 동작, CLI·Pipeline 버전 불일치, 백그라운드에서 새 파일 `.meta` 생성, 모달 대화상자, 강제 갱신(`RepaintAllViews`) 효과(1회만 시험), `editor invoke_menu` 실행, **물리 입력(실제 포인터·터치·키보드) 경로** — CLI 대안을 찾지 못했다. 물리 입력이 필요한 항목은 사람이 확인하거나 미확인으로 반환한다.

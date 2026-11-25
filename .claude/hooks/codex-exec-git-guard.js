@@ -164,6 +164,6 @@ process.stdin.on('end', () => {
     const missing = decision === 'missing';
     process.stdout.write(JSON.stringify({ hookSpecificOutput: {
         hookEventName: 'PreToolUse', permissionDecision: 'deny',
-        permissionDecisionReason: (missing ? 'stdin 브리프 파일을 읽을 수 없다. 브리프 파일을 먼저 만든 뒤 별도 명령으로 실행하라. ' : '') + 'Git 마무리는 Orca Codex 탭(메인 세션)으로 인계해야 한다. `orca terminal list --json`에서 codex 탭을 찾고, 없으면 `orca agent launch --agent codex --surface terminal`로 연다. 브리프 경로를 `orca terminal send`로 전달한다. 근거: runbook/codex-handoff.md 「금지」. Git 마무리를 codex exec로 대신할 수 없다.',
+        permissionDecisionReason: (missing ? 'stdin 브리프 파일을 읽을 수 없다. 브리프 파일을 먼저 만든 뒤 별도 명령으로 실행하라. ' : '') + 'Git 마무리는 `orca orchestration worker-start --agent codex`로 Git 작업자를 띄워 브리프로 맡긴다. `orca terminal send`는 사용자가 기존 탭을 지정한 경우에만 쓴다. 근거: runbook/codex-handoff.md 「금지」. Git 마무리를 codex exec로 대신할 수 없다.',
     } }));
 });

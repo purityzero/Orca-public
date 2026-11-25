@@ -1,10 +1,6 @@
 # Runbook — UI 컴포넌트와 프리팹 편집
 
-프리팹·UI를 만들거나 고칠 때 읽는다. 자동 로드하지 않는다(2026-09-11에 `CLAUDE.md`의
-`@PREFAB.MD` 상시 주입을 끊고 여기로 내렸다 — 프리팹을 안 건드리는 세션에도 매번 들어왔다).
-
-같은 주제의 사고 기록은 [`scene-prefab-edit.md`](scene-prefab-edit.md)에 있다.
-이 문서는 **무엇을 쓸지와 어떻게 만들지**, 그쪽은 **무엇에 데였는지**다.
+프리팹·UI 편집 시 읽는 컴포넌트·작성 규칙 정본이다(2026-09-11 상시 주입에서 분리). 사고 기록은 [씬·프리팹 편집](scene-prefab-edit.md)을 따른다.
 
 ---
 
@@ -26,7 +22,7 @@
 ### YAML 직접 편집 vs Unity CLI — 선택 기준 (2026-11-17)
 구조 변경 전에 `unity status --project-path <경로>`로 Pipeline 연결과 준비 상태를 확인한다. 컴파일 중이면 기다리고, 연결되지 않거나 계속 실패하면 YAML 경로로 전환한다.
 
-**CLI 연결 확인됨** → Codex가 CLI 명령 또는 `script eval`/`script run`으로 구조와 참조를 변경한다. 정확한 명령과 과거 MCP 전용 이름의 대응은 `runbook/codex-qa-unity-cli.md` §2를 참고한다. 이미 위치를 아는 단순 값과 CSV는 직접 편집할 수 있다. YAML 구조 편집은 GUID·fileID·컴포넌트 목록의 정합성을 직접 확인해야 한다.
+**CLI 연결 확인됨** → Codex가 CLI 명령 또는 `script eval`/`script run`으로 구조와 참조를 변경한다. 정확한 명령은 [CLI 정본 §2](codex-qa-unity-cli.md#2-명령-powershell)를 참고한다. 이미 위치를 아는 단순 값과 CSV는 직접 편집할 수 있다. YAML 구조 편집은 GUID·fileID·컴포넌트 목록의 정합성을 직접 확인해야 한다.
 
 **CLI 미연결 또는 연결 끊김** → 아래 YAML 경로를 사용하고 이유와 미검증 범위를 보고한다. 이미 완료한 단계를 되돌릴 필요는 없다.
 - 프리팹 파일은 Unity Editor 없이 YAML로 직접 편집한다.
@@ -35,30 +31,21 @@
 - GUID는 추측하지 않고 반드시 실제 파일에서 확인한다. (`.cs.meta` 파일 대조 또는 기존 프리팹 grep) 신규 스크립트라 대조할 기존 GUID가 없다면, 32자리 16진수 형식(0-9a-f)을 지키되 프로젝트 내 기존 `.meta` 전체와 겹치지 않는지 grep으로 확인 후 사용한다.
 
 ### 프리팹 안의 필드/버튼 연결하기
-CLI 명령 또는 `script eval`/`script run`으로 편집하고 저장 후 실제 YAML의 `m_Target`과 `m_MethodName`을 확인한다. 과거 MCP 전용 도구의 CLI 대응은 `runbook/codex-qa-unity-cli.md` §2를 따른다. 런타임 instance ID와 YAML fileID를 혼동하지 않는다.
-
-### MCP 시절 프리팹 필드/버튼 연결 실측 (2026-11-17 폐기)
-
-아래는 과거 실측 기록이며 현행 도구 지시가 아니다. CLI 대응은 정본 §2를 따른다.
-- 프리팹 자체(씬이 아니라)를 편집할 땐 `manage_prefabs`(`open_prefab_stage` → `manage_gameobject`/`manage_components`로 편집 → `save_prefab_stage` → `close_prefab_stage`)를 쓴다.
-- **object 참조 값은 런타임 instance ID(정수)만 받는다** — 프리팹 YAML의 fileID(`9004000000000001043` 같은 긴 숫자)를 그대로 못 넣는다. `find_gameobjects`로 대상 오브젝트를 찾은 뒤, 그 컴포넌트의 instance ID를 얻어서 써야 한다.
-  - 컴포넌트 instance ID를 매번 리소스 조회로 확인하면(특히 TMP 컴포넌트는 응답이 매우 큼) 토큰이 많이 든다 — 같은 프리팹 스테이지 세션 안에서는 오브젝트가 대체로 "GameObject, +2 RectTransform, +4 CanvasRenderer, +6(또는 +8) 실제 컴포넌트" 순으로 순차 instance ID를 받는 경향이 있다(직접 확인함). 구조가 동일한 형제 오브젝트가 많으면(예: TMP 텍스트 여러 개) 하나만 조회해 오프셋을 검증하고 나머지는 그 오프셋으로 계산해서 조회 횟수를 줄일 것 — 다만 가정이므로 최소 1개는 반드시 실측 검증할 것.
-- **UnityEvent(`Button.m_OnClick` 등)에 Persistent Call을 추가**하려면 `manage_components.set_property`의 `value`에 다음 구조를 통째로 넘긴다(공식 문서화된 스키마는 아니지만 실험으로 동작 확인됨):
-  ```json
-  {"m_PersistentCalls": {"m_Calls": [{"m_Target": <컴포넌트 instanceID>, "m_MethodName": "OnClickFoo", "m_Mode": 1, "m_CallState": 2}]}}
-  ```
-  `m_Mode: 1`은 매개변수 없는(void) 메서드 호출. **읽기 리소스(`mcpforunity://scene/gameobject/{id}/component/{name}`)로는 이게 제대로 설정됐는지 확인이 안 됨**(UnityEvent 내부를 재귀적으로 안 보여주고 `{}`로만 나옴) — 반드시 `save_prefab_stage` 후 실제 YAML 파일을 grep해서 `m_Target`/`m_MethodName`이 의도대로 들어갔는지 확인할 것.
+CLI 명령 또는 `script eval`/`script run`으로 편집한다. **런타임 instance ID와 YAML fileID를 혼동하지 않는다.** UnityEvent는 도구의 요약 응답만 믿지 않고 저장 후 실제 YAML의 `m_PersistentCalls.m_Calls`에서 `m_Target`·`m_MethodName`·`m_Mode`·`m_CallState`를 확인한다(`m_Mode: 1`은 매개변수 없는 호출).
+- 직렬화 참조·오버라이드의 fileID가 대상 파일에 실재하는지 확인한다. 없는 참조는 missing 표시 없이 무시될 수 있다.
 
 ### 신규 블록 작성 순서
 1. 동일 컴포넌트가 쓰인 기존 프리팹을 grep으로 탐색
 2. 해당 블록의 YAML 포맷을 그대로 복사
 3. `m_GameObject`, `m_TargetGraphic` 등 참조 fileID만 대상에 맞게 교체
 
+신규 프리팹은 CLI로 한 번에 구성하고 `PrefabUtility.SaveAsPrefabAsset`으로 저장할 수 있다. 저장 후 참조 실재 여부·[폰트/머티리얼 짝](unity-font.md#폰트-교체는-두-필드가-한-쌍이다)·`.meta` 동반 생성을 확인한다. `.meta`가 없으면 체크아웃마다 GUID가 새로 생긴다.
+
 ### 편집 시 흔한 문제
 - 버튼의 타겟 그래픽 참조가 비어있거나, 대상 이미지의 레이캐스트 대상 옵션이 꺼져 있으면 클릭이 아예 안 잡힌다 — 클릭 안 되는 버그의 상당수가 이 케이스다.
 - 빈 영역(배경 없는 슬롯 등)에 클릭을 받게 하려면 투명하지만 레이캐스트는 받는 이미지를 별도로 추가해 버튼의 타겟 그래픽으로 연결하는 "투명 클릭 영역" 패턴을 사용한다.
 - 중첩된 프리팹(예: 공용 위젯)에 내장된 자체 버튼이 있으면, 부모 쪽 클릭 핸들러로 이벤트가 버블링되지 않고 먼저 가로챈다 — 부모가 클릭을 받아야 하는 구조라면 자식의 내장 버튼을 비활성화한다.
-- 프리팹 오버라이드가 존재하지 않는 참조 ID를 가리키면 **에러 없이 조용히 무시**되는 경우가 많다(missing 표시도 안 뜸). 텍스트/이벤트가 안 먹히는데 원인을 못 찾겠으면, 참조 ID가 대상 프리팹에 실제로 존재하는지부터 의심한다.
+- 텍스트/이벤트가 안 먹히면 위 필드/버튼 연결 절의 참조 실재 여부부터 확인한다.
 - 편집 후 실시간 컴파일/플레이 테스트를 못 하는 환경이 많다는 걸 전제로 한다 — 작업 완료 시 "미검증" 여부를 명시하고, 실제 실행 확인을 받을 때까지 완료로 단정하지 않는다.
 
 ---

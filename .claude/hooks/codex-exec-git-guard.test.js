@@ -19,9 +19,8 @@ test('실제 훅 진입점에서 Git 위임 차단과 통과 경로 검증', () 
     const deny = (command, tool, target) => {
         const output = call(command, tool, target);
         assert.equal(output?.permissionDecision, 'deny', command);
-        assert.match(output.permissionDecisionReason, /orca terminal list --json/);
-        assert.match(output.permissionDecisionReason, /orca agent launch --agent codex --surface terminal/);
-        assert.match(output.permissionDecisionReason, /orca terminal send/);
+        assert.match(output.permissionDecisionReason, /orca orchestration worker-start --agent codex/);
+        assert.match(output.permissionDecisionReason, /사용자가 기존 탭을 지정한 경우에만/);
         assert.match(output.permissionDecisionReason, /runbook\/codex-handoff.md/);
     };
     try {

@@ -87,12 +87,19 @@ Codex 호출·Unity 접근·인계·직접 반환 전에 `runbook/codex-handoff.
 | 분량 | 작은 범위 | `quick-fix` | haiku | low | 원인이 명확한 단일 파일 국소 수정 |
 | 검토 | 흐름 판단 | `code-flow-reviewer` | **Codex `gpt-6.2-astra`** (Astra를 못 띄우면 opus) | high | 실제 호출 흐름에서 일어나는 문제만 판정(방어코드 필요 여부·과잉 지적 가리기). 읽기 전용 |
 | 검토 | 이론 판단 | `code-theory-reviewer` | sonnet | medium | API 계약·내부 동작 근거로 이론상 실패 조건과 발생 조건을 정리. 수정 여부는 흐름 판단이 정함. 읽기 전용 |
+| 조사 | — | `version-researcher` | opus | high | 쓰는 버전 기준으로 설치된 패키지 원본과 외부 자료(공식 문서·변경 이력·이슈·포럼)를 조사해 보고서를 씀. 쓰기는 보고서 경로만 |
 | 마무리 리뷰 | — | `code-reviewer-committer` | sonnet | medium | 여러 에이전트 산출물의 참조 정합성·규칙을 검토하고 Codex에 커밋 가능 여부를 인계(이름은 호환용, 직접 커밋 금지) |
 
 - **QA는 이 표에 없다 — Codex가 한다.** Claude는 만들고 코드 검수(읽기·규칙·정합성)까지 한다. Unity CLI를 쓰는 Play Mode QA는 Codex에 인계하고, 브리프에 절차서를 넣는다: 전체 플레이 `runbook/codex-qa-full.md`, 고친 것 재확인 `runbook/codex-qa-quick.md`. (2026-11-13 사용자 확인으로 `qa-tester`·`qa-quick-check` 서브에이전트를 이 절차서로 전환)
 - 표의 model·effort는 기본값이다. Orca 작업자는 `--model`·`--effort`로 지정한다. 작업 성격에 따라 위 「모델·추론 강도」 표로 바꿀 수 있고, 바꾸면 이유를 알린다. 모델 별칭은 ID로 바꿔 쓴다: opus=`claude-opus-5-5`, sonnet=`claude-sonnet-5-5`, haiku=`claude-haiku-5-5`.
 - **흐름 판단은 Codex 작업자로 띄운다**(2026-11-25 사용자 결정): `worker-start --agent codex --model gpt-6.2-astra --effort high`(실패 비용이 아주 크면 `xhigh`, Astra를 띄울 수 없으면 Claude `claude-opus-5-5`/high). 브리프 첫 줄에서 `agents/code-flow-reviewer.md`를 읽게 한다. 이 기준 밖의 작업은 위 「모델·추론 강도」 표의 기존 값을 쓴다.
 - **검토 축 순서**: 방어코드·예외 처리 검토는 `code-theory-reviewer`가 먼저 조건을 뽑고, 그 결과 표를 `code-flow-reviewer` 브리프에 넣어 실사용 기준으로 판정받는다. 고칠지 말지는 흐름 판단 결과로 정한다. 둘 다 읽기 전용이라 위 우선순위(설계 > 분량 …)와 겹치지 않고, 구현 에이전트보다 앞에 붙는다.
+- **조사(`version-researcher`)는 지휘자가 판단해 제안하고, 띄울 때마다 사용자 승인을 받는다**(2026-11-27 사용자 결정: 인터넷 조사는 토큰을 많이 쓴다). 질문은 묶어서 한 번에 맡긴다. 모드는 둘이다.
+  - **선행 조사**: 내 자료(Unity 프로젝트·내 코드·내 리소스)를 보기 전에 쓴다. "의도된 동작인가", "알려진 버그인가", "버전 간 변경"처럼 외부에 답이 있을 가능성이 높고, 소스 추적이나 더미 실험 비용이 클 때.
+  - **후속 조사**: 작업 중 외부 자료가 필요해졌을 때 쓴다. 자체 확인 뒤에도 원인·의도가 남거나 예상과 다른 동작을 봤을 때.
+  - 지휘자는 보고서의 신뢰도와 「내 자료에서 확인할 것」을 근거로 다음 배정을 정한다. 신뢰도 '상'이면 확인을 줄이고, '하'나 미확인이면 더미 실험이나 이론 검토로 넘긴다. 이론 검토로 넘기면 보고서 경로를 `code-theory-reviewer` 브리프에 넣는다.
+  - 조사는 Claude `claude-opus-5-5` / `high`로 띄운다(2026-11-27 사용자 결정). 위 「표의 model·effort는 기본값」 규칙의 예외이며, 바꾸려면 승인받을 때 함께 묻는다.
+  - 보고서(`reports/research/`)를 남길지 지울지는 사용자가 정한다. 지휘자는 경로를 보고하고 임의로 지우지 않는다.
 - 애매한 경우(둘 이상 축에 걸침) 더 무거운 쪽(설계 > 분량-큰 > 컨텐츠 > 분량-작은) 기준으로 판단.
 - `code-reviewer-committer`는 다른 축과 배타가 아니라 **뒤에 붙는다** — 구현 계열 에이전트를 돌린 뒤 Codex의 Git 마무리 직전에 태운다. 이름은 기존 호출 호환을 위해 유지하지만 commit·merge·push는 하지 않고 참조 정합성·규칙 검토 결과를 Codex에 넘긴다.
 
@@ -102,7 +109,7 @@ Codex 호출·Unity 접근·인계·직접 반환 전에 `runbook/codex-handoff.
 | `design-planner` | opus | high |
 | `design-issue-resolver` | sonnet | medium |
 
-## 위 9개 에이전트(Client 7 + Design 2) 공통 규칙
+## 위 10개 에이전트(Client 8 + Design 2) 공통 규칙
 - **자체 재위임 금지**: 위임 순서는 지휘자(메인 채팅)만 정한다. Agent 도구로 띄우면 `disallowedTools: Agent`로 구조적으로 막히지만, Orca 작업자로 띄우면 막히지 않으므로 브리프에 "다른 에이전트·작업자를 띄우지 않는다"를 명시한다.
 - **Unity 에디터를 조작하지 않는다**: Play Mode 확인은 Codex 몫이므로 결과는 "Codex 검증 대기"로 보고한다. 컴파일 오류 확인만은 메인 세션이 할 수 있다(`runbook/codex-qa-unity-cli.md` §4). (QA 서브에이전트 시절의 재시도 상한 80·45턴은 Codex QA 절차서로 옮겼다)
 - **설계→구현 핸드오프**: `code-architect`가 구현까지 안 가고 설계안만 낸 경우, 그 설계안은 `.claude/architecture/{주제}.md`에 저장한다 — `code-writer`는 매번 새 세션으로 뜨는 작업자라 대화 내용을 못 보므로, 이어서 구현을 맡길 땐 반드시 이 파일 경로를 함께 전달한다. (`.claude/design/`은 design-planner의 기획 스펙 전용이라 혼용하지 않는다.)
